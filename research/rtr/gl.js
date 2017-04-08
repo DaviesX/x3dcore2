@@ -18,20 +18,24 @@ function initGL(canvas) {
 /*
  * Initializing object geometries
  */
-var meshes, meshTransforms;
+var meshes = []
+var meshTransforms = [];
 var currentMesh, currentTransform;
 function initMesh() {
     // Load object meshes
     meshes = [
         new OBJ.Mesh(teapot_mesh_str),
-        new OBJ.Mesh(bunny_mesh_str)
+        new OBJ.Mesh(bunny_mesh_str),
+        new OBJ.Mesh(mountain_mesh_str),
+        new OBJ.Mesh(cornell_mesh_str)
     ];
-    OBJ.initMeshBuffers(gl, meshes[0]);
-    OBJ.initMeshBuffers(gl, meshes[1]);
+    
+    for (var i = 0; i < meshes.length; i ++) {
+        OBJ.initMeshBuffers(gl, meshes[i]);
+        meshTransforms[i] = mat4.create();
+    }
 
     currentMesh = meshes[0];
-
-    meshTransforms = [mat4.create(), mat4.create()];
 
     // Set per-object transforms to make them better fitting the viewport
     mat4.identity(meshTransforms[0]);
@@ -40,6 +44,12 @@ function initMesh() {
 
     mat4.identity(meshTransforms[1]);
     mat4.translate(meshTransforms[1], [0.5, 0, 0]);
+    
+    mat4.identity(meshTransforms[2]);
+    mat4.translate(meshTransforms[2], [0.5, -3, -10]);
+    
+    mat4.identity(meshTransforms[3]);
+    mat4.translate(meshTransforms[3], [0.5, 0, -5]);
 
     currentTransform = meshTransforms[0];
 }

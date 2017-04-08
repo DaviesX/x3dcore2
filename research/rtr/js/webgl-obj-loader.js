@@ -31,7 +31,6 @@
        * 'vt': indicates vertex texture section (if textures were used on the model)
      Each of the above sections (except for the faces section) is a list/set of
      unique vertices.
-
      Each line of the faces section contains a list of
      (vertex, [texture], normal) groups
      Some examples:
@@ -39,22 +38,17 @@
          // without a texture applied
          f 1/25 18/46 12/31
          f 1//25 18//46 12//31
-
          // A 3 vertex face with texture indices
          f 16/92/11 14/101/22 1/69/1
-
          // A 4 vertex face
          f 16/92/11 40/109/40 38/114/38 14/101/22
-
      The first two lines are examples of a 3 vertex face without a texture applied.
      The second is an example of a 3 vertex face with a texture applied.
      The third is an example of a 4 vertex face. Note: a face can contain N
      number of vertices.
-
      Each number that appears in one of the groups is a 1-based index
      corresponding to an item from the other sections (meaning that indexing
      starts at one and *not* zero).
-
      For example:
          `f 16/92/11` is saying to
            - take the 16th element from the [v] vertex array
@@ -62,11 +56,9 @@
            - take the 11th element from the [vn] normal array
          and together they make a unique vertex.
      Using all 3+ unique Vertices from the face line will produce a polygon.
-
      Now, you could just go through the OBJ file and create a new vertex for
      each face line and WebGL will draw what appears to be the same model.
      However, vertices will be overlapped and duplicated all over the place.
-
      Consider a cube in 3D space centered about the origin and each side is
      2 units long. The front face (with the positive Z-axis pointing towards
      you) would have a Top Right vertex (looking orthogonal to its normal)
@@ -75,7 +67,6 @@
      Right vertex (looking orthogonal to its normal) at (1,1,1). Each face
      has a vertex at the same coordinates, however, three distinct vertices
      will be drawn at the same spot.
-
      To solve the issue of duplicate Vertices (the `(vertex, [texture], normal)`
      groups), while iterating through the face lines, when a group is encountered
      the whole group string ('16/92/11') is checked to see if it exists in the
@@ -163,20 +154,16 @@
                 /*
                  The verts, textures, and vertNormals arrays each contain a
                  flattend array of coordinates.
-
                  Because it gets confusing by referring to vertex and then
                  vertex (both are different in my descriptions) I will explain
                  what's going on using the vertexNormals array:
-
                  vertex[2] will contain the one-based index of the vertexNormals
                  section (vn). One is subtracted from this index number to play
                  nice with javascript's zero-based array indexing.
-
                  Because vertexNormal is a flattened array of x, y, z values,
                  simple pointer arithmetic is used to skip to the start of the
                  vertexNormal, then the offset is added to get the correct
                  component: +0 is x, +1 is y, +2 is z.
-
                  This same process is repeated for verts and textures.
                  */
                 // vertex position
@@ -384,4 +371,3 @@
     gl.deleteBuffer(mesh.indexBuffer);
   }
 })(this);
-

@@ -2,10 +2,16 @@
 <html>
 
 <head>
-<title>CS114 Project 1: WebGL</title>
+<title>RTR experiments</title>
 <meta charset="utf-8">
 <link href="css/proj1.css" rel="stylesheet">
 <link href="css/spectrum.css" rel="stylesheet">
+
+<!-- Model data -->
+<script type="text/javascript" src="meshes/teapot_obj.js"></script>
+<script type="text/javascript" src="meshes/bunny_obj.js"></script>
+<script type="text/javascript" src="meshes/mountain_obj.js"></script>
+<script type="text/javascript" src="meshes/cornellbox_obj.js"></script>
 
 <!-- Useful 3rd party libraries -->
 <script type="text/javascript" src="js/jquery-1.12.2.min.js"></script>
@@ -13,22 +19,24 @@
 <script type="text/javascript" src="js/glMatrix-0.9.5.js"></script>
 <script type="text/javascript" src="js/webgl-obj-loader.js"></script>
 
-<!-- Shader initialization utils -->
-<script type="text/javascript" src="js/shader-utils.js"></script>
+<!-- GL utils -->
+<script type="text/javascript" src="js/obj-loader.js"></script>
+<script type="text/javascript" src="js/gl.js"></script>
+<script type="text/javascript" src="js/shader.js"></script>
+<script type="text/javascript" src="js/scene.js"></script>
 
 <!-- WebGL debugging utils -->
 <script type="text/javascript" src="js/webgl-debug.js"></script>
 <script type="text/javascript" src="js/debug-utils.js"></script>
 
-<!-- Model data -->
-<script type="text/javascript" src="meshes/teapot_obj.js"></script>
-<script type="text/javascript" src="meshes/bunny_obj.js"></script>
-
 <!-- WebGL functions -->
-<script type="text/javascript" src="proj1_webgl.js"></script>
+<script type="text/javascript" src="gl.js"></script>
 
 <!-- Other javascript functions -->
-<script type="text/javascript" src="proj1.js"></script>
+<script type="text/javascript" src="ui.js"></script>
+
+
+
 
 
 <!-- Simple vertex shader for drawing the light source as a point -->
@@ -36,7 +44,8 @@
     uniform mat4 uPMatrix;
     attribute vec3 aVertexPosition;
 
-    void main(void) {
+    void main(void) 
+    {
         gl_PointSize = 10.0;        
         gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
     }
@@ -54,7 +63,8 @@
     varying vec3 vPosition;             // Vertex position (camera space)
     varying vec3 vNormal;               // Vertex normal (camera space)
 
-    void main(void) {
+    void main(void) 
+    {
         vec4 camSpacePosition = uMVMatrix * vec4(aVertexPosition, 1.0);
         vPosition = vec3(camSpacePosition);
 
@@ -65,11 +75,20 @@
     }
 </script>
 
+
+
+
+
+
+
+
+
 <!-- Fragment shader: light draing -->
 <script id="shader-fs-light" type="x-shader/x-fragment">
     precision mediump float;
 
-    void main(void) {
+    void main(void) 
+    {
         gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
     }
 </script>
@@ -81,7 +100,8 @@
     varying vec3 vPosition;             // Vertex position (camera space)
     varying vec3 vNormal;               // Vertex normal (camera space)
 
-    void main(void) {
+    void main(void) 
+    {
         // Dummy variable to ensure the use of all vertex attributes.
         vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
 
@@ -96,12 +116,11 @@
     varying vec3 vPosition;             // Vertex position (camera space)
     varying vec3 vNormal;               // Vertex normal (camera space)
 
-    void main(void) {
+    void main(void) 
+    {
         // Dummy variable to ensure the use of all vertex attributes.
         vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
-
-        // Task 1-1
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+        gl_FragColor = vec4(abs(vPosition),1.0);
     }
 </script>
 
@@ -112,12 +131,13 @@
     varying vec3 vPosition;             // Vertex position (camera space)
     varying vec3 vNormal;               // Fragment normal (camera space)
 
-    void main(void) {
+    void main(void) 
+    {
         // Dummy variable to ensure the use of all vertex attributes.
         vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
 
         // Task 1-2
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+        gl_FragColor = vec4(normalize(vNormal),1.0);
     }
 </script>
 
@@ -130,12 +150,14 @@
     varying vec3 vPosition;             // Fragment position (camera space)
     varying vec3 vNormal;               // Fragment normal (camera space)    
 
-    void main(void) {
+    void main(void) 
+    {
         // Dummy variable to ensure the use of all vertex attributes.
         vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
-
+        
         // Task 1-3
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+        vec3 i = uLightPos-vPosition;
+        gl_FragColor = zero + vec4(normalize(i),1.0);
     }
 </script>
 
@@ -151,12 +173,12 @@
     varying vec3 vPosition;             // Fragment position (camera space)
     varying vec3 vNormal;               // Fragment normal (camera space)
 
-    void main(void) {
-        // Dummy variable to ensure the use of all vertex attributes.
-        vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
-
-        // Task 2
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+    void main(void) 
+    {
+        vec3 i = uLightPos - vPosition;
+        float power = uLightPower/(dot(i,i)/5.0+5.0);
+        float rad = power*max(dot(normalize(i),normalize(vNormal)),0.0);
+        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient),1.0);
 
     }
 </script>
@@ -174,12 +196,21 @@
     varying vec3 vPosition;             // Fragment position (camera space)
     varying vec3 vNormal;               // Fragment normal (camera space)
 
-    void main(void) {
-        // Dummy variable to ensure the use of all vertex attributes.
-        vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
+    void main(void) 
+    {
+        vec3 i = uLightPos - vPosition;
+        vec3 o_u = -normalize(vPosition);
+        
+        vec3 norm_u = normalize(vNormal);
+        vec3 i_u = normalize(i);
+        
+        vec3 r_u = 2.0*dot(o_u,norm_u)*norm_u - o_u;
+        
+        float power = uLightPower/(dot(i,i)/5.0+5.0);
+        float rad = power*max(dot(i_u,norm_u),0.0);
+        float e = pow(max(dot(r_u,i_u),0.0),uExponent);
 
-        // Task 3-1
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient) + sign(rad)*power*e,1.0);
     }
 </script>
 
@@ -196,12 +227,21 @@
     varying vec3 vPosition;             // Fragment position (camera space)
     varying vec3 vNormal;               // Fragment normal (camera space)
 
-    void main(void) {
-        // Dummy variable to ensure the use of all vertex attributes.
-        vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
+    void main(void) 
+    {
+        vec3 i = uLightPos - vPosition;
+        vec3 o_u = -normalize(vPosition);
+        
+        vec3 norm_u = normalize(vNormal);
+        vec3 i_u = normalize(i);
+        
+        vec3 half_vec = normalize(i_u+o_u);
+        
+        float power = uLightPower/(dot(i,i)/5.0+5.0);
+        float rad = power*max(dot(i_u,norm_u),0.0);
+        float e = pow(max(dot(half_vec,norm_u),0.0),uExponent);
 
-        // Task 3-2
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient) + sign(rad)*power*e,1.0);
     }
 </script>
 
@@ -218,21 +258,79 @@
 
     varying vec3 vPosition;             // Fragment position (camera space)
     varying vec3 vNormal;               // Fragment normal (camera space)
+    
+    const float PI = 3.1415926535897932384626433832795;
+    
+    float x2(float x)
+    {
+        return x*x;
+    }
+    
+    float x3(float x)
+    {
+        return x*x*x;
+    }
+    
+    float x4(float x)
+    {
+        return x*x*x*x;
+    }
+    
+    float fresnel(vec3 i, vec3 h) 
+    {
+        float c = dot(i,h);
+        float g = sqrt(x2(uIOR) - 1.0 + x2(c));
+        return 0.5*x2((g-c)/(g+c))*(1.0+x2((c*(g+c)-1.0)/(c*(g-c)+1.0)));
+    }
+    
+    float ggx_distri(vec3 n, vec3 h) 
+    {
+        float cos_th = dot(n,h);
+        float tan_th2 = 1.0/x2(cos_th)-1.0;
+        float b2 = x2(uBeta);
+        return b2/(PI*x4(cos_th)*x2(b2+tan_th2));
+    }
+    
+    float ggx_shadow1(vec3 v, vec3 h)
+    {
+        float tan_tv2 = 1.0/x2(dot(v,h))-1.0;
+        float b2 = x2(uBeta);
+        return 2.0/(1.0+sqrt(1.0+b2*tan_tv2));
+    }
+    
+    float ggx_shadow(vec3 i, vec3 o, vec3 h) 
+    {
+        return ggx_shadow1(i,h)*ggx_shadow1(o,h);
+    }
 
-    void main(void) {
-        // Dummy variable to ensure the use of all vertex attributes.
-        vec4 zero = vec4(vPosition + vNormal - vPosition - vNormal, 0.0);
+    void main(void) 
+    {
+        vec3 i = uLightPos - vPosition;
+        vec3 o_u = -normalize(vPosition);
+        
+        vec3 norm_u = normalize(vNormal);
+        vec3 i_u = normalize(i);
+        
+        vec3 half_vec = normalize(i_u+o_u);
+        
+        float power = uLightPower/(dot(i,i)/5.0+5.0);
+        float rad = power*max(dot(i_u,norm_u),0.0);
 
-        // Task 4
-        gl_FragColor = zero + vec4(1.0, 1.0, 1.0, 1.0); // FIXME
+        gl_FragColor = vec4(rad*(uDiffuseColor
+                            + fresnel(i_u,half_vec)*ggx_distri(norm_u,half_vec)*ggx_shadow(i_u,o_u,half_vec)/(4.0*(dot(norm_u,i_u)+0.00001)*dot(norm_u,o_u))) 
+                            + uDiffuseColor*uAmbient,
+                            1.0);
     }
 </script>
 </head>
 
 
+
+
+
 <!-- HTML contents -->
 <body>
-    <h1>CS114 Project 1: WebGL</h1>
+    <h1>RTR experiments</h1>
 
     <div class="droplist">
         <span>
@@ -240,6 +338,8 @@
             <select onchange="changeActiveMesh(this);">
               <option value="0" selected="selected">Utah teapot</option>
               <option value="1">Stanford bunny</option>
+              <option value="2">Mountain</option>
+              <option value="3">Cornell box</option>
             </select>
         </span>
         <span style="margin-left:30px">
