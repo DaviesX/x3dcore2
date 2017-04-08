@@ -75,6 +75,7 @@ function createShader(vs_id, fs_id) {
     shaderProg.lightPosUniform = gl.getUniformLocation(shaderProg, "uLightPos");
     shaderProg.lightPowerUniform = gl.getUniformLocation(shaderProg, "uLightPower");
     shaderProg.kdUniform = gl.getUniformLocation(shaderProg, "uDiffuseColor");
+    shaderProg.ksUniform = gl.getUniformLocation(shaderProg, "uSpecularColor");
     shaderProg.ambientUniform = gl.getUniformLocation(shaderProg, "uAmbient");    
 
     return shaderProg;
@@ -146,6 +147,7 @@ var lightPower = 5.0;                           // "Power" of the light source
 
 // Common parameters for shading models
 var diffuseColor = [0.2392, 0.5216, 0.7765];    // Diffuse color
+var specularColor = [1,1,1];
 var ambientIntensity = 0.1;                     // Ambient
 
 // Animation related variables
@@ -162,6 +164,7 @@ function setUniforms(prog) {
     gl.uniform3fv(prog.lightPosUniform, lightPos);
     gl.uniform1f(prog.lightPowerUniform, lightPower);
     gl.uniform3fv(prog.kdUniform, diffuseColor);
+    gl.uniform3fv(prog.ksUniform, specularColor);
     gl.uniform1f(prog.ambientUniform, ambientIntensity);
 }
 

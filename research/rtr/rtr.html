@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>RTR experiments</title>
+<title>rtr experiments</title>
 <meta charset="utf-8">
 <link href="css/proj1.css" rel="stylesheet">
 <link href="css/spectrum.css" rel="stylesheet">
@@ -167,7 +167,7 @@
 
     uniform vec3 uLightPos;             // Light position in camera space
     uniform float uLightPower;          // Light power
-    uniform vec3 uDiffuseColor;         // Diffuse color    
+    uniform vec3 uDiffuseColor;         // Diffuse color   
     uniform float uAmbient;             // Ambient
 
     varying vec3 vPosition;             // Fragment position (camera space)
@@ -190,6 +190,7 @@
     uniform vec3 uLightPos;             // Light position in camera space
     uniform float uLightPower;          // Light power
     uniform vec3 uDiffuseColor;         // Diffuse color
+    uniform vec3 uSpecularColor;        // Specular color
     uniform float uExponent;            // Phong exponent
     uniform float uAmbient;             // Ambient
 
@@ -210,7 +211,7 @@
         float rad = power*max(dot(i_u,norm_u),0.0);
         float e = pow(max(dot(r_u,i_u),0.0),uExponent);
 
-        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient) + sign(rad)*power*e,1.0);
+        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient) + sign(rad)*power*e*uSpecularColor,1.0);
     }
 </script>
 
@@ -221,6 +222,7 @@
     uniform vec3 uLightPos;             // Light position in camera space
     uniform float uLightPower;          // Light power
     uniform vec3 uDiffuseColor;         // Diffuse color
+    uniform vec3 uSpecularColor;        // Specular color
     uniform float uExponent;            // Blinn-Phong exponent
     uniform float uAmbient;             // Ambient
 
@@ -241,7 +243,7 @@
         float rad = power*max(dot(i_u,norm_u),0.0);
         float e = pow(max(dot(half_vec,norm_u),0.0),uExponent);
 
-        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient) + sign(rad)*power*e,1.0);
+        gl_FragColor = vec4(uDiffuseColor*(rad + uAmbient) + sign(rad)*power*e*uSpecularColor,1.0);
     }
 </script>
 
@@ -252,6 +254,7 @@
     uniform vec3 uLightPos;             // Light position in camera space
     uniform float uLightPower;          // Light power
     uniform vec3 uDiffuseColor;         // Diffuse color
+    uniform vec3 uSpecularColor;        // Specular color
     uniform float uBeta;                // Roughness
     uniform float uIOR;                 // Index of refraction
     uniform float uAmbient;             // Ambient
@@ -315,11 +318,10 @@
         
         float power = uLightPower/(dot(i,i)/5.0+5.0);
         float rad = power*max(dot(i_u,norm_u),0.0);
+        
+        vec3 r = rad*(uDiffuseColor + uSpecularColor*fresnel(i_u,half_vec)*ggx_distri(norm_u,half_vec)*ggx_shadow(i_u,o_u,norm_u)/(4.0*(dot(norm_u,i_u)+0.00001*(1.0-sign(rad)))*dot(norm_u,o_u)));
 
-        gl_FragColor = vec4(rad*(uDiffuseColor
-                            + fresnel(i_u,half_vec)*ggx_distri(norm_u,half_vec)*ggx_shadow(i_u,o_u,half_vec)/(4.0*(dot(norm_u,i_u)+0.00001)*dot(norm_u,o_u))) 
-                            + uDiffuseColor*uAmbient,
-                            1.0);
+        gl_FragColor = vec4(r+uDiffuseColor*uAmbient, 1.0);
     }
 </script>
 </head>
@@ -330,7 +332,7 @@
 
 <!-- HTML contents -->
 <body>
-    <h1>RTR experiments</h1>
+    <h1>rtr experiments</h1>
 
     <div class="droplist">
         <span>
@@ -411,14 +413,13 @@
             <tr>
                 <td>Diffuse Color</td>
                 <td>
-                    <input type="text" id="colorPicker"> (<span id="colorText">#1f75fe</span>)
+                    <input type="text" id="colorPickerDiff"> (<span id="colorTextDiff">#1f75fe</span>)
                 </td>
             </tr>
             <tr>
                 <td>Specular Color</td>
                 <td>
-                    <!-- Extra credit -->
-                    #ffffff
+                    <input type="text" id="colorPickerSpec"> (<span id="colorTextSpec">#ffffff</span>)
                 </td>
             </tr>            
             <tr>

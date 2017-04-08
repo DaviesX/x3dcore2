@@ -1,13 +1,15 @@
 /*
  * Changing active object and shader
  */
-function changeActiveMesh(sel) {
+function changeActiveMesh(sel) 
+{
     var id = parseInt(sel.value, 10);
     currentMesh = meshes[id];
     currentTransform = meshTransforms[id];
 }
 
-function changeActiveShader(sel) {
+function changeActiveShader(sel) 
+{
     var id = parseInt(sel.value, 10);
     currentProgram = shaderPrograms[id];
 
@@ -28,7 +30,8 @@ function changeActiveShader(sel) {
     }
 }
 
-function changeResolution(sel) {
+function changeResolution(sel) 
+{
     var id = parseInt(sel.value, 10);
 
     var width = 0, height = 0;
@@ -57,48 +60,66 @@ function changeResolution(sel) {
     }
 }
 
+function changeDiffuseColor(color) 
+{
+    diffuseColor = color;
+}
+
+function changeSpecularColor(color) 
+{
+    specularColor = color;
+}
+
 
 /*
  * Slider bar handlers
  */
-function changeAnimatedState(ifAnimated) {
+function changeAnimatedState(ifAnimated) 
+{
     animated = ifAnimated;
     $("#sliderBar").prop("disabled", !animated);
 }
 
-function updateSlider(sliderAmount) {
+function updateSlider(sliderAmount) 
+{
     $("#sliderAmount").html(sliderAmount*10);
     rotSpeed = sliderAmount*10.0;
 }
 
-function changeShowLightState(ifShow) {
+function changeShowLightState(ifShow) 
+{
     draw_light = ifShow;
 }    
 
-function changeAnimatedLightState(ifAnimated) {
+function changeAnimatedLightState(ifAnimated) 
+{
     animated_light = ifAnimated;
     $("#sliderBarLight").prop("disabled", !animated_light);
 }
 
-function updateSliderLight(sliderAmount) {
+function updateSliderLight(sliderAmount) 
+{
     var value = sliderAmount*10.0;
     $("#sliderAmountLight").html(value);
     rotSpeed_light = value;
 }
 
-function updateSlider_LightPower(sliderAmount) {
+function updateSlider_LightPower(sliderAmount) 
+{
     var value = sliderAmount/2.0;
     $("#sliderAmount_LightPower").html(value);
     lightPower = value;
 }
 
-function updateSlider_Ambient(sliderAmount) {
+function updateSlider_Ambient(sliderAmount) 
+{
     var value = sliderAmount/100.0;
     $("#sliderAmount_Ambient").html(value);
     ambientIntensity = value;
 }
 
-function updateSlider_PhongExp(sliderAmount) {
+function updateSlider_PhongExp(sliderAmount) 
+{
     var value = sliderAmount*5;
     $("#sliderAmount_PhongExp").html(value);
 
@@ -106,7 +127,8 @@ function updateSlider_PhongExp(sliderAmount) {
     gl.uniform1f(shaderPrograms[5].exponentUniform, value);
 }
 
-function updateSlider_BlinnPhongExp(sliderAmount) {
+function updateSlider_BlinnPhongExp(sliderAmount) 
+{
     var value = sliderAmount*5;
     $("#sliderAmount_BlinnPhongExp").html(value);
 
@@ -114,7 +136,8 @@ function updateSlider_BlinnPhongExp(sliderAmount) {
     gl.uniform1f(shaderPrograms[6].exponentUniform, value);
 }
 
-function updateSlider_MicrofacetIOR(sliderAmount) {
+function updateSlider_MicrofacetIOR(sliderAmount) 
+{
     var value = sliderAmount/10.0;
     $("#sliderAmount_MicrofacetIOR").html(value);
 
@@ -122,7 +145,8 @@ function updateSlider_MicrofacetIOR(sliderAmount) {
     gl.uniform1f(shaderPrograms[7].iorUniform, value);
 }
 
-function updateSlider_MicrofacetBeta(sliderAmount) {
+function updateSlider_MicrofacetBeta(sliderAmount) 
+{
     var value = sliderAmount/100.0;
     $("#sliderAmount_MicrofacetBeta").html(value);
 
@@ -130,10 +154,8 @@ function updateSlider_MicrofacetBeta(sliderAmount) {
     gl.uniform1f(shaderPrograms[7].betaUniform, value);
 }
 
-/*
- * Page-load handler
- */
-$(function() {
+function init_color_picker(jpicker, jtext, init_color, onchange)
+{
     var colorPalette = [
         ["#000","#444","#666","#999","#ccc","#eee","#f3f3f3","#fff"],
         ["#f00","#f90","#ff0","#0f0","#0ff","#00f","#90f","#f0f"],
@@ -144,19 +166,28 @@ $(function() {
         ["#900","#b45f06","#bf9000","#38761d","#134f5c","#0b5394","#351c75","#741b47"],
         ["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
     ];
-
-    $("#colorPicker").spectrum({
-        color: "#3d85c6",
+    
+    jpicker.spectrum({
+        color: init_color,
         showPaletteOnly: true,
         togglePaletteOnly: true,
         hideAfterPaletteSelect: true,
         palette: colorPalette,
         change: function(color) {
             var color_ = color.toRgb();
-            $("#colorText").html(color.toHexString());
-            diffuseColor = [color_.r/255.0, color_.g/255.0, color_.b/255.0];
+            jtext.html(color.toHexString());
+            onchange([color_.r/255.0, color_.g/255.0, color_.b/255.0]);
         }        
     });
+}
+
+/*
+ * Page-load handler
+ */
+$(function() 
+{
+    init_color_picker($("#colorPickerDiff"),$("#colorTextDiff"),"#3d85c6",changeDiffuseColor);
+    init_color_picker($("#colorPickerSpec"),$("#colorTextSpec"),"#ffffff",changeSpecularColor);
 
     webGLStart();
 });
