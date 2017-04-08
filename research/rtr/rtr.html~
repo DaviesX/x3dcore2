@@ -14,6 +14,7 @@
     <script type="text/javascript" src="meshes/cornellbox_obj.js"></script>
 
     <!-- Shaders -->
+    <!--
     <script id="shader-vs"          type="text/javascript" src="shader/stdmesh.glslv"></script>
     <script id="shader-vs-light"    type="text/javascript" src="shader/pointlightmarker.glslv"></script>
     <script id="shader-fs-light"    type="text/javascript" src="shader/pointlightmarker.glslf"></script>
@@ -25,7 +26,7 @@
     <script id="shader-fs3-1"       type="text/javascript" src="shader/phong.glslf"></script>
     <script id="shader-fs3-2"       type="text/javascript" src="shader/blinnphong.glslf"></script>
     <script id="shader-fs4"         type="text/javascript" src="shader/isotropic.glslf"></script>
-
+    -->
     
     <!-- Useful 3rd party libraries -->
     <script type="text/javascript" src="js/jquery-3.2.0.js"></script>
