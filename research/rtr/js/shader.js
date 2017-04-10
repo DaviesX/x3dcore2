@@ -65,8 +65,7 @@ function create_shader_from_ext_script(gl, sid) {
     }
     return create_shader_from_code(gl, code, ext);
 }
-function create_shader_program(vid, fid, is_ext) {
-    if (is_ext === void 0) { is_ext = true; }
+function create_shader_program(vid, fid, is_ext = true) {
     var gl = gl_rendering_context();
     var fs = is_ext ? create_shader_from_ext_script(gl, fid) : create_shader_from_script_tag(gl, fid);
     var vs = is_ext ? create_shader_from_ext_script(gl, vid) : create_shader_from_script_tag(gl, vid);

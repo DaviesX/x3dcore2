@@ -241,6 +241,7 @@ function webGLStart() {
     var canvas = $("#canvas0")[0];
 
     initGL(canvas);
+    gl_init_from_canvas(canvas);
     initMesh();
     initShaders();
     initBuffers();
