@@ -40,7 +40,7 @@ class trimesh {
     get_multi_indices_u16() {
         var m_idx = new Array();
         for (var i = 0; i < this.indices.length;) {
-            var eff_len = this.indices.length % 0XFFF;
+            var eff_len = this.indices.length % 0XFFFF;
             var arr = new Uint16Array(eff_len);
             for (var j = 0; j < eff_len; j++)
                 arr[j] = this.indices[i + j];

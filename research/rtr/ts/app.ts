@@ -187,7 +187,8 @@ function drawScene()
 
         var gl = gl_rendering_context();
 
-        pMatrix = mat4_viewport(0, 0, gl_viewport_width(), gl_viewport_height());
+        //pMatrix = mat4_viewport(0, 0, gl_viewport_width(), gl_viewport_height());
+        pMatrix = mat4_identity();
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         pMatrix = pMatrix.mul(mat4_perspective(35, gl_viewport_width() / gl_viewport_height(), 0.1, 1000.0));
@@ -218,8 +219,8 @@ function drawScene()
                 setUniforms(currentProgram);
 
                 var vbo: mesh_vbo = cache.get_mesh_buffer(mesh_ids[i]);
+
                 vbo.bind_attri_buffer(vbo.LOC_VERT);
-                
                 gl.vertexAttribPointer(vertex_ptr, 3, gl.FLOAT, false, 0, 0);
 
                 vbo.bind_attri_buffer(vbo.LOC_NORM);
@@ -227,21 +228,25 @@ function drawScene()
                 
                 var n_idx_buf = vbo.idx_buf_count();
                 for (var j = 0; j < n_idx_buf; j ++) {
-                        vbo.bind_idx_buffer(n_idx_buf);
+                        vbo.bind_idx_buffer(j);
                         gl.drawElements(gl.TRIANGLES, vbo.idx_buf_length(j), gl.UNSIGNED_SHORT, 0);
                 }
         }
-/*
-        if (draw_light) {
-                gl.useProgram(lightProgram);
-                gl.uniformMatrix4fv(lightProgram.pMatrixUniform, false, pMatrix);
 
+        if (draw_light) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, lightPositionBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, Float32Array.from(lightPos), gl.DYNAMIC_DRAW);
-                gl.vertexAttribPointer(lightProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+                gl.useProgram(lightProgram);
+                var upmatrix_ptr = gl.getUniformLocation(lightProgram, "uPMatrix");
+                var vertex_ptr = gl.getAttribLocation(lightProgram, "aVertexPosition");
+
+                gl.uniformMatrix4fv(upmatrix_ptr, false, pMatrix.toarray());
+
+                gl.bufferData(gl.ARRAY_BUFFER, Float32Array.from(lightPos.tovec3().toarray()), gl.DYNAMIC_DRAW);
+
+                gl.vertexAttribPointer(vertex_ptr, 3, gl.FLOAT, false, 0, 0);
                 gl.drawArrays(gl.POINTS, 0, 1);
         }
-*/
 }
 
 var lastTime = 0;
@@ -250,7 +255,8 @@ var animated = false, animated_light = false;
 
 function tick(): void
 {
-        requestAnimationFrame(tick);
+        //requestAnimationFrame(tick);
+        setTimeout(tick, 500);
 
         var timeNow = new Date().getTime();
         if (lastTime != 0) {

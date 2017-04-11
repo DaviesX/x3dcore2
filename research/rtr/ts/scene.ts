@@ -17,8 +17,10 @@ class scene_cache
                 if (!this.has_mesh(id)) {
                         vbo = new mesh_vbo(mesh);
                         this.mesh_cache.set(id, vbo);
-                } 
-                vbo.unload();
+                } else {
+                        vbo = this.mesh_cache.get(id);
+                }
+                vbo.upload();
         }
 
         public unload_mesh(id: string): void

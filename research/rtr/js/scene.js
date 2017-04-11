@@ -11,7 +11,10 @@ class scene_cache {
             vbo = new mesh_vbo(mesh);
             this.mesh_cache.set(id, vbo);
         }
-        vbo.unload();
+        else {
+            vbo = this.mesh_cache.get(id);
+        }
+        vbo.upload();
     }
     unload_mesh(id) {
         if (this.has_mesh(id)) {

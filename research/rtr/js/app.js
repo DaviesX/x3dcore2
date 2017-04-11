@@ -113,7 +113,7 @@ var draw_light = false;
 function drawScene() {
     var current_scene = teapot_scene;
     var gl = gl_rendering_context();
-    pMatrix = mat4_viewport(0, 0, gl_viewport_width(), gl_viewport_height());
+    pMatrix = mat4_identity();
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     pMatrix = pMatrix.mul(mat4_perspective(35, gl_viewport_width() / gl_viewport_height(), 0.1, 1000.0));
     lightMatrix = mat4_ttrans(new vec3(0.0, -1.0, -7.0)).
@@ -140,16 +140,26 @@ function drawScene() {
         gl.vertexAttribPointer(norm_ptr, 3, gl.FLOAT, false, 0, 0);
         var n_idx_buf = vbo.idx_buf_count();
         for (var j = 0; j < n_idx_buf; j++) {
-            vbo.bind_idx_buffer(n_idx_buf);
+            vbo.bind_idx_buffer(j);
             gl.drawElements(gl.TRIANGLES, vbo.idx_buf_length(j), gl.UNSIGNED_SHORT, 0);
         }
+    }
+    if (draw_light) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, lightPositionBuffer);
+        gl.useProgram(lightProgram);
+        var upmatrix_ptr = gl.getUniformLocation(lightProgram, "uPMatrix");
+        var vertex_ptr = gl.getAttribLocation(lightProgram, "aVertexPosition");
+        gl.uniformMatrix4fv(upmatrix_ptr, false, pMatrix.toarray());
+        gl.bufferData(gl.ARRAY_BUFFER, Float32Array.from(lightPos.tovec3().toarray()), gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(vertex_ptr, 3, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.POINTS, 0, 1);
     }
 }
 var lastTime = 0;
 var rotSpeed = 60, rotSpeed_light = 60;
 var animated = false, animated_light = false;
 function tick() {
-    requestAnimationFrame(tick);
+    setTimeout(tick, 500);
     var timeNow = new Date().getTime();
     if (lastTime != 0) {
         var elapsed = timeNow - lastTime;
