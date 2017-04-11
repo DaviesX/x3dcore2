@@ -1,14 +1,19 @@
+
+
+/// <reference path="typing/jquery.d.ts" />
+/// <reference path="app.ts" />
+
 /*
  * Changing active object and shader
  */
-function changeActiveMesh(sel) 
+function changeActiveMesh(sel: HTMLSelectElement): void
 {
     var id = parseInt(sel.value, 10);
-    currentMesh = meshes[id];
-    currentTransform = meshTransforms[id];
+    //currentMesh = meshes[id];
+    //currentTransform = meshTransforms[id];
 }
 
-function changeActiveShader(sel) 
+function changeActiveShader(sel: HTMLSelectElement): void
 {
     var id = parseInt(sel.value, 10);
     currentProgram = shaderPrograms[id];
@@ -30,7 +35,7 @@ function changeActiveShader(sel)
     }
 }
 
-function changeResolution(sel) 
+function changeResolution(sel: HTMLSelectElement): void
 {
     var id = parseInt(sel.value, 10);
 
@@ -51,110 +56,112 @@ function changeResolution(sel)
 
     if ( width > 0 ) {
         var canvas = $("#canvas0")[0];
-        
+/*        
         canvas.width = width; 
         canvas.height = height;
 
         gl.viewportWidth = width;
         gl.viewportHeight = height;
+*/
     }
 }
 
-function changeDiffuseColor(color) 
+function changeDiffuseColor(color: Array<number>) 
 {
-    diffuseColor = color;
+    diffuseColor = new vec3(color[0], color[1], color[2]);
 }
 
-function changeSpecularColor(color) 
+function changeSpecularColor(color: Array<number>) 
 {
-    specularColor = color;
+    specularColor = new vec3(color[0], color[1], color[2]);
 }
 
 
 /*
  * Slider bar handlers
  */
-function changeAnimatedState(ifAnimated) 
+function changeAnimatedState(ifAnimated: boolean): void 
 {
     animated = ifAnimated;
     $("#sliderBar").prop("disabled", !animated);
 }
 
-function updateSlider(sliderAmount) 
+function updateSlider(sliderAmount: number): void 
 {
-    $("#sliderAmount").html(sliderAmount*10);
+    $("#sliderAmount").html((sliderAmount*10).toString());
     rotSpeed = sliderAmount*10.0;
 }
 
-function changeShowLightState(ifShow) 
+function changeShowLightState(ifShow: boolean) 
 {
     draw_light = ifShow;
 }    
 
-function changeAnimatedLightState(ifAnimated) 
+function changeAnimatedLightState(ifAnimated: boolean) 
 {
     animated_light = ifAnimated;
     $("#sliderBarLight").prop("disabled", !animated_light);
 }
 
-function updateSliderLight(sliderAmount) 
+function updateSliderLight(sliderAmount: number) 
 {
     var value = sliderAmount*10.0;
-    $("#sliderAmountLight").html(value);
+    $("#sliderAmountLight").html(value.toString());
     rotSpeed_light = value;
 }
 
-function updateSlider_LightPower(sliderAmount) 
+function updateSlider_LightPower(sliderAmount: number) 
 {
     var value = sliderAmount/2.0;
-    $("#sliderAmount_LightPower").html(value);
+    $("#sliderAmount_LightPower").html(value.toString());
     lightPower = value;
 }
 
-function updateSlider_Ambient(sliderAmount) 
+function updateSlider_Ambient(sliderAmount: number) 
 {
     var value = sliderAmount/100.0;
-    $("#sliderAmount_Ambient").html(value);
+    $("#sliderAmount_Ambient").html(value.toString());
     ambientIntensity = value;
 }
 
-function updateSlider_PhongExp(sliderAmount) 
+function updateSlider_PhongExp(sliderAmount: number) 
 {
     var value = sliderAmount*5;
-    $("#sliderAmount_PhongExp").html(value);
+    $("#sliderAmount_PhongExp").html(value.toString());
 
-    gl.useProgram(shaderPrograms[5]);
-    gl.uniform1f(shaderPrograms[5].exponentUniform, value);
+    //gl.useProgram(shaderPrograms[5]);
+    //gl.uniform1f(shaderPrograms[5].exponentUniform, value);
 }
 
-function updateSlider_BlinnPhongExp(sliderAmount) 
+function updateSlider_BlinnPhongExp(sliderAmount: number) 
 {
     var value = sliderAmount*5;
-    $("#sliderAmount_BlinnPhongExp").html(value);
+    $("#sliderAmount_BlinnPhongExp").html(value.toString());
 
-    gl.useProgram(shaderPrograms[6]);
-    gl.uniform1f(shaderPrograms[6].exponentUniform, value);
+    // gl.useProgram(shaderPrograms[6]);
+    // gl.uniform1f(shaderPrograms[6].exponentUniform, value);
 }
 
-function updateSlider_MicrofacetIOR(sliderAmount) 
+function updateSlider_MicrofacetIOR(sliderAmount: number) 
 {
     var value = sliderAmount/10.0;
-    $("#sliderAmount_MicrofacetIOR").html(value);
+    $("#sliderAmount_MicrofacetIOR").html(value.toString());
 
-    gl.useProgram(shaderPrograms[7]);
-    gl.uniform1f(shaderPrograms[7].iorUniform, value);
+    // gl.useProgram(shaderPrograms[7]);
+    // gl.uniform1f(shaderPrograms[7].iorUniform, value);
 }
 
-function updateSlider_MicrofacetBeta(sliderAmount) 
+function updateSlider_MicrofacetBeta(sliderAmount: number) 
 {
     var value = sliderAmount/100.0;
-    $("#sliderAmount_MicrofacetBeta").html(value);
+    $("#sliderAmount_MicrofacetBeta").html(value.toString());
 
-    gl.useProgram(shaderPrograms[7]);
-    gl.uniform1f(shaderPrograms[7].betaUniform, value);
+    // gl.useProgram(shaderPrograms[7]);
+    // gl.uniform1f(shaderPrograms[7].betaUniform, value);
 }
 
-function init_color_picker(jpicker, jtext, init_color, onchange)
+type picker_color_change = (color: Array<number>) => void;
+function init_color_picker(jpicker: JQuery, jtext: JQuery, init_color: string, onchange: picker_color_change)
 {
     var colorPalette = [
         ["#000","#444","#666","#999","#ccc","#eee","#f3f3f3","#fff"],
@@ -173,7 +180,7 @@ function init_color_picker(jpicker, jtext, init_color, onchange)
         togglePaletteOnly: true,
         hideAfterPaletteSelect: true,
         palette: colorPalette,
-        change: function(color) {
+        change: function(color: any) {
             var color_ = color.toRgb();
             jtext.html(color.toHexString());
             onchange([color_.r/255.0, color_.g/255.0, color_.b/255.0]);

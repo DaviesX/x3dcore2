@@ -6,6 +6,8 @@ class vec2
 
         constructor(x: number, y: number)
         {
+                this.x = x;
+                this.y = y;
         }
 
         public add(rhs: vec2): vec2
@@ -48,6 +50,9 @@ class vec3
 
         constructor(x: number, y: number, z: number)
         {
+                this.x = x;
+                this.y = y;
+                this.z = z;
         }
 
         public add(rhs: vec3): vec3
@@ -85,6 +90,11 @@ class vec3
                 var inv_len = 1.0 / this.len();
                 return new vec3(this.x * inv_len, this.y * inv_len, this.z * inv_len);
         }
+
+        public toarray(): Array<number>
+        {
+                return [this.x, this.y, this.z];
+        }
 }
 
 class vec4
@@ -96,6 +106,10 @@ class vec4
 
         constructor(x: number, y: number, z: number, w: number)
         {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.w = w;
         }
 
         public scale(s: number): vec4
@@ -113,6 +127,11 @@ class vec4
         {
                 return new vec3(this.x, this.y, this.z);
         }
+
+        public toarray(): Array<number>
+        {
+                return [this.x, this.y, this.z, this.w];
+        }
 }
 
 class mat4
@@ -124,6 +143,10 @@ class mat4
 
         constructor(col0: vec4, col1: vec4, col2: vec4, col3: vec4)
         {
+                this.col0 = col0;
+                this.col1 = col1;
+                this.col2 = col2;
+                this.col3 = col3;
         }
 
         public scale(s: number): mat4
@@ -187,7 +210,7 @@ class mat4
                 var f = this.col1.x, h = this.col1.y, i = this.col1.z, j = this.col1.w;
                 var k = this.col2.x, l = this.col2.y, o = this.col2.z, m = this.col2.w;
                 var n = this.col3.x, p = this.col3.y, r = this.col3.z, s = this.col3.w;
-                
+
                 var A = c * h - d * f;
                 var B = c * i - e * f;
                 var t = c * j - g * f;
@@ -208,6 +231,11 @@ class mat4
                         new vec4((f * D - h * z + j * x) * q, (-c * D + d * z - g * x) * q, (n * v - p * t + s * A) * q, (-k * v + l * t - m * A) * q),
                         new vec4((-f * C + h * y - i * x) * q, (c * C - d * y + e * x) * q, (-n * u + p * B - r * A) * q, (k * u - l * B + o * A) * q)
                 );
+        }
+
+        public toarray(): Array<number>
+        {
+                return this.col0.toarray().concat(this.col1.toarray()).concat(this.col2.toarray()).concat(this.col3.toarray());
         }
 }
 
@@ -316,5 +344,19 @@ function mat4_perspective(fovy: number, aspect: number, z_near: number, z_far: n
         return mat4_frustum(-right, right, -top, top, z_near, z_far);
 }
 
+function mat4_viewport(x: number, y: number, height: number, width: number)
+{
+        return new mat4(
+                new vec4(width / 2, 0, 0, 0),
+                new vec4(0, height / 2, 0, 0),
+                new vec4(0, 0, 1, 0),
+                new vec4(width / 2 + x, height / 2 + y, 0, 1)
+        );
+}
+
+function mat4_normal_affine(affine: mat4): mat4
+{
+        return affine.inv().transpose();
+}
 
 //function mat4_proj

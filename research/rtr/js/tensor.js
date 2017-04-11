@@ -1,5 +1,7 @@
 class vec2 {
     constructor(x, y) {
+        this.x = x;
+        this.y = y;
     }
     add(rhs) {
         return new vec2(this.x + rhs.x, this.y + rhs.y);
@@ -23,6 +25,9 @@ class vec2 {
 }
 class vec3 {
     constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
     add(rhs) {
         return new vec3(this.x + rhs.x, this.y + rhs.y, this.z + rhs.z);
@@ -46,9 +51,16 @@ class vec3 {
         var inv_len = 1.0 / this.len();
         return new vec3(this.x * inv_len, this.y * inv_len, this.z * inv_len);
     }
+    toarray() {
+        return [this.x, this.y, this.z];
+    }
 }
 class vec4 {
     constructor(x, y, z, w) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
     }
     scale(s) {
         return new vec4(s * this.x, s * this.y, s * this.z, s * this.w);
@@ -59,9 +71,16 @@ class vec4 {
     tovec3() {
         return new vec3(this.x, this.y, this.z);
     }
+    toarray() {
+        return [this.x, this.y, this.z, this.w];
+    }
 }
 class mat4 {
     constructor(col0, col1, col2, col3) {
+        this.col0 = col0;
+        this.col1 = col1;
+        this.col2 = col2;
+        this.col3 = col3;
     }
     scale(s) {
         return new mat4(this.col0.scale(s), this.col1.scale(s), this.col2.scale(s), this.col3.scale(s));
@@ -94,6 +113,9 @@ class mat4 {
         var E = o * s - m * r;
         var q = 1 / (A * E - B * D + t * C + u * z - v * y + w * x);
         return new mat4(new vec4((h * E - i * D + j * C) * q, (-d * E + e * D - g * C) * q, (p * w - r * v + s * u) * q, (-l * w + o * v - m * u) * q), new vec4((-f * E + i * z - j * y) * q, (c * E - e * z + g * y) * q, (-n * w + r * t - s * B) * q, (k * w - o * t + m * B) * q), new vec4((f * D - h * z + j * x) * q, (-c * D + d * z - g * x) * q, (n * v - p * t + s * A) * q, (-k * v + l * t - m * A) * q), new vec4((-f * C + h * y - i * x) * q, (c * C - d * y + e * x) * q, (-n * u + p * B - r * A) * q, (k * u - l * B + o * A) * q));
+    }
+    toarray() {
+        return this.col0.toarray().concat(this.col1.toarray()).concat(this.col2.toarray()).concat(this.col3.toarray());
     }
 }
 function mat4_identity() {
@@ -140,5 +162,11 @@ function mat4_perspective(fovy, aspect, z_near, z_far) {
     var top = z_near * tan;
     var right = top * aspect;
     return mat4_frustum(-right, right, -top, top, z_near, z_far);
+}
+function mat4_viewport(x, y, height, width) {
+    return new mat4(new vec4(width / 2, 0, 0, 0), new vec4(0, height / 2, 0, 0), new vec4(0, 0, 1, 0), new vec4(width / 2 + x, height / 2 + y, 0, 1));
+}
+function mat4_normal_affine(affine) {
+    return affine.inv().transpose();
 }
 //# sourceMappingURL=tensor.js.map

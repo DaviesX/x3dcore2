@@ -2,7 +2,7 @@ var g_glctx: WebGLRenderingContext = null;
 var g_viewport_width: number = null;
 var g_viewport_height: number = null;
 
-function gl_init_from_canvas(canvas: HTMLCanvasElement)
+function gl_init_from_canvas(canvas: HTMLCanvasElement): WebGLRenderingContext
 {
         try {
                 g_viewport_width = canvas.width;
@@ -15,6 +15,7 @@ function gl_init_from_canvas(canvas: HTMLCanvasElement)
         if (g_glctx == null) {
                 throw new Error("Could not initialise WebGL, sorry :-(");
         }
+        return g_glctx;
 }
 
 function gl_viewport_width(): number

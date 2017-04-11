@@ -14,6 +14,7 @@ function gl_init_from_canvas(canvas) {
     if (g_glctx == null) {
         throw new Error("Could not initialise WebGL, sorry :-(");
     }
+    return g_glctx;
 }
 function gl_viewport_width() {
     return g_viewport_width;

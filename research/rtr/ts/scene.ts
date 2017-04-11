@@ -4,27 +4,53 @@
 
 class scene_cache
 {
+        private mesh_cache = new Map<string, mesh_vbo>();
+
         public has_mesh(id: string): boolean
         {
-                return false;
+                return this.mesh_cache.has(id);
         }
 
         public upload_mesh(id: string, mesh: trimesh): void
         {
+                var vbo;
+                if (!this.has_mesh(id)) {
+                        vbo = new mesh_vbo(mesh);
+                        this.mesh_cache.set(id, vbo);
+                } 
+                vbo.unload();
         }
 
         public unload_mesh(id: string): void
         {
+                if (this.has_mesh(id)) {
+                        var vbo: mesh_vbo = this.mesh_cache.get(id);
+                        vbo.destroy();
+                        this.mesh_cache.delete(id);
+                }
+        }
+
+        public get_mesh_buffer(id: string): mesh_vbo
+        {
+                return this.mesh_cache.get(id);
+        }
+
+        public clear(): void
+        {
+                this.mesh_cache.forEach(function (vbo: mesh_vbo, k, m) {
+                        vbo.destroy();
+                });
+                this.mesh_cache.clear();
         }
 }
 
 class scene
 {
-        private meshes:         Map<string, trimesh>;
-        private mats:           Map<string, material>;
-        private mat_in_mesh:    Map<string, string>;
-        private default_id:     number = 139280;
-        private cache:          scene_cache;
+        private meshes =        new Map<string, trimesh>();
+        private mats =          new Map<string, material>();
+        private mat_in_mesh =   new Map<string, string>();
+        private default_id =    139280;
+        private cache =         new scene_cache();
 
         constructor()
         {
@@ -56,7 +82,7 @@ class scene
                 return this.default_id.toString();
         }
  
-        public load_from_obj_str(obj_str: string, is_static: boolean): Map<string, trimesh>
+        public load_from_obj_str(obj_str: string, transform: mat4, is_static: boolean): Map<string, trimesh>
         {
                 // 1. The obj data is assumed to be all triangulated.
                 // 2. default id is used.
@@ -175,9 +201,10 @@ class scene
                         mesh.texcoords[iverts[v]] = texcoords[itex[v]];
                 }
 
-                // Adde object to scene.
                 mesh.is_static = is_static;
-                mesh.global_trans = mat4_identity();
+                mesh.global_trans = transform == null ? mat4_identity() : transform;
+
+                // Adde object to scene.
                 var id = this.gen_default_id();
                 this.add_mesh(mesh, id);
 
@@ -196,7 +223,18 @@ class scene
                 return ids;
         }
 
-        public upload(): void
+        public get_mesh(id: string): trimesh
+        {
+                return this.meshes.get(id);
+        }
+
+        public get_mesh_material(mesh_id: string): material
+        {
+                var mat_id = this.mat_in_mesh.get(mesh_id);
+                return mat_id != null ? this.mats.get(mat_id) : null;
+        }
+
+        public upload(): scene_cache
         {
                 var that: scene = this;
                 this.meshes.forEach(function (mesh: trimesh, id: string, m) {
@@ -204,5 +242,14 @@ class scene
                                 that.cache.upload_mesh(id, mesh);
                         }
                 });
+                return this.cache;
+        }
+
+        public clear(): void
+        {
+                this.meshes.clear();
+                this.mats.clear();
+                this.mat_in_mesh.clear();
+                this.cache.clear();
         }
 }

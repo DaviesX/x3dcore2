@@ -1,15 +1,42 @@
 class scene_cache {
+    constructor() {
+        this.mesh_cache = new Map();
+    }
     has_mesh(id) {
-        return false;
+        return this.mesh_cache.has(id);
     }
     upload_mesh(id, mesh) {
+        var vbo;
+        if (!this.has_mesh(id)) {
+            vbo = new mesh_vbo(mesh);
+            this.mesh_cache.set(id, vbo);
+        }
+        vbo.unload();
     }
     unload_mesh(id) {
+        if (this.has_mesh(id)) {
+            var vbo = this.mesh_cache.get(id);
+            vbo.destroy();
+            this.mesh_cache.delete(id);
+        }
+    }
+    get_mesh_buffer(id) {
+        return this.mesh_cache.get(id);
+    }
+    clear() {
+        this.mesh_cache.forEach(function (vbo, k, m) {
+            vbo.destroy();
+        });
+        this.mesh_cache.clear();
     }
 }
 class scene {
     constructor() {
+        this.meshes = new Map();
+        this.mats = new Map();
+        this.mat_in_mesh = new Map();
         this.default_id = 139280;
+        this.cache = new scene_cache();
     }
     add_mesh(mesh, id) {
         if (this.meshes.has(id))
@@ -29,7 +56,7 @@ class scene {
         this.default_id++;
         return this.default_id.toString();
     }
-    load_from_obj_str(obj_str, is_static) {
+    load_from_obj_str(obj_str, transform, is_static) {
         var mesh = new trimesh();
         var vertices = new Array();
         var normals = new Array();
@@ -124,7 +151,7 @@ class scene {
             mesh.texcoords[iverts[v]] = texcoords[itex[v]];
         }
         mesh.is_static = is_static;
-        mesh.global_trans = mat4_identity();
+        mesh.global_trans = transform == null ? mat4_identity() : transform;
         var id = this.gen_default_id();
         this.add_mesh(mesh, id);
         var m = new Map();
@@ -138,6 +165,13 @@ class scene {
         });
         return ids;
     }
+    get_mesh(id) {
+        return this.meshes.get(id);
+    }
+    get_mesh_material(mesh_id) {
+        var mat_id = this.mat_in_mesh.get(mesh_id);
+        return mat_id != null ? this.mats.get(mat_id) : null;
+    }
     upload() {
         var that = this;
         this.meshes.forEach(function (mesh, id, m) {
@@ -145,6 +179,13 @@ class scene {
                 that.cache.upload_mesh(id, mesh);
             }
         });
+        return this.cache;
+    }
+    clear() {
+        this.meshes.clear();
+        this.mats.clear();
+        this.mat_in_mesh.clear();
+        this.cache.clear();
     }
 }
 //# sourceMappingURL=scene.js.map
