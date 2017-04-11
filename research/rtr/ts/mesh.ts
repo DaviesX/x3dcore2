@@ -2,7 +2,21 @@
 /// <reference path="gl.ts" />
 /// <reference path="tensor.ts" />
 
-class trimesh
+enum buffer_type
+{
+        vertex,
+        normal,
+        texcoord,
+        index
+}
+
+interface if_renderable
+{
+        upload(backend: if_raster_backend, o: buffer_type): buffer_location
+        unload(backend: if_raster_backend): void
+}
+
+class trimesh implements if_renderable
 {
         public vertices = new Array<vec3>();
         public texcoords = new Array<vec2>();
@@ -11,7 +25,6 @@ class trimesh
 
         public global_trans: mat4;
         public is_static: boolean;
-
 
         constructor()
         {
@@ -63,7 +76,7 @@ class trimesh
         {
                 var m_idx = new Array<Uint16Array>();
                 for (var i = 0; i < this.indices.length;) {
-                        var eff_len = this.indices.length % 0XFFFF;
+                        var eff_len = Math.min(this.indices.length - m_idx.length*0XFFFF,0XFFFF);
                         var arr = new Uint16Array(eff_len);
 
                         for (var j = 0; j < eff_len; j++)
@@ -83,6 +96,16 @@ class trimesh
         public has_tex_coords(): boolean
         {
                 return this.texcoords.length != 0;
+        }
+
+        public upload(backend: if_raster_backend, o: buffer_type): number
+        {
+                throw new Error('Method not implemented.');
+        }
+        
+        public unload(backend: if_raster_backend): void
+        {
+                throw new Error('Method not implemented.');
         }
 }
 
