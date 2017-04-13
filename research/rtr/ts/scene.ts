@@ -48,8 +48,8 @@ class scene_cache
 class scene
 {
         private rend = new Map<string, if_renderable>();
-        private mats = new Map<string, material>();
-        private rend_in_mesh = new Map<string, string>();
+        private mats = new Map<string, if_material>();
+        private mat_in_rend = new Map<string, string>();
         private default_id = 139280;
         private cache: scene_cache;
 
@@ -65,16 +65,16 @@ class scene
                 this.rend.set(id, mesh);
         }
 
-        public add_material(mat: material, id: string): void
+        public add_material(mat: if_material, id: string): void
         {
                 this.mats.set(id, mat);
         }
 
-        public assign_material_to_mesh(mat_id: string, mesh_id: string): boolean
+        public assign_material_to_renderable(mat_id: string, mesh_id: string): boolean
         {
                 if (!this.mats.has(mat_id) || !this.rend.has(mesh_id))
                         return false;
-                this.rend_in_mesh.set(mat_id, mesh_id);
+                this.mat_in_rend.set(mat_id, mesh_id);
                 return true;
         }
 
@@ -216,10 +216,20 @@ class scene
                 return m;
         }
 
-        public get_all_mesh_ids(): Array<string>
+        public get_all_renderable_ids(): Array<string>
         {
                 var ids = new Array<string>();
-                this.rend.forEach(function (mesh: trimesh, id: string, m)
+                this.rend.forEach(function (rend: if_renderable, id: string, m)
+                {
+                        ids.push(id);
+                });
+                return ids;
+        }
+
+        public get_all_material_ids(): Array<string>
+        {
+                var ids = new Array<string>();
+                this.mats.forEach(function (mat: if_material, id: string, m)
                 {
                         ids.push(id);
                 });
@@ -231,9 +241,9 @@ class scene
                 return this.rend.get(id);
         }
 
-        public get_mesh_material(mesh_id: string): material
+        public get_renderable_material(rend_id: string): if_material
         {
-                var mat_id = this.rend_in_mesh.get(mesh_id);
+                var mat_id = this.mat_in_rend.get(rend_id);
                 return mat_id != null ? this.mats.get(mat_id) : null;
         }
 
@@ -246,10 +256,10 @@ class scene
                                 var all_attris = rend.available_attributes();
                                 this_.cache.upload_renderable(id, rend, all_attris);
                         } else if (!rend.is_permanent()) {
-                                var mat_id: string = this_.rend_in_mesh.get(id);
+                                var mat_id: string = this_.mat_in_rend.get(id);
                                 if (mat_id == null)
                                         throw new Error("Cannot upload renderable " + id + " for it has no material.");
-                                var mat: material = this_.mats.get(mat_id);
+                                var mat: if_material = this_.mats.get(mat_id);
                                 var adaptive_attris: Array<attribute_type> = mat.get_required_attributes();
                                 this_.cache.upload_renderable(id, rend, adaptive_attris);
                         }
@@ -261,7 +271,7 @@ class scene
         {
                 this.rend.clear();
                 this.mats.clear();
-                this.rend_in_mesh.clear();
+                this.mat_in_rend.clear();
                 this.cache.clear();
         }
 }

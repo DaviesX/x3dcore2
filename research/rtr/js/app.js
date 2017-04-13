@@ -97,7 +97,7 @@ class app {
             mul(mat4_trota(0.3, new vec3(1, 0, 0))).
             mul(mat4_trota(this.rotY, new vec3(0, 1, 0)));
         current_scene.upload();
-        var mesh_ids = current_scene.get_all_mesh_ids();
+        var mesh_ids = current_scene.get_all_renderable_ids();
         for (var i = 0; i < mesh_ids.length; i++) {
             var renderable = current_scene.get_renderable(mesh_ids[i]);
             this.mvMatrix = glb_mvt.mul(renderable.affine_transform());

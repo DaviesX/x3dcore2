@@ -31,7 +31,7 @@ class scene {
     constructor(backend) {
         this.rend = new Map();
         this.mats = new Map();
-        this.rend_in_mesh = new Map();
+        this.mat_in_rend = new Map();
         this.default_id = 139280;
         this.cache = new scene_cache(backend);
     }
@@ -43,10 +43,10 @@ class scene {
     add_material(mat, id) {
         this.mats.set(id, mat);
     }
-    assign_material_to_mesh(mat_id, mesh_id) {
+    assign_material_to_renderable(mat_id, mesh_id) {
         if (!this.mats.has(mat_id) || !this.rend.has(mesh_id))
             return false;
-        this.rend_in_mesh.set(mat_id, mesh_id);
+        this.mat_in_rend.set(mat_id, mesh_id);
         return true;
     }
     gen_default_id() {
@@ -155,9 +155,16 @@ class scene {
         m.set(id, mesh);
         return m;
     }
-    get_all_mesh_ids() {
+    get_all_renderable_ids() {
         var ids = new Array();
-        this.rend.forEach(function (mesh, id, m) {
+        this.rend.forEach(function (rend, id, m) {
+            ids.push(id);
+        });
+        return ids;
+    }
+    get_all_material_ids() {
+        var ids = new Array();
+        this.mats.forEach(function (mat, id, m) {
             ids.push(id);
         });
         return ids;
@@ -165,8 +172,8 @@ class scene {
     get_renderable(id) {
         return this.rend.get(id);
     }
-    get_mesh_material(mesh_id) {
-        var mat_id = this.rend_in_mesh.get(mesh_id);
+    get_renderable_material(rend_id) {
+        var mat_id = this.mat_in_rend.get(rend_id);
         return mat_id != null ? this.mats.get(mat_id) : null;
     }
     upload() {
@@ -177,7 +184,7 @@ class scene {
                 this_.cache.upload_renderable(id, rend, all_attris);
             }
             else if (!rend.is_permanent()) {
-                var mat_id = this_.rend_in_mesh.get(id);
+                var mat_id = this_.mat_in_rend.get(id);
                 if (mat_id == null)
                     throw new Error("Cannot upload renderable " + id + " for it has no material.");
                 var mat = this_.mats.get(mat_id);
@@ -190,7 +197,7 @@ class scene {
     clear() {
         this.rend.clear();
         this.mats.clear();
-        this.rend_in_mesh.clear();
+        this.mat_in_rend.clear();
         this.cache.clear();
     }
 }
