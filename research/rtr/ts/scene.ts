@@ -4,65 +4,65 @@
 
 class scene_cache
 {
-        private mesh_cache = new Map<string, mesh_vbo>();
+        private rend_cache = new Map<string, if_renderable>();
+        private backend: if_raster_backend;
 
-        public has_mesh(id: string): boolean
+        constructor(backend: if_raster_backend)
         {
-                return this.mesh_cache.has(id);
+                this.backend = backend;
         }
 
-        public upload_mesh(id: string, mesh: trimesh): void
+        public has_renderable(id: string): boolean
         {
-                var vbo;
-                if (!this.has_mesh(id)) {
-                        vbo = new mesh_vbo(mesh);
-                        this.mesh_cache.set(id, vbo);
-                } else {
-                        vbo = this.mesh_cache.get(id);
-                }
-                vbo.upload();
+                return this.rend_cache.has(id);
         }
 
-        public unload_mesh(id: string): void
+        public upload_renderable(id: string, rend: if_renderable, types: Array<attribute_type>): void
         {
-                if (this.has_mesh(id)) {
-                        var vbo: mesh_vbo = this.mesh_cache.get(id);
-                        vbo.destroy();
-                        this.mesh_cache.delete(id);
+                this.rend_cache.set(id, rend);
+                for (var i = 0; i < types.length; i++) {
+                        rend.upload(this.backend, types[i]);
                 }
         }
 
-        public get_mesh_buffer(id: string): mesh_vbo
+        public unload_renderable(id: string): void
         {
-                return this.mesh_cache.get(id);
+                if (this.has_renderable(id)) {
+                        var rend: if_renderable = this.rend_cache.get(id);
+                        rend.unload(this.backend);
+                        this.rend_cache.delete(id);
+                }
         }
 
         public clear(): void
         {
-                this.mesh_cache.forEach(function (vbo: mesh_vbo, k, m) {
-                        vbo.destroy();
+                var c: scene_cache = this;
+                this.rend_cache.forEach(function (rend: if_renderable, k, m)
+                {
+                        rend.unload(c.backend);
                 });
-                this.mesh_cache.clear();
+                this.rend_cache.clear();
         }
 }
 
 class scene
 {
-        private meshes =        new Map<string, trimesh>();
-        private mats =          new Map<string, material>();
-        private mat_in_mesh =   new Map<string, string>();
-        private default_id =    139280;
-        private cache =         new scene_cache();
+        private rend = new Map<string, if_renderable>();
+        private mats = new Map<string, material>();
+        private rend_in_mesh = new Map<string, string>();
+        private default_id = 139280;
+        private cache: scene_cache;
 
-        constructor()
+        constructor(backend: if_raster_backend)
         {
+                this.cache = new scene_cache(backend);
         }
 
-        public add_mesh(mesh: trimesh, id: string): void
+        public add_renderable(mesh: if_renderable, id: string): void
         {
-                if (this.meshes.has(id))
-                        this.cache.unload_mesh(id);
-                this.meshes.set(id, mesh);
+                if (this.rend.has(id))
+                        this.cache.unload_renderable(id);
+                this.rend.set(id, mesh);
         }
 
         public add_material(mat: material, id: string): void
@@ -72,18 +72,18 @@ class scene
 
         public assign_material_to_mesh(mat_id: string, mesh_id: string): boolean
         {
-                if (!this.mats.has(mat_id) || !this.meshes.has(mesh_id))
+                if (!this.mats.has(mat_id) || !this.rend.has(mesh_id))
                         return false;
-                this.mat_in_mesh.set(mat_id, mesh_id);
+                this.rend_in_mesh.set(mat_id, mesh_id);
                 return true;
         }
 
         public gen_default_id(): string
         {
-                this.default_id ++;
+                this.default_id++;
                 return this.default_id.toString();
         }
- 
+
         public load_from_obj_str(obj_str: string, transform: mat4, is_static: boolean): Map<string, trimesh>
         {
                 // 1. The obj data is assumed to be all triangulated.
@@ -135,12 +135,12 @@ class scene
                                                 continue;
                                         }
 
-                                        for (var v = 0; v < 3; v ++) {
+                                        for (var v = 0; v < 3; v++) {
                                                 var vert_indices: Array<string> = elements[v].split("/");
                                                 if (vert_indices.length != 3)
-                                                        throw new Error("Malformed data at line " + (i+1).toString()
-                                                                        + " where attribute " + (v+1).toString() 
-                                                                        + " doesn't have at least 3 vertex attributes");
+                                                        throw new Error("Malformed data at line " + (i + 1).toString()
+                                                                + " where attribute " + (v + 1).toString()
+                                                                + " doesn't have at least 3 vertex attributes");
 
                                                 if (vert_indices[0].length == 0)
                                                         throw new Error("Malformed data at line " + (i + 1).toString()
@@ -148,30 +148,30 @@ class scene
                                                 else {
                                                         var iattri = parseInt(vert_indices[0]) - 1;
                                                         if (iattri < 0 || iattri >= vertices.length)
-                                                                throw new Error("At line " + (i+1).toString()
-                                                                                + ", attribute " + (v+1).toString()
-                                                                                + " referenced vertex " + (iattri+1).toString()
-                                                                                + " is illegal.");
+                                                                throw new Error("At line " + (i + 1).toString()
+                                                                        + ", attribute " + (v + 1).toString()
+                                                                        + " referenced vertex " + (iattri + 1).toString()
+                                                                        + " is illegal.");
                                                         iverts.push(iattri);
                                                 }
 
                                                 if (vert_indices[1].length != 0) {
                                                         var iattri = parseInt(vert_indices[1]) - 1;
                                                         if (iattri < 0 || iattri >= texcoords.length)
-                                                                throw new Error("At line " + (i+1).toString()
-                                                                                + ", attribute " + (v+1).toString()
-                                                                                + " referenced texcoord " + (iattri+1).toString()
-                                                                                + " is illegal.");
+                                                                throw new Error("At line " + (i + 1).toString()
+                                                                        + ", attribute " + (v + 1).toString()
+                                                                        + " referenced texcoord " + (iattri + 1).toString()
+                                                                        + " is illegal.");
                                                         itex.push(iattri);
                                                 }
 
                                                 if (vert_indices[2].length != 0) {
                                                         var iattri = parseInt(vert_indices[2]) - 1;
                                                         if (iattri < 0 || iattri >= normals.length)
-                                                                throw new Error("At line " + (i+1).toString()
-                                                                                + ", attribute " + (v+1).toString()
-                                                                                + " referenced normal " + (iattri+1).toString()
-                                                                                + " is illegal.");
+                                                                throw new Error("At line " + (i + 1).toString()
+                                                                        + ", attribute " + (v + 1).toString()
+                                                                        + " referenced normal " + (iattri + 1).toString()
+                                                                        + " is illegal.");
                                                         inorms.push(iattri);
                                                 }
                                         }
@@ -183,21 +183,21 @@ class scene
 
                 // Assemble the face indices with vertex attributes -- shift vertex data to the proper location.
                 if ((iverts.length != itex.length && itex.length != 0) ||
-                    (iverts.length != inorms.length && inorms.length != 0)) {
-                            throw new Error("Vertex attributes mismatch as "
-                                        + "|v|=" + iverts.length + ",|n|=" + inorms.length + ",|t|=" + itex.length);
+                        (iverts.length != inorms.length && inorms.length != 0)) {
+                        throw new Error("Vertex attributes mismatch as "
+                                + "|v|=" + iverts.length + ",|n|=" + inorms.length + ",|t|=" + itex.length);
                 }
-                
+
                 if (vertices.length == 0)
                         throw new Error("The mesh doesn't contain vertex data");
-                
+
                 // Vertices are already in the right place.
                 mesh.vertices = vertices;
                 if (inorms.length != 0)
-                        mesh.normals.fill(new vec3(0,0,0), 0, vertices.length);
+                        mesh.normals.fill(new vec3(0, 0, 0), 0, vertices.length);
                 if (itex.length != 0)
-                        mesh.texcoords.fill(new vec2(0,0), 0, vertices.length);
-                for (var v = 0; v < iverts.length; v ++) {
+                        mesh.texcoords.fill(new vec2(0, 0), 0, vertices.length);
+                for (var v = 0; v < iverts.length; v++) {
                         mesh.indices.push(iverts[v]);
                         mesh.normals[iverts[v]] = normals[inorms[v]];
                         mesh.texcoords[iverts[v]] = texcoords[itex[v]];
@@ -208,40 +208,50 @@ class scene
 
                 // Adde object to scene.
                 var id = this.gen_default_id();
-                this.add_mesh(mesh, id);
+                this.add_renderable(mesh, id);
 
                 // Return info.
                 var m = new Map<string, trimesh>();
-                m.set(id,mesh);
+                m.set(id, mesh);
                 return m;
         }
 
         public get_all_mesh_ids(): Array<string>
         {
                 var ids = new Array<string>();
-                this.meshes.forEach(function (mesh: trimesh, id: string, m) {
+                this.rend.forEach(function (mesh: trimesh, id: string, m)
+                {
                         ids.push(id);
                 });
                 return ids;
         }
 
-        public get_mesh(id: string): trimesh
+        public get_renderable(id: string): if_renderable
         {
-                return this.meshes.get(id);
+                return this.rend.get(id);
         }
 
         public get_mesh_material(mesh_id: string): material
         {
-                var mat_id = this.mat_in_mesh.get(mesh_id);
+                var mat_id = this.rend_in_mesh.get(mesh_id);
                 return mat_id != null ? this.mats.get(mat_id) : null;
         }
 
         public upload(): scene_cache
         {
-                var that: scene = this;
-                this.meshes.forEach(function (mesh: trimesh, id: string, m) {
-                        if (!that.cache.has_mesh(id) || !mesh.is_static) {
-                                that.cache.upload_mesh(id, mesh);
+                var this_: scene = this;
+                this.rend.forEach(function (rend: if_renderable, id: string, m)
+                {
+                        if (!this_.cache.has_renderable(id) && rend.is_permanent()) {
+                                var all_attris = rend.available_attributes();
+                                this_.cache.upload_renderable(id, rend, all_attris);
+                        } else if (!rend.is_permanent()) {
+                                var mat_id: string = this_.rend_in_mesh.get(id);
+                                if (mat_id == null)
+                                        throw new Error("Cannot upload renderable " + id + " for it has no material.");
+                                var mat: material = this_.mats.get(mat_id);
+                                var adaptive_attris: Array<attribute_type> = mat.get_required_attributes();
+                                this_.cache.upload_renderable(id, rend, adaptive_attris);
                         }
                 });
                 return this.cache;
@@ -249,9 +259,9 @@ class scene
 
         public clear(): void
         {
-                this.meshes.clear();
+                this.rend.clear();
                 this.mats.clear();
-                this.mat_in_mesh.clear();
+                this.rend_in_mesh.clear();
                 this.cache.clear();
         }
 }

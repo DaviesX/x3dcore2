@@ -1,58 +1,52 @@
 class scene_cache {
-    constructor() {
-        this.mesh_cache = new Map();
+    constructor(backend) {
+        this.rend_cache = new Map();
+        this.backend = backend;
     }
-    has_mesh(id) {
-        return this.mesh_cache.has(id);
+    has_renderable(id) {
+        return this.rend_cache.has(id);
     }
-    upload_mesh(id, mesh) {
-        var vbo;
-        if (!this.has_mesh(id)) {
-            vbo = new mesh_vbo(mesh);
-            this.mesh_cache.set(id, vbo);
-        }
-        else {
-            vbo = this.mesh_cache.get(id);
-        }
-        vbo.upload();
-    }
-    unload_mesh(id) {
-        if (this.has_mesh(id)) {
-            var vbo = this.mesh_cache.get(id);
-            vbo.destroy();
-            this.mesh_cache.delete(id);
+    upload_renderable(id, rend, types) {
+        this.rend_cache.set(id, rend);
+        for (var i = 0; i < types.length; i++) {
+            rend.upload(this.backend, types[i]);
         }
     }
-    get_mesh_buffer(id) {
-        return this.mesh_cache.get(id);
+    unload_renderable(id) {
+        if (this.has_renderable(id)) {
+            var rend = this.rend_cache.get(id);
+            rend.unload(this.backend);
+            this.rend_cache.delete(id);
+        }
     }
     clear() {
-        this.mesh_cache.forEach(function (vbo, k, m) {
-            vbo.destroy();
+        var c = this;
+        this.rend_cache.forEach(function (rend, k, m) {
+            rend.unload(c.backend);
         });
-        this.mesh_cache.clear();
+        this.rend_cache.clear();
     }
 }
 class scene {
-    constructor() {
-        this.meshes = new Map();
+    constructor(backend) {
+        this.rend = new Map();
         this.mats = new Map();
-        this.mat_in_mesh = new Map();
+        this.rend_in_mesh = new Map();
         this.default_id = 139280;
-        this.cache = new scene_cache();
+        this.cache = new scene_cache(backend);
     }
-    add_mesh(mesh, id) {
-        if (this.meshes.has(id))
-            this.cache.unload_mesh(id);
-        this.meshes.set(id, mesh);
+    add_renderable(mesh, id) {
+        if (this.rend.has(id))
+            this.cache.unload_renderable(id);
+        this.rend.set(id, mesh);
     }
     add_material(mat, id) {
         this.mats.set(id, mat);
     }
     assign_material_to_mesh(mat_id, mesh_id) {
-        if (!this.mats.has(mat_id) || !this.meshes.has(mesh_id))
+        if (!this.mats.has(mat_id) || !this.rend.has(mesh_id))
             return false;
-        this.mat_in_mesh.set(mat_id, mesh_id);
+        this.rend_in_mesh.set(mat_id, mesh_id);
         return true;
     }
     gen_default_id() {
@@ -156,38 +150,47 @@ class scene {
         mesh.is_static = is_static;
         mesh.global_trans = transform == null ? mat4_identity() : transform;
         var id = this.gen_default_id();
-        this.add_mesh(mesh, id);
+        this.add_renderable(mesh, id);
         var m = new Map();
         m.set(id, mesh);
         return m;
     }
     get_all_mesh_ids() {
         var ids = new Array();
-        this.meshes.forEach(function (mesh, id, m) {
+        this.rend.forEach(function (mesh, id, m) {
             ids.push(id);
         });
         return ids;
     }
-    get_mesh(id) {
-        return this.meshes.get(id);
+    get_renderable(id) {
+        return this.rend.get(id);
     }
     get_mesh_material(mesh_id) {
-        var mat_id = this.mat_in_mesh.get(mesh_id);
+        var mat_id = this.rend_in_mesh.get(mesh_id);
         return mat_id != null ? this.mats.get(mat_id) : null;
     }
     upload() {
-        var that = this;
-        this.meshes.forEach(function (mesh, id, m) {
-            if (!that.cache.has_mesh(id) || !mesh.is_static) {
-                that.cache.upload_mesh(id, mesh);
+        var this_ = this;
+        this.rend.forEach(function (rend, id, m) {
+            if (!this_.cache.has_renderable(id) && rend.is_permanent()) {
+                var all_attris = rend.available_attributes();
+                this_.cache.upload_renderable(id, rend, all_attris);
+            }
+            else if (!rend.is_permanent()) {
+                var mat_id = this_.rend_in_mesh.get(id);
+                if (mat_id == null)
+                    throw new Error("Cannot upload renderable " + id + " for it has no material.");
+                var mat = this_.mats.get(mat_id);
+                var adaptive_attris = mat.get_required_attributes();
+                this_.cache.upload_renderable(id, rend, adaptive_attris);
             }
         });
         return this.cache;
     }
     clear() {
-        this.meshes.clear();
+        this.rend.clear();
         this.mats.clear();
-        this.mat_in_mesh.clear();
+        this.rend_in_mesh.clear();
         this.cache.clear();
     }
 }

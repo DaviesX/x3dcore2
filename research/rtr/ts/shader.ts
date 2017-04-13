@@ -3,34 +3,24 @@
 /// <reference path="gl.ts" />
 
 
-function create_shader_from_code(gl: WebGLRenderingContext, code: string, ext: string): WebGLShader
+function create_shader_from_code(backend: if_raster_backend, code: string, ext: string): shader_location
 {
-        var shader;
+        var shader: shader_location;
 
         switch (ext) {
-                case "glslf":
-                        shader = gl.createShader(WebGL2RenderingContext.FRAGMENT_SHADER);
-                        break;
                 case "glslv":
-                        shader = gl.createShader(WebGL2RenderingContext.VERTEX_SHADER);
+                        shader = backend.shader_vertex_create(code);
+                        break;
+                case "glslf":
+                        shader = backend.shader_fragment_create(code);
                         break;
                 default:
-                        alert("Incorrect extension " + ext);
-                        return null;
+                        throw new Error("Incorrect extension " + ext);
         }
-
-        gl.shaderSource(shader, code);
-        gl.compileShader(shader);
-
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                alert(gl.getShaderInfoLog(shader));
-                return null;
-        }
-
         return shader;
 }
 
-function create_shader_from_script_tag(gl: WebGLRenderingContext, sid: string): WebGLShader
+function create_shader_from_script_tag(backend: if_raster_backend, sid: string): shader_location
 {
         var shaderScript = <HTMLScriptElement>document.getElementById(sid);
         if (!shaderScript)
@@ -53,7 +43,7 @@ function create_shader_from_script_tag(gl: WebGLRenderingContext, sid: string): 
                 return null;
         }
 
-        return create_shader_from_code(gl, code, ext);
+        return create_shader_from_code(backend, code, ext);
 }
 
 function last_after(s: string, stor: string): string
@@ -62,7 +52,7 @@ function last_after(s: string, stor: string): string
         return c[c.length - 1];
 }
 
-function create_shader_from_ext_script(gl: WebGLRenderingContext, sid: string): WebGLShader
+function create_shader_from_ext_script(backend: if_raster_backend, sid: string): shader_location
 {
         var path = (<HTMLScriptElement>document.getElementById(sid)).src;
         if (!path) {
@@ -72,7 +62,7 @@ function create_shader_from_ext_script(gl: WebGLRenderingContext, sid: string): 
 
         var filename: string = last_after(path, "/");
         var ext: string = last_after(filename, ".");
-        var varname:string = filename.replace(".", "");
+        var varname: string = filename.replace(".", "");
         var code: string;
         try {
                 code = eval(varname);
@@ -81,25 +71,18 @@ function create_shader_from_ext_script(gl: WebGLRenderingContext, sid: string): 
                 return null;
         }
 
-        return create_shader_from_code(gl, code, ext);
+        return create_shader_from_code(backend, code, ext);
 }
 
 
-function create_shader_program(vid: string, fid: string, is_ext: boolean = true): WebGLShader
+function create_shader_program(backend: if_raster_backend, vid: string, fid: string, is_ext: boolean = true): program_location
 {
-        var gl = gl_rendering_context();
+        var fs: shader_location = is_ext ? create_shader_from_ext_script(backend, fid) : create_shader_from_script_tag(backend, fid);
+        var vs: shader_location = is_ext ? create_shader_from_ext_script(backend, vid) : create_shader_from_script_tag(backend, vid);
+        var prog: program_location = backend.program_create();
 
-        var fs = is_ext ? create_shader_from_ext_script(gl, fid) : create_shader_from_script_tag(gl, fid);
-        var vs = is_ext ? create_shader_from_ext_script(gl, vid) : create_shader_from_script_tag(gl, vid);
-        var prog = gl.createProgram();
-
-        gl.attachShader(prog, vs);
-        gl.attachShader(prog, fs);
-        gl.linkProgram(prog);
-
-        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-                alert("Could not initialise shaders");
-        }
-
+        backend.program_attach_shader(prog, vs);
+        backend.program_attach_shader(prog, fs);
+        backend.program_link(prog);
         return prog;
 }

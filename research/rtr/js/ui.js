@@ -3,7 +3,6 @@ function changeActiveMesh(sel) {
 }
 function changeActiveShader(sel) {
     var id = parseInt(sel.value, 10);
-    currentProgram = shaderPrograms[id];
     $("[class$='-panel']").css("display", "none");
     switch (id) {
         case 5:
@@ -41,40 +40,29 @@ function changeResolution(sel) {
     }
 }
 function changeDiffuseColor(color) {
-    diffuseColor = new vec3(color[0], color[1], color[2]);
 }
 function changeSpecularColor(color) {
-    specularColor = new vec3(color[0], color[1], color[2]);
 }
 function changeAnimatedState(ifAnimated) {
-    animated = ifAnimated;
-    $("#sliderBar").prop("disabled", !animated);
 }
 function updateSlider(sliderAmount) {
     $("#sliderAmount").html((sliderAmount * 10).toString());
-    rotSpeed = sliderAmount * 10.0;
 }
 function changeShowLightState(ifShow) {
-    draw_light = ifShow;
 }
 function changeAnimatedLightState(ifAnimated) {
-    animated_light = ifAnimated;
-    $("#sliderBarLight").prop("disabled", !animated_light);
 }
 function updateSliderLight(sliderAmount) {
     var value = sliderAmount * 10.0;
     $("#sliderAmountLight").html(value.toString());
-    rotSpeed_light = value;
 }
 function updateSlider_LightPower(sliderAmount) {
     var value = sliderAmount / 2.0;
     $("#sliderAmount_LightPower").html(value.toString());
-    lightPower = value;
 }
 function updateSlider_Ambient(sliderAmount) {
     var value = sliderAmount / 100.0;
     $("#sliderAmount_Ambient").html(value.toString());
-    ambientIntensity = value;
 }
 function updateSlider_PhongExp(sliderAmount) {
     var value = sliderAmount * 5;
@@ -119,6 +107,7 @@ function init_color_picker(jpicker, jtext, init_color, onchange) {
 $(function () {
     init_color_picker($("#colorPickerDiff"), $("#colorTextDiff"), "#3d85c6", changeDiffuseColor);
     init_color_picker($("#colorPickerSpec"), $("#colorTextSpec"), "#ffffff", changeSpecularColor);
-    webGLStart();
+    var appa = new app();
+    appa.webGLStart();
 });
 //# sourceMappingURL=ui.js.map

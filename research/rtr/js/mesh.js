@@ -1,9 +1,50 @@
+var attribute_type;
+(function (attribute_type) {
+    attribute_type[attribute_type["vertex"] = 0] = "vertex";
+    attribute_type[attribute_type["normal"] = 1] = "normal";
+    attribute_type[attribute_type["texcoord"] = 2] = "texcoord";
+    attribute_type[attribute_type["index"] = 3] = "index";
+})(attribute_type || (attribute_type = {}));
+class buffer_info {
+    constructor(loc, len) {
+        this.loc = loc;
+        this.len = len;
+    }
+    get_buf() {
+        return this.loc;
+    }
+    get_len() {
+        return this.len;
+    }
+}
 class trimesh {
     constructor() {
         this.vertices = new Array();
         this.texcoords = new Array();
         this.normals = new Array();
         this.indices = Array();
+        this.NUM_DATA_BUFS = 3;
+        this.HAS_UINT16_RESTRICTION = true;
+        this.vbos = new Array();
+        this.ibo = new Array();
+        this.num_idx_buffers = 0;
+    }
+    affine_transform() {
+        return this.global_trans;
+    }
+    is_permanent() {
+        return this.is_static;
+    }
+    available_attributes() {
+        var types = new Array();
+        types.push(attribute_type.vertex);
+        if (this.has_index())
+            types.push(attribute_type.index);
+        if (this.has_normal())
+            types.push(attribute_type.normal);
+        if (this.has_tex_coords())
+            types.push(attribute_type.texcoord);
+        return types;
     }
     get_vertex_transform() {
         return this.global_trans;
@@ -39,13 +80,14 @@ class trimesh {
     }
     get_multi_indices_u16() {
         var m_idx = new Array();
-        for (var i = 0; i < this.indices.length;) {
-            var eff_len = this.indices.length % 0XFFFF;
-            var arr = new Uint16Array(eff_len);
-            for (var j = 0; j < eff_len; j++)
-                arr[j] = this.indices[i + j];
+        var n_idx = this.idx_buf_count();
+        var base = 0;
+        for (var i = 0; i < n_idx; i++) {
+            var arr = new Uint16Array(this.idx_buf_length(i));
+            for (var j = 0; j < arr.length; j++)
+                arr[j] = this.indices[base + j];
+            base += arr.length;
             m_idx.push(arr);
-            i += eff_len;
         }
         return m_idx;
     }
@@ -55,92 +97,99 @@ class trimesh {
     has_tex_coords() {
         return this.texcoords.length != 0;
     }
-}
-class mesh_vbo {
-    constructor(mesh) {
-        this.NUM_DATA_BUFS = 3;
-        this.LOC_VERT = 0;
-        this.LOC_NORM = 1;
-        this.LOC_TEX = 2;
-        this.LOC_IND_BASE = 3;
-        this.buffers = new Array();
-        this.num_idx_buffers = 0;
-        this.HAS_UINT16_RESTRICTION = true;
-        this.mesh = mesh;
-        this.gl = gl_rendering_context();
-        this.alloc();
+    has_index() {
+        return this.indices.length != 0;
     }
     idx_buf_count() {
-        return this.HAS_UINT16_RESTRICTION ? Math.ceil(this.mesh.indices.length / 0XFFFF) : 1;
+        return this.HAS_UINT16_RESTRICTION ? Math.ceil(this.indices.length / 0XFFFF) : 1;
     }
     idx_buf_length(bloc) {
-        return this.HAS_UINT16_RESTRICTION ? Math.min(0XFFFF, this.mesh.indices.length - bloc * 0XFFFF) : this.mesh.indices.length;
+        return this.HAS_UINT16_RESTRICTION ? Math.min(0XFFFF, this.indices.length - bloc * 0XFFFF) : this.indices.length;
     }
-    alloc() {
+    realloc(backend) {
         for (var i = 0; i < this.NUM_DATA_BUFS; i++) {
-            this.buffers[i] = this.gl.createBuffer();
+            if (this.vbos[i] == null)
+                this.vbos[i] = backend.attri_buf_create();
         }
-        this.num_idx_buffers = this.idx_buf_count();
-        for (var i = 0; i < this.num_idx_buffers; i++) {
-            this.buffers[this.LOC_IND_BASE + i] = this.gl.createBuffer();
-        }
-    }
-    realloc() {
         var new_idx_count = this.idx_buf_count();
         if (new_idx_count > this.num_idx_buffers) {
             for (var i = this.num_idx_buffers; i < new_idx_count; i++) {
-                this.buffers[this.LOC_IND_BASE + i] = this.gl.createBuffer();
+                this.ibo[i] = backend.index_buf_create();
             }
         }
+        this.num_idx_buffers = new_idx_count;
     }
-    upload() {
-        this.realloc();
-        var data_hint = this.mesh.is_static ? WebGLRenderingContext.STATIC_DRAW : WebGLRenderingContext.DYNAMIC_DRAW;
-        this.gl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER, this.buffers[this.LOC_VERT]);
-        this.gl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, this.mesh.get_vertices_f32(), data_hint);
-        if (this.mesh.has_normal()) {
-            this.gl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER, this.buffers[this.LOC_NORM]);
-            this.gl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, this.mesh.get_normals_f32(), data_hint);
-        }
-        if (this.mesh.has_tex_coords()) {
-            this.gl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER, this.buffers[this.LOC_TEX]);
-            this.gl.bufferData(WebGLRenderingContext.ARRAY_BUFFER, this.mesh.get_texcoords_f32(), data_hint);
-        }
-        if (this.HAS_UINT16_RESTRICTION) {
-            var m_idx = this.mesh.get_multi_indices_u16();
-            for (var i = 0; i < this.num_idx_buffers; i++) {
-                this.gl.bindBuffer(WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, this.buffers[this.LOC_IND_BASE + i]);
-                this.gl.bufferData(WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, m_idx[i], data_hint);
-            }
-        }
-        else {
-            this.gl.bindBuffer(WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, this.buffers[this.LOC_IND_BASE + 0]);
-            this.gl.bufferData(WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, this.mesh.get_indices_u32(), data_hint);
+    upload(backend, o) {
+        this.realloc(backend);
+        switch (o) {
+            case attribute_type.vertex:
+                backend.attri_buf_writef32(this.vbos[attribute_type.vertex], this.get_vertices_f32(), 3, this.is_permanent());
+                return [new buffer_info(this.vbos[attribute_type.vertex], this.vertices.length)];
+            case attribute_type.normal:
+                if (!this.has_normal())
+                    throw new Error("This mesh doesn't have the normal attributes.");
+                backend.attri_buf_writef32(this.vbos[attribute_type.normal], this.get_normals_f32(), 3, this.is_permanent());
+                return [new buffer_info(this.vbos[attribute_type.normal], this.normals.length)];
+            case attribute_type.texcoord:
+                if (!this.has_tex_coords())
+                    throw new Error("This mesh doesn't have the texcoord attributes.");
+                backend.attri_buf_writef32(this.vbos[attribute_type.texcoord], this.get_texcoords_f32(), 2, this.is_permanent());
+                return [new buffer_info(this.vbos[attribute_type.texcoord], this.texcoords.length)];
+            case attribute_type.index:
+                if (!this.has_index())
+                    throw new Error("This mesh does't have index.");
+                if (this.HAS_UINT16_RESTRICTION) {
+                    var m_idx = this.get_multi_indices_u16();
+                    var infos = new Array();
+                    for (var i = 0; i < this.num_idx_buffers; i++) {
+                        backend.index_buf_write_u16(this.ibo[i], m_idx[i], this.is_permanent());
+                        infos[i] = new buffer_info(this.ibo[i], m_idx[i].length);
+                    }
+                    return infos;
+                }
+                else {
+                    backend.index_buf_write_u32(this.ibo[0], this.get_indices_u32(), this.is_permanent());
+                    return [new buffer_info(this.ibo[0], this.indices.length)];
+                }
         }
     }
-    unload() {
-        for (var i = 0; i < this.buffers.length; i++) {
-            this.gl.deleteBuffer(this.buffers[i]);
-            this.buffers[i] = null;
+    unload(backend) {
+        for (var i = 0; i < this.vbos.length; i++) {
+            backend.attri_buf_delete(this.vbos[i]);
+            this.vbos[i] = null;
+        }
+        for (var i = 0; i < this.ibo.length; i++) {
+            backend.index_buf_delete(this.ibo[i]);
+            this.ibo[i] = null;
         }
         this.num_idx_buffers = 0;
-        this.alloc();
     }
-    bind_attri_buffer(loc) {
-        this.gl.bindBuffer(WebGLRenderingContext.ARRAY_BUFFER, this.buffers[loc]);
-        return this.buffers[loc];
-    }
-    bind_idx_buffer(bloc) {
-        this.gl.bindBuffer(WebGLRenderingContext.ELEMENT_ARRAY_BUFFER, this.buffers[this.LOC_IND_BASE + bloc]);
-        return this.buffers[this.LOC_IND_BASE + bloc];
-    }
-    destroy() {
-        for (var i = 0; i < this.buffers.length; i++) {
-            this.gl.deleteBuffer(this.buffers[i]);
-            this.buffers[i] = null;
+    get_buffer(o) {
+        switch (o) {
+            case attribute_type.vertex:
+                return [new buffer_info(this.vbos[attribute_type.vertex], this.vertices.length)];
+            case attribute_type.normal:
+                if (!this.has_normal())
+                    throw new Error("This mesh doesn't have the normal attributes.");
+                return [new buffer_info(this.vbos[attribute_type.normal], this.normals.length)];
+            case attribute_type.texcoord:
+                if (!this.has_tex_coords())
+                    throw new Error("This mesh doesn't have the texcoord attributes.");
+                return [new buffer_info(this.vbos[attribute_type.texcoord], this.texcoords.length)];
+            case attribute_type.index:
+                if (!this.has_index())
+                    throw new Error("This mesh does't have index.");
+                if (this.HAS_UINT16_RESTRICTION) {
+                    var infos = new Array();
+                    for (var i = 0; i < this.num_idx_buffers; i++) {
+                        infos[i] = new buffer_info(this.ibo[i], this.idx_buf_length(i));
+                    }
+                    return infos;
+                }
+                else {
+                    return [new buffer_info(this.ibo[0], this.indices.length)];
+                }
         }
-        this.mesh = null;
-        this.num_idx_buffers = 0;
     }
 }
 //# sourceMappingURL=mesh.js.map
