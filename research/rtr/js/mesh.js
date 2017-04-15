@@ -1,10 +1,3 @@
-var attribute_type;
-(function (attribute_type) {
-    attribute_type[attribute_type["vertex"] = 0] = "vertex";
-    attribute_type[attribute_type["normal"] = 1] = "normal";
-    attribute_type[attribute_type["texcoord"] = 2] = "texcoord";
-    attribute_type[attribute_type["index"] = 3] = "index";
-})(attribute_type || (attribute_type = {}));
 class buffer_info {
     constructor(loc, len) {
         this.loc = loc;
@@ -37,13 +30,13 @@ class trimesh {
     }
     available_attributes() {
         var types = new Array();
-        types.push(attribute_type.vertex);
+        types.push(shader_input.position);
         if (this.has_index())
-            types.push(attribute_type.index);
+            types.push(shader_input.index);
         if (this.has_normal())
-            types.push(attribute_type.normal);
+            types.push(shader_input.normal);
         if (this.has_tex_coords())
-            types.push(attribute_type.texcoord);
+            types.push(shader_input.texcoord);
         return types;
     }
     get_vertex_transform() {
@@ -122,20 +115,20 @@ class trimesh {
     upload(backend, o) {
         this.realloc(backend);
         switch (o) {
-            case attribute_type.vertex:
-                backend.attri_buf_writef32(this.vbos[attribute_type.vertex], this.get_vertices_f32(), 3, this.is_permanent());
-                return [new buffer_info(this.vbos[attribute_type.vertex], this.vertices.length)];
-            case attribute_type.normal:
+            case shader_input.position:
+                backend.attri_buf_writef32(this.vbos[shader_input.position], this.get_vertices_f32(), 3, this.is_permanent());
+                return [new buffer_info(this.vbos[shader_input.position], this.vertices.length)];
+            case shader_input.normal:
                 if (!this.has_normal())
                     throw new Error("This mesh doesn't have the normal attributes.");
-                backend.attri_buf_writef32(this.vbos[attribute_type.normal], this.get_normals_f32(), 3, this.is_permanent());
-                return [new buffer_info(this.vbos[attribute_type.normal], this.normals.length)];
-            case attribute_type.texcoord:
+                backend.attri_buf_writef32(this.vbos[shader_input.normal], this.get_normals_f32(), 3, this.is_permanent());
+                return [new buffer_info(this.vbos[shader_input.normal], this.normals.length)];
+            case shader_input.texcoord:
                 if (!this.has_tex_coords())
                     throw new Error("This mesh doesn't have the texcoord attributes.");
-                backend.attri_buf_writef32(this.vbos[attribute_type.texcoord], this.get_texcoords_f32(), 2, this.is_permanent());
-                return [new buffer_info(this.vbos[attribute_type.texcoord], this.texcoords.length)];
-            case attribute_type.index:
+                backend.attri_buf_writef32(this.vbos[shader_input.texcoord], this.get_texcoords_f32(), 2, this.is_permanent());
+                return [new buffer_info(this.vbos[shader_input.texcoord], this.texcoords.length)];
+            case shader_input.index:
                 if (!this.has_index())
                     throw new Error("This mesh does't have index.");
                 if (this.HAS_UINT16_RESTRICTION) {
@@ -166,17 +159,17 @@ class trimesh {
     }
     get_buffer(o) {
         switch (o) {
-            case attribute_type.vertex:
-                return [new buffer_info(this.vbos[attribute_type.vertex], this.vertices.length)];
-            case attribute_type.normal:
+            case shader_input.position:
+                return [new buffer_info(this.vbos[shader_input.position], this.vertices.length)];
+            case shader_input.normal:
                 if (!this.has_normal())
                     throw new Error("This mesh doesn't have the normal attributes.");
-                return [new buffer_info(this.vbos[attribute_type.normal], this.normals.length)];
-            case attribute_type.texcoord:
+                return [new buffer_info(this.vbos[shader_input.normal], this.normals.length)];
+            case shader_input.texcoord:
                 if (!this.has_tex_coords())
                     throw new Error("This mesh doesn't have the texcoord attributes.");
-                return [new buffer_info(this.vbos[attribute_type.texcoord], this.texcoords.length)];
-            case attribute_type.index:
+                return [new buffer_info(this.vbos[shader_input.texcoord], this.texcoords.length)];
+            case shader_input.index:
                 if (!this.has_index())
                     throw new Error("This mesh does't have index.");
                 if (this.HAS_UINT16_RESTRICTION) {
