@@ -1,0 +1,7 @@
+var vec3modelviewglslt = `
+// GLSL template to perform point linear transformation.
+vec3 vec3modelview(mat4 t, vec3 v)
+{
+        return vec3(t*vec4(v, 1));
+}
+`;

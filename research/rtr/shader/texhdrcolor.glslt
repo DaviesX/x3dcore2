@@ -1,0 +1,6 @@
+var texhdrcolorglslt = `
+vec3 texhdrcolor(sampler2D tex, vec2 tex_coord)
+{
+        return texture(tex, tex_coord).rgb;
+}
+`;

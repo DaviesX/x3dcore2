@@ -1,0 +1,26 @@
+var brdflambertglslt = `
+
+const float PI = 3.1415926535897932384626433832795;
+
+// Oren-Nayar brdf model.
+vec4 brdforennayar(vec3 i, vec3 n, vec3 o, vec3 irrad, vec3 albedo, float sig_gradi)
+{
+        const float A = 1 - 0.5 * var_gradi / (var_gradi + 0.57);
+        const float B = 0.45 * var_gradi / (var_gradi + 0.09);
+
+        float var_gradi = sig_gradi*sig_gradi;
+        float cos_thei = max(dot(i, n), 0.0);
+        float cos_theo = dot(o, n);
+        float alpha = min(cos_thei, cos_theo);
+        float beta max(cos_thei, cos_theo);
+
+        float sin_alpha = sqrt(1.0 - alpha*alpha);
+        flaot tan_beta = sqrt(1.0/(beta*beta) - 1.0)
+
+        vec3 r = 2.0 * n * cos_theo - o;
+        vec3 cos_theio = dot(r, i);
+
+        vec3 rad = irrad * sig_gradi/PI * cos_thei * (A + (B * max(0, cos_theio) * sin_alpha * tan_beta));
+        return vec4(rad, 1.0);
+}
+`;

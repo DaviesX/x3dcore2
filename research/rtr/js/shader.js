@@ -1,4 +1,4 @@
-function create_shader_from_code(backend, code, ext) {
+function shader_create_from_code(backend, code, ext) {
     var shader;
     switch (ext) {
         case "glslv":
@@ -12,41 +12,42 @@ function create_shader_from_code(backend, code, ext) {
     }
     return shader;
 }
-function create_shader_from_script_tag(backend, sid) {
-    var shaderScript = document.getElementById(sid);
-    if (!shaderScript)
+function shader_code_from_script_tag(sid) {
+    var script = document.getElementById(sid);
+    if (!script)
         return null;
     var code = "";
-    var k = shaderScript.firstChild;
+    var k = script.firstChild;
     while (k) {
         if (k.nodeType == 3)
             code += k.textContent;
         k = k.nextSibling;
     }
+    return [code, script.type];
+}
+function shader_create_from_script_tag(backend, sid) {
+    var info = shader_code_from_script_tag(sid);
     var ext;
-    if (shaderScript.type == "x-shader/x-fragment") {
+    if (info[1] == "x-shader/x-fragment") {
         ext = "glslf";
     }
-    else if (shaderScript.type == "x-shader/x-vertex") {
+    else if (info[1] == "x-shader/x-vertex") {
         ext = "glslv";
     }
     else {
-        return null;
+        throw new Error("Unknown shader type " + info[1]);
     }
-    return create_shader_from_code(backend, code, ext);
+    return shader_create_from_code(backend, info[0], ext);
 }
-function last_after(s, stor) {
-    var c = s.split(stor);
-    return c[c.length - 1];
-}
-function create_shader_from_ext_script(backend, sid) {
+function shader_code_from_ext_script(sid) {
     var path = document.getElementById(sid).src;
     if (!path) {
         alert("Shader script tag doesn't contain the source path (shouldn't import externally?).");
         return null;
     }
-    var filename = last_after(path, "/");
-    var ext = last_after(filename, ".");
+    var u_path = new ut_string(path);
+    var filename = u_path.last_after("/");
+    var ext = u_path.last_after(".");
     var varname = filename.replace(".", "");
     var code;
     try {
@@ -56,86 +57,167 @@ function create_shader_from_ext_script(backend, sid) {
         alert("Shader source file doesn't contain the string variable: " + varname + " or the shader script hasn't got loaded properly.");
         return null;
     }
-    return create_shader_from_code(backend, code, ext);
+    return [code, ext, filename];
+}
+function shader_create_from_ext_script(backend, sid) {
+    var info = shader_code_from_ext_script(sid);
+    return shader_create_from_code(backend, info[0], info[0]);
 }
 function create_shader_program(backend, vid, fid, is_ext = true) {
-    var fs = is_ext ? create_shader_from_ext_script(backend, fid) : create_shader_from_script_tag(backend, fid);
-    var vs = is_ext ? create_shader_from_ext_script(backend, vid) : create_shader_from_script_tag(backend, vid);
+    var fs = is_ext ? shader_create_from_ext_script(backend, fid) : shader_create_from_script_tag(backend, fid);
+    var vs = is_ext ? shader_create_from_ext_script(backend, vid) : shader_create_from_script_tag(backend, vid);
     var prog = backend.program_create();
     backend.program_attach_shader(prog, vs);
     backend.program_attach_shader(prog, fs);
     backend.program_link(prog);
     return prog;
 }
-var shader_input;
-(function (shader_input) {
-    shader_input[shader_input["position"] = 0] = "position";
-    shader_input[shader_input["normal"] = 1] = "normal";
-    shader_input[shader_input["texcoord"] = 2] = "texcoord";
-    shader_input[shader_input["tangent"] = 3] = "tangent";
-    shader_input[shader_input["index"] = 4] = "index";
-    shader_input[shader_input["hdr_color"] = 5] = "hdr_color";
-    shader_input[shader_input["ldr_color"] = 6] = "ldr_color";
-    shader_input[shader_input["depth"] = 7] = "depth";
-})(shader_input || (shader_input = {}));
-var shader_constant;
-(function (shader_constant) {
-    shader_constant[shader_constant["mv_transform"] = 0] = "mv_transform";
-    shader_constant[shader_constant["proj_transform"] = 1] = "proj_transform";
-})(shader_constant || (shader_constant = {}));
-function shader_io_validate(input, output) {
-    if (input != output)
-        throw new Error("Shader output is " + output + " but input requires " + input + ".");
+var shader_func_param;
+(function (shader_func_param) {
+    shader_func_param[shader_func_param["position"] = 0] = "position";
+    shader_func_param[shader_func_param["normal"] = 1] = "normal";
+    shader_func_param[shader_func_param["texcoord"] = 2] = "texcoord";
+    shader_func_param[shader_func_param["tangent"] = 3] = "tangent";
+    shader_func_param[shader_func_param["color_hdr_diff"] = 4] = "color_hdr_diff";
+    shader_func_param[shader_func_param["color_hdr_spec"] = 5] = "color_hdr_spec";
+    shader_func_param[shader_func_param["color_hdr_ambi"] = 6] = "color_hdr_ambi";
+    shader_func_param[shader_func_param["color_hdr"] = 7] = "color_hdr";
+    shader_func_param[shader_func_param["color_ldr"] = 8] = "color_ldr";
+    shader_func_param[shader_func_param["adapted_lum"] = 9] = "adapted_lum";
+    shader_func_param[shader_func_param["depth"] = 10] = "depth";
+    shader_func_param[shader_func_param["depth_max"] = 11] = "depth_max";
+    shader_func_param[shader_func_param["position_max"] = 12] = "position_max";
+    shader_func_param[shader_func_param["t_modelview"] = 13] = "t_modelview";
+    shader_func_param[shader_func_param["t_nmodelview"] = 14] = "t_nmodelview";
+    shader_func_param[shader_func_param["t_proj"] = 15] = "t_proj";
+    shader_func_param[shader_func_param["ambient"] = 16] = "ambient";
+    shader_func_param[shader_func_param["albedo"] = 17] = "albedo";
+    shader_func_param[shader_func_param["metalness"] = 18] = "metalness";
+    shader_func_param[shader_func_param["alpha"] = 19] = "alpha";
+    shader_func_param[shader_func_param["beta"] = 20] = "beta";
+    shader_func_param[shader_func_param["sigma"] = 21] = "sigma";
+    shader_func_param[shader_func_param["ior"] = 22] = "ior";
+    shader_func_param[shader_func_param["exp"] = 23] = "exp";
+    shader_func_param[shader_func_param["umbrella"] = 24] = "umbrella";
+    shader_func_param[shader_func_param["lightinten"] = 25] = "lightinten";
+    shader_func_param[shader_func_param["lightpos"] = 26] = "lightpos";
+    shader_func_param[shader_func_param["lightdir"] = 27] = "lightdir";
+    shader_func_param[shader_func_param["irrad"] = 28] = "irrad";
+    shader_func_param[shader_func_param["incident"] = 29] = "incident";
+    shader_func_param[shader_func_param["emergent"] = 30] = "emergent";
+    shader_func_param[shader_func_param["hdr_sampler"] = 31] = "hdr_sampler";
+})(shader_func_param || (shader_func_param = {}));
+var shader_func_ret;
+(function (shader_func_ret) {
+    shader_func_ret[shader_func_ret["position"] = 0] = "position";
+    shader_func_ret[shader_func_ret["normal"] = 1] = "normal";
+    shader_func_ret[shader_func_ret["texcoord"] = 2] = "texcoord";
+    shader_func_ret[shader_func_ret["tangent"] = 3] = "tangent";
+    shader_func_ret[shader_func_ret["incident"] = 4] = "incident";
+    shader_func_ret[shader_func_ret["emergent"] = 5] = "emergent";
+    shader_func_ret[shader_func_ret["albedo"] = 6] = "albedo";
+    shader_func_ret[shader_func_ret["irrad"] = 7] = "irrad";
+    shader_func_ret[shader_func_ret["color_hdr_diff"] = 8] = "color_hdr_diff";
+    shader_func_ret[shader_func_ret["color_hdr_spec"] = 9] = "color_hdr_spec";
+    shader_func_ret[shader_func_ret["color_hdr_ambi"] = 10] = "color_hdr_ambi";
+    shader_func_ret[shader_func_ret["color_hdr"] = 11] = "color_hdr";
+    shader_func_ret[shader_func_ret["color_ldr"] = 12] = "color_ldr";
+    shader_func_ret[shader_func_ret["depth"] = 13] = "depth";
+})(shader_func_ret || (shader_func_ret = {}));
+function shader_func_io_validate(param, ret) {
+    if (param.toString() !== ret.toString())
+        throw new Error("Return value of the shader function is " + ret
+            + " but is fed into the one of the parameters of type " + param + " of another function"
+            + ", which is incompatible.");
     return true;
 }
-function shader_gen_var_info(input, prefix) {
+function shader_input_var_info(input) {
+    var prefix = "in_";
     switch (input) {
-        case shader_input.position:
-            return [prefix + "position", "vec3"];
-        case shader_input.normal:
-            return [prefix + "normal", "vec3"];
-        case shader_input.texcoord:
-            return [prefix + "texcoord", "vec2"];
-        case shader_input.tangent:
-            return [prefix + "tangent", "vec3"];
-        case shader_input.index:
-            return [prefix + "index", "int"];
-        case shader_input.hdr_color:
-            return [prefix + "hdr_color", "vec4"];
-        case shader_input.ldr_color:
-            return [prefix + "ldr_color", "vec4"];
-        case shader_input.depth:
-            return [prefix + "depth", "float"];
+        case shader_func_param.position:
+            return [prefix + shader_func_param.position.toString(), "vec3"];
+        case shader_func_param.normal:
+            return [prefix + shader_func_param.normal.toString(), "vec3"];
+        case shader_func_param.texcoord:
+            return [prefix + shader_func_param.texcoord.toString(), "vec2"];
+        case shader_func_param.tangent:
+            return [prefix + shader_func_param.tangent.toString(), "vec3"];
+        case shader_func_param.depth:
+            return [prefix + shader_func_param.depth.toString(), "float"];
         default: {
-            if (prefix === "in_")
-                throw new Error("Unknown shader input type " + input + ".");
-            else
-                throw new Error("Unknown shader output type " + input + ".");
+            throw new Error("Unknown shader input type " + input + ".");
         }
     }
 }
-function shader_input_var_info(input) {
-    return shader_gen_var_info(input, "in_");
-}
 function shader_output_var_info(output) {
-    return shader_gen_var_info(output, "out_");
+    var prefix = "out_";
+    switch (output) {
+        case shader_func_ret.position:
+            return [prefix + shader_func_ret.position.toString(), "vec3"];
+        case shader_func_ret.normal:
+            return [prefix + shader_func_ret.normal.toString(), "vec3"];
+        case shader_func_ret.texcoord:
+            return [prefix + shader_func_ret.texcoord.toString(), "vec2"];
+        case shader_func_ret.tangent:
+            return [prefix + shader_func_ret.tangent.toString(), "vec3"];
+        case shader_func_ret.color_hdr:
+        case shader_func_ret.color_ldr:
+            return ["gl_FragColor", "vec4"];
+        case shader_func_ret.depth:
+            return ["gl_FragDepth", "float"];
+        default: {
+            throw new Error("Unknown shader output type " + output + ".");
+        }
+    }
 }
 function shader_constant_var_info(constant) {
     var prefix = "const_";
     switch (constant) {
-        case shader_constant.mv_transform:
-            return [prefix + "mv_trans", "mat4"];
-        case shader_constant.proj_transform:
-            return [prefix + "proj_trans", "mat4"];
+        case shader_func_param.t_modelview:
+            return [prefix + shader_func_param.t_modelview.toString(), "mat4"];
+        case shader_func_param.t_proj:
+            return [prefix + shader_func_param.t_proj.toString(), "mat4"];
+        case shader_func_param.lightpos:
+            return [prefix + shader_func_param.lightpos.toString(), "vec3"];
+        case shader_func_param.ambient:
+            return [prefix + shader_func_param.ambient.toString(), "vec3"];
+        case shader_func_param.albedo:
+            return [prefix + shader_func_param.albedo.toString(), "vec3"];
+        case shader_func_param.metalness:
+            return [prefix + shader_func_param.metalness.toString(), "float"];
+        case shader_func_param.alpha:
+            return [prefix + shader_func_param.alpha.toString(), "float"];
+        case shader_func_param.beta:
+            return [prefix + shader_func_param.beta.toString(), "float"];
+        case shader_func_param.sigma:
+            return [prefix + shader_func_param.sigma.toString(), "float"];
+        case shader_func_param.ior:
+            return [prefix + shader_func_param.ior.toString(), "float"];
+        case shader_func_param.exp:
+            return [prefix + shader_func_param.exp.toString(), "float"];
+        case shader_func_param.umbrella:
+            return [prefix + shader_func_param.umbrella.toString(), "float"];
+        case shader_func_param.depth_max:
+            return [prefix + shader_func_param.depth_max.toString(), "float"];
+        case shader_func_param.position_max:
+            return [prefix + shader_func_param.depth_max.toString(), "vec3"];
+        case shader_func_param.lightinten:
+            return [prefix + shader_func_param.lightinten.toString(), "vec3"];
+        case shader_func_param.lightdir:
+            return [prefix + shader_func_param.lightdir.toString(), "vec3"];
+        case shader_func_param.hdr_sampler:
+            return [prefix + shader_func_param.hdr_sampler.toString(), "sample2D"];
+        case shader_func_param.adapted_lum:
+            return [prefix + shader_func_param.adapted_lum.toString(), "vec3"];
         default:
             throw new Error("Unknown shader constant type " + constant + ".");
     }
 }
 class shader_function {
     constructor(func_name, code) {
-        this.input = new Map();
-        this.ordered_input = new Array();
-        this.output = null;
+        this.params = new Set();
+        this.ordered_params = new Array();
+        this.ret = null;
         this.func_required = new Set();
         this.func_name = name;
         this.code = code;
@@ -146,30 +228,26 @@ class shader_function {
     get_definition() {
         return this.code;
     }
-    add_input(param_name, type) {
-        if (this.input.has(type))
-            throw new Error("Input type " + type + " has already existed.");
-        this.ordered_input.push(type);
-        this.input.set(type, param_name);
+    add_param(param) {
+        if (this.params.has(param))
+            throw new Error("Parameter type " + param + " has already existed.");
+        this.ordered_params.push(param);
+        this.params.add(param);
     }
-    set_output(type) {
-        this.output = type;
+    set_ret(ret) {
+        this.ret = ret;
     }
     add_required_function(defn) {
         this.func_required.add(defn);
     }
-    get_inputs() {
-        var ins = new Set();
-        this.input.forEach(function (v, input, m) {
-            ins.add(input);
-        });
-        return ins;
+    get_params() {
+        return this.params;
     }
-    get_ordered_inputs() {
-        return this.ordered_input;
+    get_ordered_params() {
+        return this.ordered_params;
     }
-    get_output() {
-        return this.output;
+    get_ret() {
+        return this.ret;
     }
     get_functions_required() {
         return this.func_required;
@@ -211,56 +289,43 @@ class shader_lib {
         });
     }
 }
-function gen_builtin_library() {
-    var lib = new shader_lib();
-    lib.check_functions();
-    return lib;
-}
-var shader_input_binding;
-(function (shader_input_binding) {
-    shader_input_binding[shader_input_binding["constant"] = 0] = "constant";
-    shader_input_binding[shader_input_binding["input"] = 1] = "input";
-    shader_input_binding[shader_input_binding["call"] = 2] = "call";
-})(shader_input_binding || (shader_input_binding = {}));
+var shader_param_binding;
+(function (shader_param_binding) {
+    shader_param_binding[shader_param_binding["constant"] = 0] = "constant";
+    shader_param_binding[shader_param_binding["input"] = 1] = "input";
+    shader_param_binding[shader_param_binding["call"] = 2] = "call";
+})(shader_param_binding || (shader_param_binding = {}));
 class shader_call {
     constructor() {
-        this.in_call_binding = new Map();
-        this.in_input_binding = new Map();
-        this.in_const_binding = new Map();
+        this.param_call_binding = new Map();
+        this.param_input_binding = new Set();
+        this.param_const_binding = new Set();
     }
-    bind_input_from_shader_input(input, shader_in) {
-        this.in_input_binding.set(input, shader_in);
+    bind_param_to_shader_input(param) {
+        this.param_input_binding.add(param);
     }
-    bind_input_from_constant(input, constant) {
-        this.in_const_binding.set(input, constant);
+    bind_param_to_constant(param) {
+        this.param_const_binding.add(param);
     }
-    bind_input_from_call(input, func) {
-        shader_io_validate(input, func.func.get_output());
-        this.in_call_binding.set(input, func);
+    bind_param_to_call(param, call) {
+        shader_func_io_validate(param, call.func.get_ret());
+        this.param_call_binding.set(param, call);
     }
-    get_input_binding(input) {
-        if (this.in_call_binding.has(input))
-            return [shader_input_binding.call, this.in_call_binding.get(input)];
-        else if (this.in_input_binding.has(input))
-            return [shader_input_binding.input, this.in_input_binding.get(input)];
-        else if (this.in_const_binding.has(input))
-            return [shader_input_binding.constant, this.in_const_binding.get(input)];
+    get_param_binding(param) {
+        if (this.param_call_binding.has(param))
+            return [shader_param_binding.call, this.param_call_binding.get(param)];
+        else if (this.param_input_binding.has(param))
+            return [shader_param_binding.input, null];
+        else if (this.param_const_binding.has(param))
+            return [shader_param_binding.constant, null];
         else
-            throw new Error("Input " + input + " doesn't have any binding.");
+            throw new Error("Input " + param + " doesn't have any binding.");
     }
     get_required_shader_input() {
-        var ins = new Set();
-        this.in_input_binding.forEach(function (input, type, m) {
-            ins.add(input);
-        });
-        return ins;
+        return this.param_input_binding;
     }
     get_required_constants() {
-        var constants = new Set();
-        this.in_const_binding.forEach(function (constanst, type, m) {
-            constants.add(constanst);
-        });
-        return constants;
+        return this.param_const_binding;
     }
     get_all_required_functions(func, lib) {
         var result = new Array();
@@ -278,26 +343,26 @@ class shader_call {
     get_required_functions(lib) {
         return this.get_all_required_functions(this.func, lib);
     }
-    get_ordered_inputs() {
-        return this.func.get_ordered_inputs();
+    get_ordered_params() {
+        return this.func.get_ordered_params();
     }
-    get_output() {
-        return this.func.get_output();
+    get_ret() {
+        return this.func.get_ret();
     }
     get_function_name() {
         return this.func.get_function_name();
     }
-    check_input_binding() {
+    check_param_binding() {
         var this_ = this;
-        this.func.get_inputs().forEach(function (input, m) {
+        this.func.get_params().forEach(function (input, m) {
             var bindings = new Array();
-            if (this_.in_const_binding.has(input))
+            if (this_.param_const_binding.has(input))
                 bindings.push("constant binding");
-            if (this_.in_input_binding.has(input))
+            if (this_.param_input_binding.has(input))
                 bindings.push("shader input binding");
-            if (this_.in_call_binding.has(input) &&
-                shader_io_validate(input, this_.in_call_binding.get(input).func.get_output()) &&
-                this_.in_call_binding.get(input).check_input_binding())
+            if (this_.param_call_binding.has(input) &&
+                shader_func_io_validate(input, this_.param_call_binding.get(input).func.get_ret()) &&
+                this_.param_call_binding.get(input).check_param_binding())
                 bindings.push("shader function call binding");
             if (bindings.length == 0)
                 throw new Error("Shader function " + this_.func.get_function_name()
@@ -356,32 +421,32 @@ class shader_call_sequence {
     get_outputs() {
         var outs = new Set();
         for (var i = 0; i < this.sequence.length; i++) {
-            outs.add(this.sequence[i].get_output());
+            outs.add(this.sequence[i].get_ret());
         }
         return outs;
     }
-    gen_call_string(func) {
-        var call = func.get_function_name() + "(";
-        var inputs = func.get_ordered_inputs();
-        for (var i = 0; i < inputs.length; i++) {
-            var binding_info = func.get_input_binding(inputs[i]);
+    gen_call_string(call) {
+        var call_str = call.get_function_name() + "(";
+        var params = call.get_ordered_params();
+        for (var i = 0; i < params.length; i++) {
+            var binding_info = call.get_param_binding(params[i]);
             switch (binding_info[0]) {
-                case shader_input_binding.call:
-                    call += this.gen_call_string(binding_info[1]);
-                case shader_input_binding.constant:
-                    call += shader_constant_var_info(binding_info[1])[0];
-                case shader_input_binding.input:
-                    call += shader_input_var_info(binding_info[1])[0];
+                case shader_param_binding.call:
+                    call_str += this.gen_call_string(binding_info[1]);
+                case shader_param_binding.constant:
+                    call_str += shader_constant_var_info(params[i])[0];
+                case shader_param_binding.input:
+                    call_str += shader_input_var_info(params[1])[0];
             }
-            if (i !== inputs.length - 1)
-                call += ",";
+            if (i !== params.length - 1)
+                call_str += ",";
         }
-        call += ")";
-        return call;
+        call_str += ")";
+        return call_str;
     }
     gen_glsl_main(lib) {
         for (var i = 0; i < this.sequence.length; i++) {
-            this.sequence[i].check_input_binding();
+            this.sequence[i].check_param_binding();
         }
         var const_section = "";
         var input_section = "";
@@ -411,12 +476,215 @@ class shader_call_sequence {
                         void main()
                         {`;
         for (var i = 0; i < this.sequence.length; i++) {
-            var info = shader_output_var_info(this.sequence[i].get_output());
+            var info = shader_output_var_info(this.sequence[i].get_ret());
             main_section += info[0] + "=" + this.gen_call_string(this.sequence[i]) + ";" + "\n";
         }
         main_section += `
                         }`;
         return const_section + input_section + output_section + defn_section + main_section;
     }
+}
+function shade_gen_builtin_library() {
+    var lib = new shader_lib();
+    var codeinfo;
+    var func;
+    codeinfo = shader_code_from_ext_script("sl_albedodiff");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.metalness);
+    func.set_ret(shader_func_ret.albedo);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_albedospec");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.metalness);
+    func.set_ret(shader_func_ret.albedo);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfambient");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.ambient);
+    func.set_ret(shader_func_ret.color_hdr_ambi);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfblinnphong");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.normal);
+    func.add_param(shader_func_param.emergent);
+    func.add_param(shader_func_param.irrad);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.alpha);
+    func.set_ret(shader_func_ret.color_hdr_spec);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfcolor");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.albedo);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfcooktorr");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.normal);
+    func.add_param(shader_func_param.emergent);
+    func.add_param(shader_func_param.irrad);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.beta);
+    func.add_param(shader_func_param.ior);
+    func.set_ret(shader_func_ret.color_hdr_spec);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfdepth");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.position);
+    func.add_param(shader_func_param.depth_max);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfdirection");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.position);
+    func.add_param(shader_func_param.depth_max);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdflambert");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.normal);
+    func.add_param(shader_func_param.irrad);
+    func.add_param(shader_func_param.albedo);
+    func.set_ret(shader_func_ret.color_hdr_diff);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfnormal");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.normal);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdforennayar");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.normal);
+    func.add_param(shader_func_param.emergent);
+    func.add_param(shader_func_param.irrad);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.sigma);
+    func.set_ret(shader_func_ret.color_hdr_diff);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfphong");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.normal);
+    func.add_param(shader_func_param.emergent);
+    func.add_param(shader_func_param.irrad);
+    func.add_param(shader_func_param.albedo);
+    func.add_param(shader_func_param.alpha);
+    func.set_ret(shader_func_ret.color_hdr_spec);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfposition");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.position);
+    func.add_param(shader_func_param.position_max);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfwhite");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_brdfadd3");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.color_hdr_diff);
+    func.add_param(shader_func_param.color_hdr_spec);
+    func.add_param(shader_func_param.color_hdr_ambi);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_emergent");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.position);
+    func.set_ret(shader_func_ret.emergent);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_incident");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.lightpos);
+    func.add_param(shader_func_param.position);
+    func.set_ret(shader_func_ret.emergent);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_irradpoint");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.lightinten);
+    func.set_ret(shader_func_ret.irrad);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_irradspot");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.lightdir);
+    func.add_param(shader_func_param.incident);
+    func.add_param(shader_func_param.lightinten);
+    func.add_param(shader_func_param.exp);
+    func.add_param(shader_func_param.umbrella);
+    func.set_ret(shader_func_ret.irrad);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_irradsun");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.lightdir);
+    func.add_param(shader_func_param.lightinten);
+    func.set_ret(shader_func_ret.irrad);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_loglum");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.color_hdr);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_texhdrcolor");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.hdr_sampler);
+    func.add_param(shader_func_param.texcoord);
+    func.set_ret(shader_func_ret.color_hdr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_tonemapaces");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.color_hdr);
+    func.add_param(shader_func_param.adapted_lum);
+    func.set_ret(shader_func_ret.color_ldr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_tonemapexp");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.color_hdr);
+    func.add_param(shader_func_param.adapted_lum);
+    func.set_ret(shader_func_ret.color_ldr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_tonemapfilmic");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.color_hdr);
+    func.add_param(shader_func_param.adapted_lum);
+    func.set_ret(shader_func_ret.color_ldr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_tonemapreinhard");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.color_hdr);
+    func.add_param(shader_func_param.adapted_lum);
+    func.set_ret(shader_func_ret.color_ldr);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_vec3normalize");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.normal);
+    func.set_ret(shader_func_ret.normal);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_vec3modelview");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.t_modelview);
+    func.add_param(shader_func_param.position);
+    func.set_ret(shader_func_ret.normal);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_vec3nmodelview");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.t_nmodelview);
+    func.add_param(shader_func_param.normal);
+    func.set_ret(shader_func_ret.normal);
+    lib.add_function(func);
+    codeinfo = shader_code_from_ext_script("sl_vec3proj");
+    func = new shader_function(codeinfo[2], codeinfo[0]);
+    func.add_param(shader_func_param.t_proj);
+    func.add_param(shader_func_param.position);
+    func.set_ret(shader_func_ret.normal);
+    lib.add_function(func);
+    lib.check_functions();
+    return lib;
 }
 //# sourceMappingURL=shader.js.map

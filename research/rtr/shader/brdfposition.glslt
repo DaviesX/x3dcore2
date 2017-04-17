@@ -1,0 +1,7 @@
+var brdfpositionglslt = `
+// Position brdf material.
+vec4 brdfposition(vec3 p, vec3 max)
+{
+        return vec4(abs(p)/max, 1.0);
+}
+`;

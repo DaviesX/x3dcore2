@@ -1,0 +1,7 @@
+var irradsunglslt = `
+
+vec3 irradsun(vec3 d, vec3 inten)
+{
+        return inten;
+}
+`;

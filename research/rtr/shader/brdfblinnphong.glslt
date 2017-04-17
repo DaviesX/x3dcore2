@@ -1,0 +1,14 @@
+var brdfblinnphongglslt = `
+
+// Blinn-Phong brdf model.
+vec4 brdfblinnphong(vec3 i, vec3 n, vec3 o, vec3 irrad, vec3 albedo, float alpha)
+{       
+        vec3 h = normalize(i + o);
+        float cos_the = max(dot(n, i), 0.0);
+        float e = pow(max(dot(half_vec,norm_u),0.0),uExponent);
+
+        vec3 rad = irrad * sign(cos_the) * pow(max(dot(h, n), 0.0), alpha) * albedo;
+        return vec4(rad, 1.0);  
+}
+
+`;

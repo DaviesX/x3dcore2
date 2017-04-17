@@ -3,6 +3,6 @@
 
 interface if_material
 {
-        get_required_attributes(): Array<shader_input>;
+        get_required_attributes(): Array<attri_type>;
 }
 

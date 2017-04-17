@@ -1,0 +1,7 @@
+var brdfdirectionglslt = `
+// Light direction brdf material.
+vec4 brdfdirection(vec3 unit_dir)
+{
+        return vec4(unit_dir, 1.0);
+}
+`;

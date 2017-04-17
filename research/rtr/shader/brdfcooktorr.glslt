@@ -1,0 +1,50 @@
+var brdfcooktorrglslt = `
+
+const float PI = 3.1415926535897932384626433832795;
+
+
+float fresnel(vec3 i, vec3 h, float ior) 
+{
+        float c = dot(i, h);
+        float g = sqrt(ior * ior - 1.0 + c * c);
+        float f = (g - c) / (g + c);
+        float d = (c * (g + c) - 1.0) / (c * (g - c) + 1.0);
+        return 1 / 2 * f * f * (1.0 + d * d);
+}
+
+float ggx_distri(vec3 n, vec3 h, float beta) 
+{
+        float cos_th = dot(n, h);
+        float cos_th2 = cos_th*cos_th;
+        float tan_th2 = 1.0 / cos_th2 - 1.0;
+        float b2 = beta * beta;
+        float c = b2 + tan_th2;
+        return b2 / (PI * cos_th2 * cos_th2 * c * c);
+}
+
+float ggx_shadow1(vec3 v, vec3 h, float beta)
+{
+        float cos_vh = dot(v, h);
+        float tan_tv2 = 1.0 / (cos_vh * cos_vh) - 1.0;
+        float b2 = beta * beta;
+        return 2.0 / (1.0 + sqrt(1.0 + b2  * tan_tv2));
+}
+
+float ggx_shadow(vec3 i, vec3 o, vec3 h, float beta) 
+{
+        return ggx_shadow1(i, h, beta) * ggx_shadow1(o, h, beta);
+}
+
+// Cook-Torrence brdf model.
+vec4 brdfcooktorr(vec3 i, vec3 n, vec3 o, vec3 irrad, vec3 albedo, float beta, float ior)
+{
+        const float bias = 0.001;
+        vec3 h = normalize(i + o);
+        float cos_the = max(dot(n, i));
+        float b_cos_the = cos_the + bias * (1.0 - sign(cos_the));
+
+        vec3 rad = irrad * albedo * fresnel(i, h, ior) * ggx_distri(n, h, beta) * ggx_shadow(i, o, n, beta) / (4.0 * b_cos_the * dot(n, o));
+        return vec4(rad, 1.0);
+}
+
+`;

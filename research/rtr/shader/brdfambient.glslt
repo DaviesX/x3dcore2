@@ -1,0 +1,9 @@
+var brdfambientglslt = `
+
+// Ambient material.
+vec4 brdfambientglslt(vec3 albedo, vec3 ambient)
+{
+        return vec4(albedo * ambient, 1.0);
+}
+
+`;

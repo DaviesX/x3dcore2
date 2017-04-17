@@ -1,0 +1,9 @@
+var loglumglslt=`
+// Compute the log2 illuminance.
+float loglum(vec3 color)
+{
+        const float bias = 0.001;
+        const vec3 w(0.299,0.587,0.114);
+        return log2(dot(w,c) + bias);
+}
+`;

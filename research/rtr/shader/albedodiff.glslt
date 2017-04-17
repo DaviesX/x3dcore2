@@ -1,0 +1,6 @@
+var albedodiffglslt = `
+vec3 albedodiff(vec3 albedo, float metalness)
+{
+        return albedo*(1 - metalness);
+}
+`;

@@ -1,0 +1,7 @@
+var brdfwhiteglslt=`
+// Pure white brdf material.
+vec4 brdfwhite()
+{
+        return vec4(1.0, 1.0, 1.0, 1.0);
+}
+`;

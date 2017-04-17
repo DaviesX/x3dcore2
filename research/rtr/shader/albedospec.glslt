@@ -1,0 +1,6 @@
+var albedospecglslt = `
+vec3 albedospec(vec3 albedo, float metalness)
+{
+        return albedo * metalness;
+}
+`;

@@ -3,6 +3,14 @@
 /// <reference path="tensor.ts" />
 /// <reference path="shader.ts" />
 
+enum attri_type
+{
+        position,
+        normal,
+        texcoord,
+        index,
+}
+
 class buffer_info
 {
         private loc: buffer_location;
@@ -27,10 +35,10 @@ class buffer_info
 
 interface if_renderable
 {
-        available_attributes(): Array<shader_input>;
-        upload(backend: if_raster_backend, o: shader_input): Array<buffer_info>
+        available_attributes(): Array<attri_type>;
+        upload(backend: if_raster_backend, o: attri_type): Array<buffer_info>
         unload(backend: if_raster_backend): void
-        get_buffer(o: shader_input): Array<buffer_info>;
+        get_buffer(o: attri_type): Array<buffer_info>;
         is_permanent(): boolean;
         affine_transform(): mat4;
 }
@@ -61,16 +69,16 @@ class trimesh implements if_renderable
                 return this.is_static;
         }
 
-        public available_attributes(): Array<shader_input>
+        public available_attributes(): Array<attri_type>
         {
-                var types = new Array<shader_input>();
-                types.push(shader_input.position);
+                var types = new Array<attri_type>();
+                types.push(attri_type.position);
                 if (this.has_index())
-                        types.push(shader_input.index);
+                        types.push(attri_type.index);
                 if (this.has_normal())
-                        types.push(shader_input.normal);
+                        types.push(attri_type.normal);
                 if (this.has_tex_coords())
-                        types.push(shader_input.texcoord);
+                        types.push(attri_type.texcoord);
                 return types;
         }
 
@@ -180,28 +188,28 @@ class trimesh implements if_renderable
                 this.num_idx_buffers = new_idx_count;
         }
 
-        public upload(backend: if_raster_backend, o: shader_input): Array<buffer_info>
+        public upload(backend: if_raster_backend, o: attri_type): Array<buffer_info>
         {
                 this.realloc(backend);
 
                 switch (o) {
-                        case shader_input.position:
-                                backend.attri_buf_writef32(this.vbos[shader_input.position], this.get_vertices_f32(), 3, this.is_permanent());
-                                return [new buffer_info(this.vbos[shader_input.position], this.vertices.length)];
+                        case attri_type.position:
+                                backend.attri_buf_writef32(this.vbos[attri_type.position], this.get_vertices_f32(), 3, this.is_permanent());
+                                return [new buffer_info(this.vbos[attri_type.position], this.vertices.length)];
 
-                        case shader_input.normal:
+                        case attri_type.normal:
                                 if (!this.has_normal())
                                         throw new Error("This mesh doesn't have the normal attributes.");
-                                backend.attri_buf_writef32(this.vbos[shader_input.normal], this.get_normals_f32(), 3, this.is_permanent());
-                                return [new buffer_info(this.vbos[shader_input.normal], this.normals.length)];
+                                backend.attri_buf_writef32(this.vbos[attri_type.normal], this.get_normals_f32(), 3, this.is_permanent());
+                                return [new buffer_info(this.vbos[attri_type.normal], this.normals.length)];
 
-                        case shader_input.texcoord:
+                        case attri_type.texcoord:
                                 if (!this.has_tex_coords())
                                         throw new Error("This mesh doesn't have the texcoord attributes.");
-                                backend.attri_buf_writef32(this.vbos[shader_input.texcoord], this.get_texcoords_f32(), 2, this.is_permanent());
-                                return [new buffer_info(this.vbos[shader_input.texcoord], this.texcoords.length)];
+                                backend.attri_buf_writef32(this.vbos[attri_type.texcoord], this.get_texcoords_f32(), 2, this.is_permanent());
+                                return [new buffer_info(this.vbos[attri_type.texcoord], this.texcoords.length)];
 
-                        case shader_input.index:
+                        case attri_type.index:
                                 if (!this.has_index())
                                         throw new Error("This mesh does't have index.");
                                 if (this.HAS_UINT16_RESTRICTION) {
@@ -234,23 +242,23 @@ class trimesh implements if_renderable
                 this.num_idx_buffers = 0;
         }
 
-        public get_buffer(o: shader_input): Array<buffer_info>
+        public get_buffer(o: attri_type): Array<buffer_info>
         {
                 switch (o) {
-                        case shader_input.position:
-                                return [new buffer_info(this.vbos[shader_input.position], this.vertices.length)];
+                        case attri_type.position:
+                                return [new buffer_info(this.vbos[attri_type.position], this.vertices.length)];
 
-                        case shader_input.normal:
+                        case attri_type.normal:
                                 if (!this.has_normal())
                                         throw new Error("This mesh doesn't have the normal attributes.");
-                                return [new buffer_info(this.vbos[shader_input.normal], this.normals.length)];
+                                return [new buffer_info(this.vbos[attri_type.normal], this.normals.length)];
 
-                        case shader_input.texcoord:
+                        case attri_type.texcoord:
                                 if (!this.has_tex_coords())
                                         throw new Error("This mesh doesn't have the texcoord attributes.");
-                                return [new buffer_info(this.vbos[shader_input.texcoord], this.texcoords.length)];
+                                return [new buffer_info(this.vbos[attri_type.texcoord], this.texcoords.length)];
 
-                        case shader_input.index:
+                        case attri_type.index:
                                 if (!this.has_index())
                                         throw new Error("This mesh does't have index.");
                                 if (this.HAS_UINT16_RESTRICTION) {

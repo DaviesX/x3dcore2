@@ -1,0 +1,12 @@
+var irradspotglslt = `
+
+vec3 irradspot(vec3 d, vec3 ray, vec3 inten, float exp, float umbrella)
+{
+        float dist2 = dot(ray, ray);
+        vec3 u = -normalize(ray);
+        float a = dot(u, d);
+        float f = max(a - umbrella, 0.0);
+        return inten * sign(f) * pow(a, exp) / dist2;
+}
+
+`;

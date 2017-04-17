@@ -1,0 +1,11 @@
+var brdflambertglslt = `
+// Lambert brdf model.
+
+const float PI = 3.1415926535897932384626433832795;
+
+vec4 brdflambert(vec3 i, vec3 n, vec3 irrad, vec3 albedo)
+{
+        vec3 rad = irrad * 1/PI * albedo * max(dot(i, n), 0.0);
+        return vec4(rad, 1.0);
+}
+`;

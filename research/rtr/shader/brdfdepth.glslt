@@ -1,0 +1,7 @@
+var brdfdepthglslt = `
+// Depth material.
+vec4 brdfdepth(vec3 p, float maxdepth)
+{
+        return vec4(vec3(p.z/maxdepth), 1.0);
+}
+`;

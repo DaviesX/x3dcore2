@@ -1,0 +1,6 @@
+var emergentglslt = `
+vec3 emergent(vec3 hit_point)
+{
+        return -hit_point;
+}
+`;

@@ -103,11 +103,11 @@ class app {
             this.mvMatrix = glb_mvt.mul(renderable.affine_transform());
             this.nMatrix = mat4_normal_affine(this.mvMatrix);
             this.setUniforms(this.currentProgram);
-            var vert_buf = renderable.get_buffer(shader_input.position);
+            var vert_buf = renderable.get_buffer(attri_type.position);
             this.backend.program_assign_input(this.currentProgram, "aVertexPosition", vert_buf[0].get_buf());
-            var norm_buf = renderable.get_buffer(shader_input.normal);
+            var norm_buf = renderable.get_buffer(attri_type.normal);
             this.backend.program_assign_input(this.currentProgram, "aVertexNormal", norm_buf[0].get_buf());
-            var idx_bufs = renderable.get_buffer(shader_input.index);
+            var idx_bufs = renderable.get_buffer(attri_type.index);
             for (var j = 0; j < idx_bufs.length; j++) {
                 this.backend.draw_indexed_triangles(this.backend.frame_buf_get_default(), this.currentProgram, idx_bufs[j].get_buf(), 0, idx_bufs[j].get_len());
             }

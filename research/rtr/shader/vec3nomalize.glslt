@@ -1,0 +1,6 @@
+var vec3normalizeglslt = `
+vec3 vec3normalize(vec3 n)
+{
+        return normalize(n);
+}
+`;

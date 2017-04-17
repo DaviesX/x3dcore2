@@ -1,0 +1,7 @@
+var brdfnormalglslt = `
+// Normal vector brdf material.
+vec4 brdfnormal(vec3 unit_norm)
+{
+        return vec4(unit_norm, 1.0);
+}
+`;

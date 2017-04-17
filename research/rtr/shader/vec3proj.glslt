@@ -1,0 +1,7 @@
+var vec3projglslt = `
+// GLSL template to perform vector linear transformation.
+vec3 vec3proj(mat4 t, vec3 p)
+{
+        return vec3(t*vec4(p, 1.0));
+}
+`;

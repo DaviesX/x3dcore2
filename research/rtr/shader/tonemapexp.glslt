@@ -1,0 +1,7 @@
+var tonemapexpglslt = `
+// Crytek's tonemapping algorithm.
+vec3 tonemapexp(vec3 color, float adapted_lum) 
+{
+        return 1 - exp(-adapted_lum * color);
+}
+`;

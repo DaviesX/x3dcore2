@@ -17,7 +17,7 @@ class scene_cache
                 return this.rend_cache.has(id);
         }
 
-        public upload_renderable(id: string, rend: if_renderable, types: Array<shader_input>): void
+        public upload_renderable(id: string, rend: if_renderable, types: Array<attri_type>): void
         {
                 this.rend_cache.set(id, rend);
                 for (var i = 0; i < types.length; i++) {
@@ -260,7 +260,7 @@ class scene
                                 if (mat_id == null)
                                         throw new Error("Cannot upload renderable " + id + " for it has no material.");
                                 var mat: if_material = this_.mats.get(mat_id);
-                                var adaptive_attris: Array<shader_input> = mat.get_required_attributes();
+                                var adaptive_attris: Array<attri_type> = mat.get_required_attributes();
                                 this_.cache.upload_renderable(id, rend, adaptive_attris);
                         }
                 });

@@ -1,0 +1,8 @@
+var brdfadd3glslt = `
+
+// 3-color addition.
+vec4 brdfadd3(vec4 diff, vec4 spec, vec4 ambient)
+{
+        return diff + spec + ambient;
+}
+`;

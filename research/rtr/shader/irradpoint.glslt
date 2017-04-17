@@ -1,0 +1,8 @@
+var irradpointglslt = `
+
+vec3 irradpoint(vec3 ray, vec3 inten)
+{
+        float dist2 = dot(ray, ray);
+        return inten/dist2;
+}
+`;

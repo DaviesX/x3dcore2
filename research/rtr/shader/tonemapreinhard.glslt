@@ -1,0 +1,9 @@
+var tonemapreinhardglslt = `
+// Reinhard's tonemapping algorithm.
+vec3 tonemapreinhard(vec3 color, float adapted_lum)
+{
+    const float MIDDLE_GREY = 1;
+    color *= MIDDLE_GREY / adapted_lum;
+    return color / (1.0 + color);
+}
+`;

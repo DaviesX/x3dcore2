@@ -1,0 +1,7 @@
+var incidentglslt = `
+
+vec3 incident(vec3 light_pos, vec3 hit_point)
+{
+        return light_pos - hit_point;
+}
+`;

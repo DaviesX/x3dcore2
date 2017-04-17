@@ -1,0 +1,6 @@
+var brdfcolorglslt = `
+vec4 brdfcolor(vec3 albedo)
+{
+        return vec4(albedo, 1.0);
+}
+`;
