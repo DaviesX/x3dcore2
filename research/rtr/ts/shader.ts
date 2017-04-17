@@ -97,48 +97,8 @@ function create_shader_program(backend: if_raster_backend, vid: string, fid: str
         backend.program_link(prog);
         return prog;
 }
-/*
-enum shader_input
-{
-        position,
-        normal,
-        texcoord,
-        tangent,
-        index,
 
-        hdr_color,
-        ldr_color,
-        depth,
-}
 
-enum shader_output
-{
-        position,
-        normal,
-        texcoord,
-        tangent,
-        index,
-
-        hdr_color,
-        ldr_color,
-        depth
-};
-
-enum shader_constant
-{
-        t_modelview,
-        t_proj,
-
-        albedo,
-        metalness,
-        alpha,
-        beta,
-
-        inten,
-        lightpos,
-        lightdir
-}
-*/
 enum shader_func_param
 {
         position,
