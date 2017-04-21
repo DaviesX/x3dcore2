@@ -360,3 +360,13 @@ function mat4_normal_affine(affine: mat4): mat4
 }
 
 //function mat4_proj
+
+function rad2deg(rad: number): number
+{
+        return rad / Math.PI * 180;
+}
+
+function deg2rad(deg: number): number
+{
+        return deg / 180 * Math.PI;
+}

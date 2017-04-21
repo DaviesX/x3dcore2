@@ -400,6 +400,11 @@ class shader_call
         private param_input_binding = new Set<shader_func_param>();
         private param_const_binding = new Set<shader_func_param>();
 
+        constructor(func: shader_function)
+        {
+                this.func = func;
+        }
+
         public bind_param_to_shader_input(param: shader_func_param)
         {
                 this.param_input_binding.add(param);
@@ -918,4 +923,11 @@ function shade_gen_builtin_library(): shader_lib
 
         lib.check_functions();
         return lib;
+}
+
+var g_shader_lib = shade_gen_builtin_library();
+
+function shader_get_builtin_library(): shader_lib
+{
+        return g_shader_lib;
 }

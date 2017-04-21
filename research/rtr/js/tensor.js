@@ -169,4 +169,10 @@ function mat4_viewport(x, y, height, width) {
 function mat4_normal_affine(affine) {
     return affine.inv().transpose();
 }
+function rad2deg(rad) {
+    return rad / Math.PI * 180;
+}
+function deg2rad(deg) {
+    return deg / 180 * Math.PI;
+}
 //# sourceMappingURL=tensor.js.map

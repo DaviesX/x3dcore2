@@ -296,10 +296,11 @@ var shader_param_binding;
     shader_param_binding[shader_param_binding["call"] = 2] = "call";
 })(shader_param_binding || (shader_param_binding = {}));
 class shader_call {
-    constructor() {
+    constructor(func) {
         this.param_call_binding = new Map();
         this.param_input_binding = new Set();
         this.param_const_binding = new Set();
+        this.func = func;
     }
     bind_param_to_shader_input(param) {
         this.param_input_binding.add(param);
@@ -686,5 +687,9 @@ function shade_gen_builtin_library() {
     lib.add_function(func);
     lib.check_functions();
     return lib;
+}
+var g_shader_lib = shade_gen_builtin_library();
+function shader_get_builtin_library() {
+    return g_shader_lib;
 }
 //# sourceMappingURL=shader.js.map
