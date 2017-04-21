@@ -14,19 +14,37 @@
     <script type="text/javascript" src="meshes/cornellbox_obj.js"></script>
 
     <!-- Shaders -->
-    <script id="shader-vs"          type="text/javascript" src="shader/stdmesh.glslv"></script>
-    <script id="shader-vs-light"    type="text/javascript" src="shader/pointlightmarker.glslv"></script>
-    <script id="shader-fs-light"    type="text/javascript" src="shader/pointlightmarker.glslf"></script>
-    <script id="shader-fs0"         type="text/javascript" src="shader/white.glslf"></script>
-    <script id="shader-fs1-1"       type="text/javascript" src="shader/position.glslf"></script>
-    <script id="shader-fs1-2"       type="text/javascript" src="shader/normal.glslf"></script>
-    <script id="shader-fs1-3"       type="text/javascript" src="shader/lightdirection.glslf"></script>
-    <script id="shader-fs2"         type="text/javascript" src="shader/diffuse.glslf"></script>
-    <script id="shader-fs3-1"       type="text/javascript" src="shader/phong.glslf"></script>
-    <script id="shader-fs3-2"       type="text/javascript" src="shader/blinnphong.glslf"></script>
-    <script id="shader-fs4"         type="text/javascript" src="shader/isotropic.glslf"></script>
+    <script id="sl_albedodiff" type="text/javascript" src="shader/albedodiff.glslt"></script>
+    <script id="sl_albedospec" type="text/javascript" src="shader/albedospec.glslt"></script>
+    <script id="sl_brdfambient" type="text/javascript" src="shader/brdfambient.glslt"></script>
+    <script id="sl_brdfblinnphong" type="text/javascript" src="shader/brdfblinnphong.glslt"></script>
+    <script id="sl_brdfcolor" type="text/javascript" src="shader/brdfcolor.glslt"></script>
+    <script id="sl_brdfcooktorr" type="text/javascript" src="shader/brdfcooktorr.glslt"></script>
+    <script id="sl_brdfdepth" type="text/javascript" src="shader/brdfdepth.glslt"></script>
+    <script id="sl_brdfdirection" type="text/javascript" src="shader/brdfdirection.glslt"></script>
+    <script id="sl_brdflambert" type="text/javascript" src="shader/brdflambert.glslt"></script>
+    <script id="sl_brdfnormal" type="text/javascript" src="shader/brdfnormal.glslt"></script>
+    <script id="sl_brdforennayar" type="text/javascript" src="shader/brdforennayar.glslt"></script>
+    <script id="sl_brdfphong" type="text/javascript" src="shader/brdfphong.glslt"></script>
+    <script id="sl_brdfwhite" type="text/javascript" src="shader/brdfwhite.glslt"></script>
+    <script id="sl_brdfadd3" type="text/javascript" src="shader/brdfadd3.glslt"></script>
+    <script id="sl_emergent" type="text/javascript" src="shader/emergent.glslt"></script>
+    <script id="sl_incident" type="text/javascript" src="shader/incident.glslt"></script>
+    <script id="sl_irradpoint" type="text/javascript" src="shader/irradpoint.glslt"></script>
+    <script id="sl_irradspot" type="text/javascript" src="shader/irradspot.glslt"></script>
+    <script id="sl_irradsun" type="text/javascript" src="shader/irradsun.glslt"></script>
+    <script id="sl_loglum" type="text/javascript" src="shader/loglum.glslt"></script>
+    <script id="sl_texhdrcolor" type="text/javascript" src="shader/texhdrcolor.glslt"></script>
+    <script id="sl_tonemapaces" type="text/javascript" src="shader/tonemapaces.glslt"></script>
+    <script id="sl_tonemapexp" type="text/javascript" src="shader/tonemapexp.glslt"></script>
+    <script id="sl_tonemapfilmic" type="text/javascript" src="shader/tonemapfilmic.glslt"></script>
+    <script id="sl_tonemapreinhard" type="text/javascript" src="shader/tonemapreinhard.glslt"></script>
+    <script id="sl_vec3normalize" type="text/javascript" src="shader/vec3normalize.glslt"></script>
+    <script id="sl_vec3modelview" type="text/javascript" src="shader/vec3modelview.glslt"></script>
+    <script id="sl_vec3nmodelview" type="text/javascript" src="shader/vec3nmodelview.glslt"></script>
+    <script id="sl_vec3proj" type="text/javascript" src="shader/vec3proj.glslt"></script>
 
-    
+
     <!-- Useful 3rd party libraries -->
     <script type="text/javascript" src="js/3rdparty/jquery-3.2.0.js"></script>
     <script type="text/javascript" src="js/3rdparty/spectrum.js"></script>
@@ -38,25 +56,27 @@
     <script type="text/javascript" src="js/tensor.js"></script>
     <script type="text/javascript" src="js/gl.js"></script>
     <script type="text/javascript" src="js/shader.js"></script>
-    <scropt type="text/javascript" src="js/material.js"></script>
-    <script type="text/javascript" src="js/mesh.js"></script>
-    <script type="text/javascript" src="js/light.js"></script>
-    <script type="text/javascript" src="js/camera.js"></script>
-    <script type="text/javascript" src="js/scene.js"></script>
-    <script type="text/javascript" src="js/postproc.js"></script>
-    <script type="text/javascript" src="js/pass.js"></script>
-    <script type="text/javascript" src="js/pipeline.js"></script>
+    <scropt type="text/javascript" src="js/material.js">
+        </script>
+        <script type="text/javascript" src="js/mesh.js"></script>
+        <script type="text/javascript" src="js/light.js"></script>
+        <script type="text/javascript" src="js/camera.js"></script>
+        <script type="text/javascript" src="js/scene.js"></script>
+        <script type="text/javascript" src="js/postproc.js"></script>
+        <script type="text/javascript" src="js/pass.js"></script>
+        <script type="text/javascript" src="js/pipeline.js"></script>
 
-    <!-- WebGL functions -->
-    <script type="text/javascript" src="js/app.js"></script>
+        <!-- WebGL functions -->
+        <script type="text/javascript" src="js/app.js"></script>
 
-    <!-- App controller  -->
-    <script type="text/javascript" src="js/ui.js"></script>
+        <!-- App controller  -->
+        <script type="text/javascript" src="js/ui.js"></script>
 </head>
 
 
 
 <!-- HTML contents -->
+
 <body>
     <h1>rtr experiments</h1>
 
@@ -83,8 +103,8 @@
             <tr>
                 <td width="200px"><input type="checkbox" onchange="changeAnimatedState(this.checked);">Animated object</td>
                 <td>
-                    <input id="sliderBar" type="range" min="1" max="36" value="6" onchange="updateSlider(this.value);" disabled>
-                    (<span id="sliderAmount">60</span>&deg;/s)
+                    <input id="sliderBar" type="range" min="1" max="36" value="6" onchange="updateSlider(this.value);" disabled>                    (
+                    <span id="sliderAmount">60</span>&deg;/s)
                 </td>
             </tr>
         </table>
@@ -104,19 +124,19 @@
             <tr>
                 <td width="200px"><input type="checkbox" onchange="changeAnimatedLightState(this.checked);">Animated light</td>
                 <td>
-                    <input id="sliderBarLight" type="range" min="1" max="36" value="6" onchange="updateSliderLight(this.value);" disabled>
-                    (<span id="sliderAmountLight">60</span>&deg;/s)
+                    <input id="sliderBarLight" type="range" min="1" max="36" value="6" onchange="updateSliderLight(this.value);" disabled>                    (
+                    <span id="sliderAmountLight">60</span>&deg;/s)
                 </td>
             </tr>
             <tr>
                 <td>Light power</td>
                 <td>
-                    <input id="sliderBar_LightPower" type="range" min="1" max="20" value="10" onchange="updateSlider_LightPower(this.value);">
-                    (<span id="sliderAmount_LightPower">5</span>)
+                    <input id="sliderBar_LightPower" type="range" min="1" max="20" value="10" onchange="updateSlider_LightPower(this.value);">                    (
+                    <span id="sliderAmount_LightPower">5</span>)
                 </td>
             </tr>
         </table>
-    </div>    
+    </div>
 
     <div class="panel" style="margin-left:10px">
         <p>Shading Parameters (Common)</p>
@@ -133,7 +153,7 @@
                         <option value="5">Phong Shading</option>
                         <option value="6">Blinn-Phong Shading</option>
                         <option value="7">(Isotropic) Microfacet Shading</option>
-                    </select>                
+                    </select>
                 </td>
             </tr>
             <tr>
@@ -147,52 +167,61 @@
                 <td>
                     <input type="text" id="colorPickerSpec"> (<span id="colorTextSpec">#ffffff</span>)
                 </td>
-            </tr>            
+            </tr>
             <tr>
                 <td>Ambient</td>
                 <td>
-                    <input type="range" min="0" max="50" value="10" onchange="updateSlider_Ambient(this.value);">
-                    (<span id="sliderAmount_Ambient">0.1</span>)
+                    <input type="range" min="0" max="50" value="10" onchange="updateSlider_Ambient(this.value);"> (
+                    <span id="sliderAmount_Ambient">0.1</span>)
                 </td>
             </tr>
 
             <tr class="phong-panel" style="display:none">
-                <td colspan="2"><hr><p>Shading Parameters (Phong)</p></td>
+                <td colspan="2">
+                    <hr>
+                    <p>Shading Parameters (Phong)</p>
+                </td>
             </tr>
             <tr class="phong-panel" style="display:none">
                 <td>Exponent</td>
                 <td>
-                    <input type="range" min="1" max="40" value="10" onchange="updateSlider_PhongExp(this.value);">
-                    (<span id="sliderAmount_PhongExp">50</span>)
+                    <input type="range" min="1" max="40" value="10" onchange="updateSlider_PhongExp(this.value);"> (
+                    <span id="sliderAmount_PhongExp">50</span>)
                 </td>
-            </tr>            
+            </tr>
 
             <tr class="blinn-phong-panel" style="display:none">
-                <td colspan="2"><hr><p>Shading Parameters (Blinn-Phong)</p></td>
+                <td colspan="2">
+                    <hr>
+                    <p>Shading Parameters (Blinn-Phong)</p>
+                </td>
             </tr>
             <tr class="blinn-phong-panel" style="display:none">
                 <td>Exponent</td>
                 <td>
-                    <input type="range" min="1" max="40" value="10" onchange="updateSlider_BlinnPhongExp(this.value);">
-                    (<span id="sliderAmount_BlinnPhongExp">50</span>)
+                    <input type="range" min="1" max="40" value="10" onchange="updateSlider_BlinnPhongExp(this.value);"> (
+                    <span id="sliderAmount_BlinnPhongExp">50</span>)
                 </td>
             </tr>
 
             <tr class="microfacet-panel" style="display:none">
-                <td colspan="2"><hr><p>Shading Parameters (Microfacet)</p></td>
+                <td colspan="2">
+                    <hr>
+                    <p>Shading Parameters (Microfacet)</p>
+                </td>
             </tr>
             <tr class="microfacet-panel" style="display:none">
                 <td>Index of Refraction</td>
                 <td>
-                    <input id="sliderBar_MicrofacetIOR" type="range" min="20" max="100" value="50" onchange="updateSlider_MicrofacetIOR(this.value);">
-                    (<span id="sliderAmount_MicrofacetIOR">5.0</span>)
+                    <input id="sliderBar_MicrofacetIOR" type="range" min="20" max="100" value="50" onchange="updateSlider_MicrofacetIOR(this.value);">                    (
+                    <span id="sliderAmount_MicrofacetIOR">5.0</span>)
                 </td>
-            </tr>            
+            </tr>
             <tr class="microfacet-panel" style="display:none">
                 <td>Beta</td>
                 <td>
-                    <input id="sliderBar_MicrofacetBeta" type="range" min="5" max="50" value="20" onchange="updateSlider_MicrofacetBeta(this.value);">
-                    (<span id="sliderAmount_MicrofacetBeta">0.2</span>)
+                    <input id="sliderBar_MicrofacetBeta" type="range" min="5" max="50" value="20" onchange="updateSlider_MicrofacetBeta(this.value);">                    (
+                    <span id="sliderAmount_MicrofacetBeta">0.2</span>)
                 </td>
             </tr>
         </table>
