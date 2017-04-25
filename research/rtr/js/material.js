@@ -19,10 +19,6 @@ class mat_lambert {
     is_mergeable(mat) {
         return mat.type() === material_type.lambert;
     }
-    merge(mat) {
-        if (!this.is_mergeable(mat))
-            throw new Error("material " + this.type() + " is not mergable with " + mat.type());
-    }
     get_required_attributes() {
         var attris = new Array();
         attris.push(attri_type.index);

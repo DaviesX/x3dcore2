@@ -19,7 +19,6 @@ interface if_material
         get_radiance_call(irradance: shader_call, incident: shader_call): shader_call;
         upload(backend: if_raster_backend, prog: program_location): void;
         is_mergeable(mat: if_material): boolean;
-        merge(mat: if_material): void;
 }
 
 class mat_lambert implements if_material
@@ -43,12 +42,6 @@ class mat_lambert implements if_material
         public is_mergeable(mat: if_material): boolean
         {
                 return mat.type() === material_type.lambert;
-        }
-
-        public merge(mat: if_material): void
-        {
-                if (!this.is_mergeable(mat))
-                        throw new Error("material " + this.type() + " is not mergable with " + mat.type());
         }
 
         public get_required_attributes(): Array<attri_type>
