@@ -26,10 +26,7 @@ class light_spot {
         this.p = p;
     }
     projective_transforms() {
-        var trans = new Array();
-        var proj = mat4_perspective(rad2deg(this.umbrella), 1, this.near, this.far);
-        trans.push(proj);
-        return trans;
+        return [frustum_perspective(rad2deg(this.umbrella), 1, this.near, this.far)];
     }
     get_irradiance_call() {
         var func = shader_get_builtin_library().get_function("irradspot");
@@ -47,7 +44,7 @@ class light_spot {
         incident_call.bind_param_to_shader_input(shader_func_param.position);
         return incident_call;
     }
-    upload(backend, prog) {
+    upload(backend, prog, i) {
         backend.program_assign_uniform(prog, shader_constant_var_info(shader_func_param.lightdir)[0], this.dir.toarray(), shader_constant_var_info(shader_func_param.lightdir)[1]);
         backend.program_assign_uniform(prog, shader_constant_var_info(shader_func_param.exp)[0], [this.exp], shader_constant_var_info(shader_func_param.exp)[1]);
         backend.program_assign_uniform(prog, shader_constant_var_info(shader_func_param.umbrella)[0], [this.umbrella], shader_constant_var_info(shader_func_param.umbrella)[1]);

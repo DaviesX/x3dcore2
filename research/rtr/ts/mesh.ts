@@ -36,9 +36,13 @@ class buffer_info
 interface if_renderable
 {
         available_attributes(): Array<attri_type>;
-        upload(backend: if_raster_backend, o: attri_type): Array<buffer_info>
-        unload(backend: if_raster_backend): void
+        upload(backend: if_raster_backend, o: attri_type): Array<buffer_info>;
+        unload(backend: if_raster_backend): void;
         get_buffer(o: attri_type): Array<buffer_info>;
+
+        get_transform_call(o: attri_type): shader_call;
+        upload_transform_call(backend: if_raster_backend, prog: program_location, o: attri_type, modelview: mat4, proj: mat4): void;
+
         is_permanent(): boolean;
         affine_transform(): mat4;
 }
@@ -270,6 +274,66 @@ class trimesh implements if_renderable
                                 } else {
                                         return [new buffer_info(this.ibo[0], this.indices.length)];
                                 }
+                }
+        }
+
+        public get_transform_call(o: attri_type): shader_call
+        {
+                switch (o) {
+                        case attri_type.position:
+                                var t_vert = shader_get_builtin_library().get_function("vec3modelview");
+                                var t_vert_call = new shader_call(t_vert);
+                                t_vert_call.bind_param_to_constant(shader_func_param.t_modelview);
+                                t_vert_call.bind_param_to_shader_input(shader_func_param.position);
+                                return t_vert_call;
+
+                        case attri_type.normal:
+                                if (!this.has_normal())
+                                        throw new Error("This mesh doesn't have the normal attributes.");
+                                var t_norm = shader_get_builtin_library().get_function("vec3nmodelview");
+                                var t_norm_call = new shader_call(t_norm);
+                                t_norm_call.bind_param_to_constant(shader_func_param.t_nmodelview);
+                                t_norm_call.bind_param_to_shader_input(shader_func_param.normal);
+                                return t_norm_call;
+
+                        case attri_type.texcoord:
+                                if (!this.has_tex_coords())
+                                        throw new Error("This mesh doesn't have the texcoord attributes.");
+                                return null;
+
+                        default:
+                                throw new Error("Invalid attribute type " + o.toString() + " for generating transform call.");
+                }
+        }
+
+        public upload_transform_call(backend: if_raster_backend, prog: program_location, o: attri_type, modelview: mat4, proj: mat4): void
+        {
+                var comp_modelview: mat4 = modelview.mul(this.affine_transform());
+
+                switch (o) {
+                        case attri_type.position:
+                                backend.program_assign_uniform(prog,
+                                        shader_constant_var_info(shader_func_param.t_modelview)[0],
+                                        comp_modelview.toarray(),
+                                        shader_constant_var_info(shader_func_param.t_modelview)[1]);
+                                break;
+
+                        case attri_type.normal:
+                                if (!this.has_normal())
+                                        throw new Error("This mesh doesn't have the normal attributes.");
+                                backend.program_assign_uniform(prog,
+                                        shader_constant_var_info(shader_func_param.t_nmodelview)[0],
+                                        mat4_normal_affine(comp_modelview).toarray(),
+                                        shader_constant_var_info(shader_func_param.t_nmodelview)[1]);
+                                break;
+
+                        case attri_type.texcoord:
+                                if (!this.has_tex_coords())
+                                        throw new Error("This mesh doesn't have the texcoord attributes.");
+                                break;
+
+                        default:
+                                throw new Error("Invalid attribute type " + o.toString() + " for transform call upload.");
                 }
         }
 }

@@ -300,6 +300,16 @@ function mat4_trota(a: number, axis: vec3): mat4
         return inv_r.mul(rotw).mul(r);
 }
 
+function mat4_trotd(u: vec3, v: vec3, w: vec3): mat4
+{
+        return new mat4(
+                new vec4(u.x, u.y, u.z, 0),
+                new vec4(v.x, v.y, v.z, 0),
+                new vec4(w.x, w.y, w.z, 0),
+                new vec4(0, 0, 0, 1)
+        );
+}
+
 function mat4_tlookat(eye: vec3, center: vec3, up: vec3): mat4
 {
         var w: vec3 = center.sub(eye).norm();
@@ -318,30 +328,50 @@ function mat4_tlookat(eye: vec3, center: vec3, up: vec3): mat4
         return t.mul(l);
 }
 
-function mat4_frustum(left: number, right: number, bottom: number, top: number, z_near: number, z_far: number): mat4
+class frustum
 {
-        var a: number = 2 * z_near;
-        var width: number = right - left;
-        var height: number = top - bottom;
-        var d: number = z_far - z_near;
+        private left: number;
+        private right: number;
+        private top: number;
+        private bottom: number;
+        private z_near: number;
+        private z_far: number;
 
-        var delta_y = top + bottom;
-        var delta_x = left + right;
+        constructor(left: number, right: number, bottom: number, top: number, z_near: number, z_far: number)
+        {
+                this.left = left;
+                this.right = right;
+                this.top = top;
+                this.bottom = bottom;
+                this.z_near = z_near;
+                this.z_far = z_far;
+        }
 
-        return new mat4(
-                new vec4(a / width, 0, 0, 0),
-                new vec4(0, a / height, 0, 0),
-                new vec4(delta_x / width, delta_y / height, (-z_far - z_near) / d, -1),
-                new vec4(0, 0, -a * z_far / d, 0)
-        );
+        public projective_transform(): mat4
+        {
+                var a: number = 2 * this.z_near;
+                var width: number = this.right - this.left;
+                var height: number = this.top - this.bottom;
+                var d: number = this.z_far - this.z_near;
+
+                var delta_y = this.top + this.bottom;
+                var delta_x = this.left + this.right;
+
+                return new mat4(
+                        new vec4(a / width, 0, 0, 0),
+                        new vec4(0, a / height, 0, 0),
+                        new vec4(delta_x / width, delta_y / height, (-this.z_far - this.z_near) / d, -1),
+                        new vec4(0, 0, -a * this.z_far / d, 0)
+                );
+        }
 }
 
-function mat4_perspective(fovy: number, aspect: number, z_near: number, z_far: number): mat4
+function frustum_perspective(fovy: number, aspect: number, z_near: number, z_far: number): frustum
 {
         var tan: number = Math.tan(fovy * Math.PI / 360);
         var top: number = z_near * tan;
         var right: number = top * aspect;
-        return mat4_frustum(-right, right, -top, top, z_near, z_far);
+        return new frustum(-right, right, -top, top, z_near, z_far);
 }
 
 function mat4_viewport(x: number, y: number, height: number, width: number)

@@ -139,6 +139,9 @@ function mat4_trota(a, axis) {
     var rotw = new mat4(new vec4(cos, sin, 0, 0), new vec4(-sin, cos, 0, 0), new vec4(0, 0, 1, 0), new vec4(0, 0, 0, 1));
     return inv_r.mul(rotw).mul(r);
 }
+function mat4_trotd(u, v, w) {
+    return new mat4(new vec4(u.x, u.y, u.z, 0), new vec4(v.x, v.y, v.z, 0), new vec4(w.x, w.y, w.z, 0), new vec4(0, 0, 0, 1));
+}
 function mat4_tlookat(eye, center, up) {
     var w = center.sub(eye).norm();
     up = up.norm();
@@ -148,20 +151,30 @@ function mat4_tlookat(eye, center, up) {
     var t = mat4_ttrans(eye.scale(-1));
     return t.mul(l);
 }
-function mat4_frustum(left, right, bottom, top, z_near, z_far) {
-    var a = 2 * z_near;
-    var width = right - left;
-    var height = top - bottom;
-    var d = z_far - z_near;
-    var delta_y = top + bottom;
-    var delta_x = left + right;
-    return new mat4(new vec4(a / width, 0, 0, 0), new vec4(0, a / height, 0, 0), new vec4(delta_x / width, delta_y / height, (-z_far - z_near) / d, -1), new vec4(0, 0, -a * z_far / d, 0));
+class frustum {
+    constructor(left, right, bottom, top, z_near, z_far) {
+        this.left = left;
+        this.right = right;
+        this.top = top;
+        this.bottom = bottom;
+        this.z_near = z_near;
+        this.z_far = z_far;
+    }
+    projective_transform() {
+        var a = 2 * this.z_near;
+        var width = this.right - this.left;
+        var height = this.top - this.bottom;
+        var d = this.z_far - this.z_near;
+        var delta_y = this.top + this.bottom;
+        var delta_x = this.left + this.right;
+        return new mat4(new vec4(a / width, 0, 0, 0), new vec4(0, a / height, 0, 0), new vec4(delta_x / width, delta_y / height, (-this.z_far - this.z_near) / d, -1), new vec4(0, 0, -a * this.z_far / d, 0));
+    }
 }
-function mat4_perspective(fovy, aspect, z_near, z_far) {
+function frustum_perspective(fovy, aspect, z_near, z_far) {
     var tan = Math.tan(fovy * Math.PI / 360);
     var top = z_near * tan;
     var right = top * aspect;
-    return mat4_frustum(-right, right, -top, top, z_near, z_far);
+    return new frustum(-right, right, -top, top, z_near, z_far);
 }
 function mat4_viewport(x, y, height, width) {
     return new mat4(new vec4(width / 2, 0, 0, 0), new vec4(0, height / 2, 0, 0), new vec4(0, 0, 1, 0), new vec4(width / 2 + x, height / 2 + y, 0, 1));

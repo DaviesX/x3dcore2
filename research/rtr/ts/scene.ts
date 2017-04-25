@@ -1,8 +1,9 @@
 
 /// <reference path="mesh.ts" />
 /// <reference path="material.ts" />
+/// <reference path="light.ts" />
 
-class scene_cache
+class renderable_cache
 {
         private rend_cache = new Map<string, if_renderable>();
         private backend: if_raster_backend;
@@ -36,7 +37,7 @@ class scene_cache
 
         public clear(): void
         {
-                var c: scene_cache = this;
+                var c: renderable_cache = this;
                 this.rend_cache.forEach(function (rend: if_renderable, k, m)
                 {
                         rend.unload(c.backend);
@@ -50,24 +51,30 @@ class scene
         private rend = new Map<string, if_renderable>();
         private mats = new Map<string, if_material>();
         private mat_in_rend = new Map<string, string>();
+        private lights = new Map<string, if_light>();
         private default_id = 139280;
-        private cache: scene_cache;
+        private rend_cache: renderable_cache;
 
         constructor(backend: if_raster_backend)
         {
-                this.cache = new scene_cache(backend);
+                this.rend_cache = new renderable_cache(backend);
         }
 
         public add_renderable(mesh: if_renderable, id: string): void
         {
                 if (this.rend.has(id))
-                        this.cache.unload_renderable(id);
+                        this.rend_cache.unload_renderable(id);
                 this.rend.set(id, mesh);
         }
 
         public add_material(mat: if_material, id: string): void
         {
                 this.mats.set(id, mat);
+        }
+
+        public add_light(light: if_light, id: string): void
+        {
+                this.lights.set(id, light);
         }
 
         public assign_material_to_renderable(mat_id: string, mesh_id: string): boolean
@@ -84,7 +91,7 @@ class scene
                 return this.default_id.toString();
         }
 
-        public load_from_obj_str(obj_str: string, transform: mat4, is_static: boolean): Map<string, trimesh>
+        public load_from_obj_str(id: string, obj_str: string, transform: mat4, is_static: boolean): Map<string, trimesh>
         {
                 // 1. The obj data is assumed to be all triangulated.
                 // 2. default id is used.
@@ -207,13 +214,35 @@ class scene
                 mesh.global_trans = transform == null ? mat4_identity() : transform;
 
                 // Adde object to scene.
-                var id = this.gen_default_id();
+                id = id == null ? this.gen_default_id() : id;
                 this.add_renderable(mesh, id);
 
                 // Return info.
                 var m = new Map<string, trimesh>();
                 m.set(id, mesh);
                 return m;
+        }
+
+        public get_relevant_renderables(f: frustum): Map<if_renderable, if_material>
+        {
+                var this_: scene = this;
+                var result = new Map<if_renderable, if_material>();
+                this.rend.forEach(function (rend: if_renderable, id: string, m)
+                {
+                        var mat_id = this_.mat_in_rend.get(id);
+                        result.set(rend, mat_id == null ? this_.mats.get(mat_id) : null);
+                });
+                return result;
+        }
+
+        public get_relevant_lights(f: frustum): Array<if_light>
+        {
+                var result = new Array<if_light>();
+                this.lights.forEach(function (light: if_light, id, m)
+                {
+                        result.push(light);
+                });
+                return result;
         }
 
         public get_all_renderable_ids(): Array<string>
@@ -247,24 +276,24 @@ class scene
                 return mat_id != null ? this.mats.get(mat_id) : null;
         }
 
-        public upload(): scene_cache
+        public upload(): renderable_cache
         {
                 var this_: scene = this;
                 this.rend.forEach(function (rend: if_renderable, id: string, m)
                 {
-                        if (!this_.cache.has_renderable(id) && rend.is_permanent()) {
+                        if (!this_.rend_cache.has_renderable(id) && rend.is_permanent()) {
                                 var all_attris = rend.available_attributes();
-                                this_.cache.upload_renderable(id, rend, all_attris);
+                                this_.rend_cache.upload_renderable(id, rend, all_attris);
                         } else if (!rend.is_permanent()) {
                                 var mat_id: string = this_.mat_in_rend.get(id);
                                 if (mat_id == null)
                                         throw new Error("Cannot upload renderable " + id + " for it has no material.");
                                 var mat: if_material = this_.mats.get(mat_id);
                                 var adaptive_attris: Array<attri_type> = mat.get_required_attributes();
-                                this_.cache.upload_renderable(id, rend, adaptive_attris);
+                                this_.rend_cache.upload_renderable(id, rend, adaptive_attris);
                         }
                 });
-                return this.cache;
+                return this.rend_cache;
         }
 
         public clear(): void
@@ -272,6 +301,6 @@ class scene
                 this.rend.clear();
                 this.mats.clear();
                 this.mat_in_rend.clear();
-                this.cache.clear();
+                this.rend_cache.clear();
         }
 }

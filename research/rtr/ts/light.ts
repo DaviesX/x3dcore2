@@ -4,10 +4,10 @@
 
 interface if_light
 {
-        projective_transforms(): Array<mat4>;
+        projective_transforms(): Array<frustum>;
         get_irradiance_call(): shader_call;
         get_incident_call(): shader_call;
-        upload(backend: if_raster_backend, prog: program_location): void;
+        upload(backend: if_raster_backend, prog: program_location, i: number): void;
 }
 
 class light_spot implements if_light
@@ -53,12 +53,9 @@ class light_spot implements if_light
                 this.p = p;
         }
 
-        public projective_transforms(): Array<mat4>
+        public projective_transforms(): Array<frustum>
         {
-                var trans = new Array<mat4>();
-                var proj = mat4_perspective(rad2deg(this.umbrella), 1, this.near, this.far);
-                trans.push(proj);
-                return trans;
+                return [frustum_perspective(rad2deg(this.umbrella), 1, this.near, this.far)];
         }
 
         public get_irradiance_call(): shader_call
@@ -81,7 +78,7 @@ class light_spot implements if_light
                 return incident_call;
         }
 
-        public upload(backend: if_raster_backend, prog: number): void
+        public upload(backend: if_raster_backend, prog: number, i: number): void
         {
                 backend.program_assign_uniform(prog,
                         shader_constant_var_info(shader_func_param.lightdir)[0],

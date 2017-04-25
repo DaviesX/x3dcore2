@@ -47,16 +47,16 @@ class app
 
                 var tteapot = mat4_trota(-1.5708, new vec3(1, 0, 0)).
                         mul(mat4_tscale(new vec3(0.15, 0.15, 0.15)));
-                this.teapot_scene.load_from_obj_str(eval("teapot_mesh_str"), tteapot, true);
+                this.teapot_scene.load_from_obj_str("teapot", eval("teapot_mesh_str"), tteapot, true);
 
                 var tbunny = mat4_ttrans(new vec3(0.5, 0, 0));
-                this.bunny_scene.load_from_obj_str(eval("bunny_mesh_str"), tbunny, true);
+                this.bunny_scene.load_from_obj_str("bunny", eval("bunny_mesh_str"), tbunny, true);
 
                 var tmountain = mat4_ttrans(new vec3(0.5, -3, -10));
-                this.mountain_scene.load_from_obj_str(eval("mountain_mesh_str"), tmountain, true);
+                this.mountain_scene.load_from_obj_str("mountain", eval("mountain_mesh_str"), tmountain, true);
 
                 var tplate = mat4_ttrans(new vec3(0.5, 0, -5));
-                this.plate_scene.load_from_obj_str(eval("cornell_mesh_str"), tplate, true);
+                this.plate_scene.load_from_obj_str("cornell", eval("cornell_mesh_str"), tplate, true);
         }
 
 
@@ -169,7 +169,7 @@ class app
                 //pMatrix = mat4_viewport(0, 0, gl_viewport_width(), gl_viewport_height());
                 this.pMatrix = mat4_identity();
 
-                this.pMatrix = this.pMatrix.mul(mat4_perspective(35, this.width / this.height, 0.1, 1000.0));
+                this.pMatrix = this.pMatrix.mul(frustum_perspective(35, this.width / this.height, 0.1, 1000.0).projective_transform());
 
                 this.lightMatrix = mat4_ttrans(new vec3(0.0, -1.0, -7.0)).
                         mul(mat4_trota(0.3, new vec3(1, 0, 0))).
