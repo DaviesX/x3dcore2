@@ -52,7 +52,7 @@ interface if_renderable
         affine_transform(): mat4;
 
         get_transform_call(o: attri_type): shader_call;
-        upload_transform(o: attri_type, modelview: mat4): void;
+        upload_transform(backend: if_raster_backend, prog: program_location, o: attri_type, modelview: mat4): void;
 }
 
 
@@ -320,7 +320,29 @@ class trimesh implements if_renderable
                 }
         }
 
-        public upload_transform(o: attri_type, modelview: mat4): void
+        public upload_transform(backend: if_raster_backend, prog: program_location, o: attri_type, modelview: mat4): void
         {
+                switch (o) {
+                        case attri_type.position:
+                                backend.program_assign_uniform(prog, shader_constant_var_info(shader_func_param.t_modelview)[0],
+                                        modelview.toarray(),
+                                        shader_constant_var_info(shader_func_param.t_modelview)[1]);
+                                backend.program_assign_input(prog, shader_constant_var_info(shader_func_param.position)[0], this.get_buffer(o)[0].get_buf());
+                                break;
+
+                        case attri_type.normal:
+                                backend.program_assign_uniform(prog, shader_constant_var_info(shader_func_param.t_nmodelview)[0],
+                                        mat4_normal_affine(modelview).toarray(),
+                                        shader_constant_var_info(shader_func_param.t_nmodelview)[1]);
+                                backend.program_assign_input(prog, shader_constant_var_info(shader_func_param.normal)[0], this.get_buffer(o)[0].get_buf());
+                                break;
+
+                        case attri_type.texcoord:
+                                backend.program_assign_input(prog, shader_constant_var_info(shader_func_param.texcoord)[0], this.get_buffer(o)[0].get_buf());
+                                break;
+
+                        default:
+                                throw new Error("Invalid attribute type " + o.toString() + " for generating transform call.");
+                }
         }
 }

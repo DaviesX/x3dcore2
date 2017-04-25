@@ -80,7 +80,7 @@ class pass_cache {
                 rend.upload(backend, req_attri[i]);
         }
         for (var i = 0; i < req_attri.length; i++)
-            rend.upload_transform(req_attri[i], modelview);
+            rend.upload_transform(backend, prog, req_attri[i], modelview);
     }
     upload_light(backend, prog, light) {
         light.upload(backend, prog, 0);

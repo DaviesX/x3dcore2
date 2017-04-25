@@ -138,7 +138,7 @@ class pass_cache
 
                 // Upload transformation.
                 for (var i = 0; i < req_attri.length; i++)
-                        rend.upload_transform(req_attri[i], modelview);
+                        rend.upload_transform(backend, prog, req_attri[i], modelview);
         }
 
         public upload_light(backend: if_raster_backend, prog: program_location, light: if_light): void
