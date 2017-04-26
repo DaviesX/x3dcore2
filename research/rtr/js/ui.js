@@ -1,3 +1,4 @@
+var appa = new app();
 function changeActiveMesh(sel) {
     var id = parseInt(sel.value, 10);
 }
@@ -104,10 +105,17 @@ function init_color_picker(jpicker, jtext, init_color, onchange) {
         }
     });
 }
+function put_default_scenes(jtarget) {
+    jtarget.empty();
+    var scenes = appa.get_scenes();
+    scenes.get_all_scene_ids().forEach(function (id, v, s) {
+        jtarget.append("<option value='" + id + "'>" + id + "</option>");
+    });
+}
 $(function () {
+    appa.start(($("#canvas0")[0]));
     init_color_picker($("#colorPickerDiff"), $("#colorTextDiff"), "#3d85c6", changeDiffuseColor);
     init_color_picker($("#colorPickerSpec"), $("#colorTextSpec"), "#ffffff", changeSpecularColor);
-    var appa = new app();
-    appa.webGLStart();
+    put_default_scenes($("#scene_list"));
 });
 //# sourceMappingURL=ui.js.map

@@ -1,44 +1,12 @@
-class renderable_cache {
-    constructor(backend) {
-        this.rend_cache = new Map();
-        this.backend = backend;
-    }
-    has_renderable(id) {
-        return this.rend_cache.has(id);
-    }
-    upload_renderable(id, rend, types) {
-        this.rend_cache.set(id, rend);
-        for (var i = 0; i < types.length; i++) {
-            rend.upload(this.backend, types[i]);
-        }
-    }
-    unload_renderable(id) {
-        if (this.has_renderable(id)) {
-            var rend = this.rend_cache.get(id);
-            rend.unload(this.backend);
-            this.rend_cache.delete(id);
-        }
-    }
-    clear() {
-        var c = this;
-        this.rend_cache.forEach(function (rend, k, m) {
-            rend.unload(c.backend);
-        });
-        this.rend_cache.clear();
-    }
-}
 class scene {
-    constructor(backend) {
+    constructor() {
         this.rend = new Map();
         this.mats = new Map();
         this.mat_in_rend = new Map();
         this.lights = new Map();
         this.default_id = 139280;
-        this.rend_cache = new renderable_cache(backend);
     }
     add_renderable(mesh, id) {
-        if (this.rend.has(id))
-            this.rend_cache.unload_renderable(id);
         this.rend.set(id, mesh);
     }
     add_material(mat, id) {
@@ -196,29 +164,10 @@ class scene {
         var mat_id = this.mat_in_rend.get(rend_id);
         return mat_id != null ? this.mats.get(mat_id) : null;
     }
-    upload() {
-        var this_ = this;
-        this.rend.forEach(function (rend, id, m) {
-            if (!this_.rend_cache.has_renderable(id) && rend.is_permanent()) {
-                var all_attris = rend.available_attributes();
-                this_.rend_cache.upload_renderable(id, rend, all_attris);
-            }
-            else if (!rend.is_permanent()) {
-                var mat_id = this_.mat_in_rend.get(id);
-                if (mat_id == null)
-                    throw new Error("Cannot upload renderable " + id + " for it has no material.");
-                var mat = this_.mats.get(mat_id);
-                var adaptive_attris = mat.get_required_attributes();
-                this_.rend_cache.upload_renderable(id, rend, adaptive_attris);
-            }
-        });
-        return this.rend_cache;
-    }
     clear() {
         this.rend.clear();
         this.mats.clear();
         this.mat_in_rend.clear();
-        this.rend_cache.clear();
     }
 }
 //# sourceMappingURL=scene.js.map

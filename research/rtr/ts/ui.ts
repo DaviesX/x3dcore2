@@ -3,6 +3,8 @@
 /// <reference path="typing/jquery.d.ts" />
 /// <reference path="app.ts" />
 
+var appa = new app();
+
 /*
  * Changing active object and shader
  */
@@ -189,14 +191,26 @@ function init_color_picker(jpicker: JQuery, jtext: JQuery, init_color: string, o
         });
 }
 
+function put_default_scenes(jtarget: JQuery): void
+{
+        jtarget.empty();
+
+        var scenes: app_scenes = appa.get_scenes();
+        scenes.get_all_scene_ids().forEach(function (id: string, v, s)
+        {
+                jtarget.append("<option value='" + id + "'>" + id + "</option>");
+        });
+}
+
 /*
  * Page-load handler
  */
 $(function () 
 {
+        appa.start(<HTMLCanvasElement>($("#canvas0")[0]));
+
         init_color_picker($("#colorPickerDiff"), $("#colorTextDiff"), "#3d85c6", changeDiffuseColor);
         init_color_picker($("#colorPickerSpec"), $("#colorTextSpec"), "#ffffff", changeSpecularColor);
 
-        var appa = new app();
-        appa.webGLStart();
+        put_default_scenes($("#scene_list"));
 });
