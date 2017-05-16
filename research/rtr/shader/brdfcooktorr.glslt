@@ -9,7 +9,7 @@ float fresnel(vec3 i, vec3 h, float ior)
         float g = sqrt(ior * ior - 1.0 + c * c);
         float f = (g - c) / (g + c);
         float d = (c * (g + c) - 1.0) / (c * (g - c) + 1.0);
-        return 1 / 2 * f * f * (1.0 + d * d);
+        return 0.5 * f * f * (1.0 + d * d);
 }
 
 float ggx_distri(vec3 n, vec3 h, float beta) 
@@ -40,7 +40,7 @@ vec4 brdfcooktorr(vec3 i, vec3 n, vec3 o, vec3 irrad, vec3 albedo, float beta, f
 {
         const float bias = 0.001;
         vec3 h = normalize(i + o);
-        float cos_the = max(dot(n, i));
+        float cos_the = max(dot(n, i), 0);
         float b_cos_the = cos_the + bias * (1.0 - sign(cos_the));
 
         vec3 rad = irrad * albedo * fresnel(i, h, ior) * ggx_distri(n, h, beta) * ggx_shadow(i, o, n, beta) / (4.0 * b_cos_the * dot(n, o));
