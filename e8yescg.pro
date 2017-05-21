@@ -4,25 +4,25 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += src/main.cpp \
-    src/if_material.cpp \
-    src/if_renderable.cpp \
     src/camera.cpp \
     src/tensor.cpp \
-    src/if_scene.cpp \
-    src/if_light.cpp \
-    src/if_renderer.cpp \
-    test/if_test.cpp \
-    test/test_tensor.cpp \
-    test/test_runner.cpp
+    src/geometry.cpp \
+    src/light.cpp \
+    src/scene.cpp \
+    src/renderer.cpp \
+    src/material.cpp \
+    test/test.cpp \
+    test/testrunner.cpp \
+    test/testtensor.cpp
 
 HEADERS += \
-    src/if_material.h \
-    src/if_light.h \
-    src/if_renderable.h \
     src/scene.h \
     src/camera.h \
     src/tensor.h \
-    src/if_renderer.h \
-    test/if_test.h \
-    test/test_tensor.h \
-    test/test_runner.h
+    src/geometry.h \
+    src/light.h \
+    src/renderer.h \
+    test/test.h \
+    src/material.h \
+    test/testrunner.h \
+    test/testtensor.h

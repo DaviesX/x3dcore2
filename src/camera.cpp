@@ -1,6 +1,6 @@
 #include "camera.h"
 
-camera::camera()
+e8::camera::camera()
 {
 
 }

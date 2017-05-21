@@ -2,7 +2,7 @@
 #define TEST_TENSOR_H
 
 #include <assert.h>
-#include "if_test.h"
+#include "test.h"
 
 namespace test
 {

@@ -1,6 +1,6 @@
 #include "scene.h"
 
-if_scene::if_scene()
+e8::if_scene::if_scene()
 {
 
 }

@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "../src/tensor.h"
-#include "test_tensor.h"
+#include "testtensor.h"
 
 test::test_tensor::test_tensor()
 {

@@ -1,8 +1,8 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
-#include "test_runner.h"
-#include "test_tensor.h"
+#include "testrunner.h"
+#include "testtensor.h"
 
 
 test::test_runner::test_runner()

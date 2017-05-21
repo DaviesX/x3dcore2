@@ -12,12 +12,12 @@ namespace e8util
 
 #define T_CMP_EPSILON       1e-5f
 
-bool equals(float a, float b)
+inline bool equals(float a, float b)
 {
         return std::abs(a - b) <= T_CMP_EPSILON;
 }
 
-bool equals(double a, double b)
+inline bool equals(double a, double b)
 {
         return std::abs(a - b) <= T_CMP_EPSILON;
 }
@@ -151,7 +151,8 @@ vec<N, T>::operator*(T k) const
 }
 
 template<unsigned N, typename T>
-vec<N, T>  operator*(T k, vec<N, T> const& rhs)
+inline vec<N, T>
+operator*(T k, vec<N, T> const& rhs)
 {
         return rhs*k;
 }
@@ -203,7 +204,7 @@ vec<N, T>::normalize() const
 }
 
 template<unsigned N, typename T>
-std::ostream& operator<<(std::ostream& os, vec<N, T> const& v)
+inline std::ostream& operator<<(std::ostream& os, vec<N, T> const& v)
 {
         os << "(" << v(0);
         for (unsigned i = 1; i < N; i ++) {
@@ -389,7 +390,8 @@ mat<M, N, T>::operator*(T k) const
 }
 
 template <unsigned M, unsigned N, typename T>
-mat<M, N, T> operator*(T k, mat<M, N, T> const& rhs)
+inline mat<M, N, T>
+operator*(T k, mat<M, N, T> const& rhs)
 {
         return rhs*k;
 }
@@ -624,7 +626,8 @@ mat<M, N, T>::lu_solve(mat const& l, mat const& u, vec<N, T> const& b, T* x) con
 }
 
 template <unsigned M, unsigned N, typename T>
-std::ostream& operator<<(std::ostream& os, mat<M, N, T> const& m)
+inline std::ostream&
+operator<<(std::ostream& os, mat<M, N, T> const& m)
 {
         for (unsigned i = 0; i < M; i ++) {
                 os << m(i,0);
@@ -646,7 +649,7 @@ typedef mat<3,1>        mat31;
 typedef mat<4,1>        mat41;
 
 
-mat44
+inline mat44
 mat44_scale(vec3 const& s)
 {
         return mat44({
@@ -657,7 +660,7 @@ mat44_scale(vec3 const& s)
         });
 }
 
-mat44
+inline mat44
 mat44_translate(vec3 const& v)
 {
         return mat44({
@@ -668,7 +671,7 @@ mat44_translate(vec3 const& v)
         });
 }
 
-mat44
+inline mat44
 mat44_basis(vec3 const& u, vec3 const& v, vec3 const& w)
 {
         return mat44({
@@ -679,7 +682,7 @@ mat44_basis(vec3 const& u, vec3 const& v, vec3 const& w)
         });
 }
 
-mat44
+inline mat44
 mat44_rotate(float a, vec3 const& axis)
 {
         vec3 const& w = axis.normalize();
@@ -705,7 +708,7 @@ mat44_rotate(float a, vec3 const& axis)
         return inv_r * rotw * r;
 }
 
-mat44
+inline mat44
 mat44_lookat(vec3 const& eye, vec3 const& center, vec3 const& up)
 {
         vec3 const& w = (center - eye).normalize();
@@ -740,12 +743,12 @@ private:
         float 	z_far;
 };
 
-frustum::frustum(float left, float right, float top, float bottom, float z_near, float z_far):
+inline frustum::frustum(float left, float right, float top, float bottom, float z_near, float z_far):
         left(left), right(right), top(top), bottom(bottom), z_near(z_near), z_far(z_far)
 {
 }
 
-mat44
+inline mat44
 frustum::projective_transform()
 {
         float a = 2 * z_near;
@@ -764,7 +767,7 @@ frustum::projective_transform()
         });
 }
 
-frustum
+inline frustum
 frustum_perspective(float fovy, float aspect, float z_near, float z_far)
 {
         float tan = std::tan(fovy * M_PI / 360.0f);
@@ -773,7 +776,7 @@ frustum_perspective(float fovy, float aspect, float z_near, float z_far)
         return frustum(-right, right, top, -top, z_near, z_far);
 }
 
-mat44
+inline mat44
 mat44_viewport(float x, float y, float height, float width)
 {
         return mat44({
@@ -784,19 +787,19 @@ mat44_viewport(float x, float y, float height, float width)
         });
 }
 
-mat44
+inline mat44
 mat44_normal(mat44 const& affine)
 {
         return ~(affine^(-1));
 }
 
-float
+inline float
 rad2deg(float rad)
 {
         return rad / M_PI * 180;
 }
 
-float
+inline float
 deg2rad(float deg)
 {
         return deg / 180 * M_PI;

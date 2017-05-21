@@ -3,7 +3,7 @@
 
 #include <string>
 #include <map>
-#include "if_test.h"
+#include "test.h"
 
 namespace test
 {

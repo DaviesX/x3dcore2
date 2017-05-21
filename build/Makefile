@@ -49,27 +49,27 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = ../src/main.cpp \
-		../src/if_material.cpp \
-		../src/if_renderable.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
-		../src/if_scene.cpp \
-		../src/if_light.cpp \
-		../src/if_renderer.cpp \
-		../test/if_test.cpp \
-		../test/test_tensor.cpp \
-		../test/test_runner.cpp 
+		../src/geometry.cpp \
+		../src/light.cpp \
+		../src/scene.cpp \
+		../src/renderer.cpp \
+		../src/material.cpp \
+		../test/test.cpp \
+		../test/testrunner.cpp \
+		../test/testtensor.cpp 
 OBJECTS       = main.o \
-		if_material.o \
-		if_renderable.o \
 		camera.o \
 		tensor.o \
-		if_scene.o \
-		if_light.o \
-		if_renderer.o \
-		if_test.o \
-		test_tensor.o \
-		test_runner.o
+		geometry.o \
+		light.o \
+		scene.o \
+		renderer.o \
+		material.o \
+		test.o \
+		testrunner.o \
+		testtensor.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -124,26 +124,26 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../../e8yescg.pro src/if_material.h \
-		src/if_light.h \
-		src/if_renderable.h \
-		src/scene.h \
+		../../e8yescg.pro src/scene.h \
 		src/camera.h \
 		src/tensor.h \
-		src/if_renderer.h \
-		test/if_test.h \
-		test/test_tensor.h \
-		test/test_runner.h ../src/main.cpp \
-		../src/if_material.cpp \
-		../src/if_renderable.cpp \
+		src/geometry.h \
+		src/light.h \
+		src/renderer.h \
+		test/test.h \
+		src/material.h \
+		test/testrunner.h \
+		test/testtensor.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
-		../src/if_scene.cpp \
-		../src/if_light.cpp \
-		../src/if_renderer.cpp \
-		../test/if_test.cpp \
-		../test/test_tensor.cpp \
-		../test/test_runner.cpp
+		../src/geometry.cpp \
+		../src/light.cpp \
+		../src/scene.cpp \
+		../src/renderer.cpp \
+		../src/material.cpp \
+		../test/test.cpp \
+		../test/testrunner.cpp \
+		../test/testtensor.cpp
 QMAKE_TARGET  = e8yescg
 DESTDIR       = 
 TARGET        = e8yescg
@@ -309,15 +309,9 @@ compiler_clean:
 
 ####### Compile
 
-main.o: ../src/main.cpp ../test/test_runner.h \
-		../test/if_test.h
+main.o: ../src/main.cpp ../test/testrunner.h \
+		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../src/main.cpp
-
-if_material.o: ../src/if_material.cpp ../src/if_material.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o if_material.o ../src/if_material.cpp
-
-if_renderable.o: ../src/if_renderable.cpp ../src/if_renderable.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o if_renderable.o ../src/if_renderable.cpp
 
 camera.o: ../src/camera.cpp ../src/camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o camera.o ../src/camera.cpp
@@ -325,27 +319,34 @@ camera.o: ../src/camera.cpp ../src/camera.h
 tensor.o: ../src/tensor.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tensor.o ../src/tensor.cpp
 
-if_scene.o: ../src/if_scene.cpp ../src/scene.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o if_scene.o ../src/if_scene.cpp
+geometry.o: ../src/geometry.cpp ../src/geometry.h \
+		../src/tensor.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o geometry.o ../src/geometry.cpp
 
-if_light.o: ../src/if_light.cpp ../src/if_light.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o if_light.o ../src/if_light.cpp
+light.o: ../src/light.cpp ../src/light.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o light.o ../src/light.cpp
 
-if_renderer.o: ../src/if_renderer.cpp ../src/if_renderer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o if_renderer.o ../src/if_renderer.cpp
+scene.o: ../src/scene.cpp ../src/scene.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scene.o ../src/scene.cpp
 
-if_test.o: ../test/if_test.cpp ../test/if_test.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o if_test.o ../test/if_test.cpp
+renderer.o: ../src/renderer.cpp ../src/renderer.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o renderer.o ../src/renderer.cpp
 
-test_tensor.o: ../test/test_tensor.cpp ../src/tensor.h \
-		../test/test_tensor.h \
-		../test/if_test.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o test_tensor.o ../test/test_tensor.cpp
+material.o: ../src/material.cpp ../src/material.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o material.o ../src/material.cpp
 
-test_runner.o: ../test/test_runner.cpp ../test/test_runner.h \
-		../test/if_test.h \
-		../test/test_tensor.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o test_runner.o ../test/test_runner.cpp
+test.o: ../test/test.cpp ../test/test.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o test.o ../test/test.cpp
+
+testrunner.o: ../test/testrunner.cpp ../test/testrunner.h \
+		../test/test.h \
+		../test/testtensor.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testrunner.o ../test/testrunner.cpp
+
+testtensor.o: ../test/testtensor.cpp ../src/tensor.h \
+		../test/testtensor.h \
+		../test/test.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testtensor.o ../test/testtensor.cpp
 
 ####### Install
 

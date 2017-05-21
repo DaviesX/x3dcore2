@@ -1,5 +1,5 @@
 #include <random>
-#include "if_test.h"
+#include "test.h"
 
 
 std::mt19937 engine;

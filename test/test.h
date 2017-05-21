@@ -1,5 +1,5 @@
-#ifndef IF_TEST_H
-#define IF_TEST_H
+#ifndef TEST_H
+#define TEST_H
 
 
 namespace test
