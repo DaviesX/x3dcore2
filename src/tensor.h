@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <string>
+#include <vector>
 #include <cmath>
 #include <initializer_list>
 
@@ -247,10 +248,16 @@ public:
         bool            operator!=(mat const& rhs) const;
 
         void            lu_decompose(mat& l, mat& u) const;
-        vec<N, T>          solve(vec<N, T> const& b) const;
-        vec<N, T>          ls_solve(vec<N, T> const& b) const;
+        vec<N, T>       solve(vec<N, T> const& b) const;
+        vec<N, T>       ls_solve(vec<N, T> const& b) const;
+
+        T               det() const;
+        T               det(mat const& adj) const;
+        mat             adjugate() const;
 private:
         void            lu_solve(mat const& l, mat const& u, vec<N, T> const& b, T* x) const;
+        T               det(unsigned* next_row, unsigned curr_col, unsigned removed_col) const;
+
         T               e[N][M];
 };
 
@@ -388,6 +395,78 @@ mat<M, N, T> operator*(T k, mat<M, N, T> const& rhs)
 }
 
 template <unsigned M, unsigned N, typename T>
+T
+mat<M, N, T>::det(unsigned next_row[M + 1], unsigned curr_col, unsigned removed_col) const
+{
+        unsigned curr_row = next_row[0];
+        if (next_row[curr_row] == M + 1)
+                return (*this)(curr_row - 1, curr_col - 1);
+
+
+        T d = 0.0;
+        for (unsigned i = 0, prev_row = 0;
+             curr_row != M + 1;
+             prev_row = curr_row,
+             curr_row = next_row[curr_row], i ++) {
+                // 1. Remove row
+                // 2. Compute minor
+                // 3. Restore row
+                next_row[prev_row] = next_row[curr_row];
+                T m_ij = det(next_row, (curr_col + 1 == removed_col) ? (curr_col + 2) : (curr_col + 1), removed_col);
+                next_row[prev_row] = curr_row;
+
+                // Compute cofactor.
+                T a = (*this)(curr_row - 1, curr_col - 1);
+                d += (i & 1 ? -a: a)*m_ij;
+        }
+        return d;
+}
+
+template <unsigned M, unsigned N, typename T>
+T
+mat<M, N, T>::det(mat const& adj) const
+{
+        T d = 0;
+        for (unsigned i = 0; i < M; i ++) {
+                d += (*this)(i,0)*adj(0,i);
+        }
+        return d;
+}
+
+// Transposed comatrix.
+template <unsigned M, unsigned N, typename T>
+mat<M, N, T>
+mat<M, N, T>::adjugate() const
+{
+        unsigned next_row[M + 1];
+        for (unsigned i = 0; i <= N; i ++)
+                next_row[i] = i + 1;
+
+        mat adj;
+        for (unsigned j = 1; j < N + 1; j ++) {
+                for (unsigned i = 1; i < M + 1; i ++) {
+                        // 1. Remove row
+                        // 2. Compute minor
+                        // 3. Restore row
+                        next_row[i - 1] = i + 1;
+                        T m_ij = det(next_row, j == 1 ? 2 : 1, j);
+                        next_row[i - 1] = i;
+
+                        // Transpose and store the value.
+                        adj(j - 1, i - 1) = (i + j) & 1 ? -m_ij : m_ij;
+                }
+        }
+        return adj;
+}
+
+template <unsigned M, unsigned N, typename T>
+T
+mat<M, N, T>::det() const
+{
+        return det(adjugate());
+}
+
+template <unsigned M, unsigned N, typename T>
 mat<M, N, T>
 mat<M, N, T>::operator^(int e) const
 {
@@ -402,15 +481,28 @@ mat<M, N, T>::operator^(int e) const
                 return m;
         } else {
                 // Invert the matrix;
-                mat l, u;
                 mat m;
-                lu_decompose(l, u);
-                vec<N, T> b;
-                for (unsigned j = 0; j < N; j ++) {
-                        b(j) = 1;
-                        lu_solve(l, u, b, &m(0,j));
-                        b(j) = 0;
+
+                if (N <= 4) {
+                        // Analytic solution.
+                        mat const& com = adjugate();
+                        T d = det(com);
+                        if (equals(d, 0))
+                                throw std::string("matrix not invertible.");
+                        m = T(1.0)/d * com;
+                } else {
+                        // Baed on LU factorization.
+                        mat l, u;
+                        lu_decompose(l, u);
+                        vec<N, T> b;
+                        for (unsigned j = 0; j < N; j ++) {
+                                b(j) = 1;
+                                lu_solve(l, u, b, &m(0,j));
+                                b(j) = 0;
+                        }
                 }
+
+                // Power.
                 for (int i = -1; i > e; i --)
                         m = m*m;
                 return m;

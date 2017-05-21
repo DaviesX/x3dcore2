@@ -56,25 +56,39 @@ test::test_tensor::run() const
         e8util::vec3 x = m.solve(e8util::vec3({1,4,7}));
         assert(x == e8util::vec3({3.6250, -4.5000, 2.1250}));
 
+        e8util::mat33   k = {-3, -1, 3,
+                              2,  0,-4,
+                             -5, -2, 1};
+
+        assert(k.adjugate() == e8util::mat33({-8, -5, 4,
+                                               18, 12, -6,
+                                               -4, -1, 2}));
+
+        e8util::mat33   k2 = {-2, -1, 2,
+                               2, 1,  0,
+                              -3, 3, -1};
+        assert(e8util::equals(k2.det(), 18));
+
         e8util::mat33 m_p = m^(-1);
         assert(m_p*m == m*m_p && m_p*m == 1.0f);
 
         x = m.ls_solve(e8util::vec3({1,4,7}));
         assert(x == e8util::vec3({3.6250, -4.5000, 2.1250}));
 
-        for (unsigned i = 0; i < 1000; i ++) {
-                e8util::mat<10,10, double> m;
-                for (unsigned j = 0; j < 10; j ++) {
-                        for (unsigned i = 0; i < 10; i ++) {
-                                m(i,j) = draw_rand();
+#define DIMENSION 10
+        for (unsigned i = 0; i < 100; i ++) {
+                e8util::mat<DIMENSION, DIMENSION, double> m;
+                for (unsigned j = 0; j < DIMENSION; j ++) {
+                        for (unsigned i = 0; i < DIMENSION; i ++) {
+                                m(i,j) = draw_rand()*100;
                         }
                 }
                 assert(m + m == 2.0*m);
-                assert((m - m == e8util::mat<10,10,double>()));
+                assert((m - m == e8util::mat<DIMENSION, DIMENSION, double>()));
                 assert(-m + m == m - m);
 
-                e8util::mat<10,10, double> n = m^(-1);
-                e8util::mat<10,10, double> I = m*n;
+                e8util::mat<DIMENSION, DIMENSION, double> n = m^(-1);
+                e8util::mat<DIMENSION, DIMENSION, double> I = m*n;
                 assert(I == 1.0f);
         }
 }
