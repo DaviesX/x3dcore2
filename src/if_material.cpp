@@ -2,5 +2,4 @@
 
 if_material::if_material()
 {
-
 }

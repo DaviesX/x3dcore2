@@ -1,8 +1,14 @@
 class app_scenes {
     constructor() {
         this.scenes = new Map();
+        this.mats = new Map();
         this.curr_scene = null;
+        this.load_default_material();
         this.load_default_scenes();
+    }
+    load_default_material() {
+        var lambert = new mat_lambert(new vec3(1.0, 1.0, 1.0));
+        this.mats.set("lambertian", lambert);
     }
     load_default_scenes() {
         var teapot_scene = new scene();
@@ -12,12 +18,20 @@ class app_scenes {
         var cornell_scene = new scene();
         var tteapot = mat4_trota(-1.5708, new vec3(1, 0, 0)).mul(mat4_tscale(new vec3(0.15, 0.15, 0.15)));
         teapot_scene.load_from_obj_str("teapot", eval("teapot_mesh_str"), tteapot, true);
+        teapot_scene.add_material(this.mats.get("lambertian"), "lambertian");
+        teapot_scene.assign_material_to_renderable("lambertian", "teapot");
         var tbunny = mat4_ttrans(new vec3(0.5, 0, 0));
         bunny_scene.load_from_obj_str("bunny", eval("bunny_mesh_str"), tbunny, true);
+        bunny_scene.add_material(this.mats.get("lambertian"), "lambertian");
+        bunny_scene.assign_material_to_renderable("lambertian", "bunny");
         var tmountain = mat4_ttrans(new vec3(0.5, -3, -10));
         mountain_scene.load_from_obj_str("mountain", eval("mountain_mesh_str"), tmountain, true);
+        mountain_scene.add_material(this.mats.get("lambertian"), "lambertian");
+        mountain_scene.assign_material_to_renderable("lambertian", "mountain");
         var tplate = mat4_ttrans(new vec3(0.5, 0, -5));
         plate_scene.load_from_obj_str("cornell", eval("cornell_mesh_str"), tplate, true);
+        plate_scene.add_material(this.mats.get("lambertian"), "lambertian");
+        plate_scene.assign_material_to_renderable("lambertian", "cornell");
         this.add_scene("bunny_scene", bunny_scene);
         this.add_scene("mountain_scene", mountain_scene);
         this.add_scene("plate_scene", plate_scene);

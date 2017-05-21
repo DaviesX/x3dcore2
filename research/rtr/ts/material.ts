@@ -25,8 +25,9 @@ class mat_lambert implements if_material
 {
         private albedo: vec3 = null;
 
-        constructor()
+        constructor(albedo: vec3)
         {
+                this.albedo = albedo;
         }
 
         public type(): material_type

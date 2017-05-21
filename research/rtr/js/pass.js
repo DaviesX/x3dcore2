@@ -20,6 +20,35 @@ class pass_cache {
         this.backend = backend;
         this.need_lights = need_lights;
     }
+    update_renderable_info_material(rend_info, mat) {
+        if (rend_info.mat != mat) {
+            var prog = this.mats.get(rend_info.mat);
+            if (prog !== null) {
+                this.backend.program_delete(prog);
+                this.mats.delete(rend_info.mat);
+            }
+            rend_info.mat = mat;
+        }
+    }
+    update_batched_renderable(rend, mat) {
+        var batched_rends = this.batched_rends.get(mat);
+        if (batched_rends == null)
+            this.batched_rends.set(mat, [rend]);
+        else
+            batched_rends.push(rend);
+    }
+    update_renderable_info(rend, mat, frame_id) {
+        var info = this.rends.get(rend);
+        if (info == null) {
+            info = new pass_rend_info(mat, frame_id);
+            this.rends.set(rend, info);
+        }
+        else
+            info.appeared(frame_id);
+        this.update_renderable_info_material(info, mat);
+        this.update_batched_renderable(rend, mat);
+        return info;
+    }
     update(scene, cam, frame_id) {
         var this_ = this;
         this.cam = cam;
@@ -28,24 +57,7 @@ class pass_cache {
         var lights = this.need_lights ? scene.get_relevant_lights(f) : null;
         this.batched_rends.clear();
         rend.forEach(function (mat, r, m) {
-            var info = this_.rends.get(r);
-            if (info == null)
-                this_.rends.set(r, new pass_rend_info(mat, frame_id));
-            else
-                info.appeared(frame_id);
-            if (info.mat !== mat) {
-                var prog = this_.mats.get(info.mat);
-                if (prog !== null) {
-                    this_.backend.program_delete(prog);
-                    this_.mats.delete(info.mat);
-                }
-                info.mat = mat;
-            }
-            var batched_rends = this_.batched_rends.get(mat);
-            if (batched_rends === null)
-                this_.batched_rends.set(mat, [r]);
-            else
-                batched_rends.push(r);
+            this_.update_renderable_info(r, mat, frame_id);
         });
         if (this.need_lights) {
             lights.forEach(function (light, i, a) {

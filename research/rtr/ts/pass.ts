@@ -49,6 +49,49 @@ class pass_cache
                 this.need_lights = need_lights;
         }
 
+        private update_renderable_info_material(rend_info: pass_rend_info, mat: if_material): void
+        {
+                // Update material.
+                if (rend_info.mat != mat) {
+                        // Unload new material and remove the old one.
+                        var prog: program_location = this.mats.get(rend_info.mat);
+                        if (prog !== null) {
+                                this.backend.program_delete(prog);
+                                this.mats.delete(rend_info.mat);
+                        }
+                        // Update with new material.
+                        rend_info.mat = mat;
+                }
+        }
+
+        private update_batched_renderable(rend: if_renderable, mat: if_material): void
+        {
+                // update the actual batches of renderables that need to be rendered.
+                var batched_rends: Array<if_renderable> = this.batched_rends.get(mat);
+                if (batched_rends == null)
+                        this.batched_rends.set(mat, [rend]);
+                else
+                        batched_rends.push(rend);
+        }
+
+        private update_renderable_info(rend: if_renderable, mat: if_material, frame_id: number): pass_rend_info
+        {
+                // Update renderable.
+                var info: pass_rend_info = this.rends.get(rend);
+                if (info == null) {
+                        info = new pass_rend_info(mat, frame_id);
+                        this.rends.set(rend, info);
+                } else
+                        info.appeared(frame_id);
+
+                // Update material.
+                this.update_renderable_info_material(info, mat);
+
+                // Update batch.
+                this.update_batched_renderable(rend, mat);
+                return info;
+        }
+
         public update(scene: scene, cam: camera, frame_id: number): void
         {
                 var this_: pass_cache = this;
@@ -63,31 +106,7 @@ class pass_cache
                 this.batched_rends.clear();
                 rend.forEach(function (mat: if_material, r: if_renderable, m)
                 {
-                        var info: pass_rend_info = this_.rends.get(r);
-                        // Update renderable info.
-                        if (info == null)
-                                this_.rends.set(r, new pass_rend_info(mat, frame_id));
-                        else
-                                info.appeared(frame_id);
-
-                        // Update material.
-                        if (info.mat !== mat) {
-                                // Unload material.
-                                var prog: program_location = this_.mats.get(info.mat);
-                                if (prog !== null) {
-                                        this_.backend.program_delete(prog);
-                                        this_.mats.delete(info.mat);
-                                }
-                                // Update with new material.
-                                info.mat = mat;
-                        }
-
-                        // update the actual batches of renderables that need to be rendered.
-                        var batched_rends: Array<if_renderable> = this_.batched_rends.get(mat);
-                        if (batched_rends === null)
-                                this_.batched_rends.set(mat, [r]);
-                        else
-                                batched_rends.push(r);
+                        this_.update_renderable_info(r, mat, frame_id);
                 });
 
                 // Update lights.
@@ -95,7 +114,7 @@ class pass_cache
                         lights.forEach(function (light: if_light, i, a)
                         {
                                 var info = this_.lights.get(light);
-                                if (info === null)
+                                if (info == null)
                                         this_.lights.set(light, new pass_light_info());
                         });
                 }

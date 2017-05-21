@@ -35,7 +35,7 @@ class scene
         {
                 if (!this.mats.has(mat_id) || !this.rend.has(mesh_id))
                         return false;
-                this.mat_in_rend.set(mat_id, mesh_id);
+                this.mat_in_rend.set(mesh_id, mat_id);
                 return true;
         }
 
@@ -184,7 +184,7 @@ class scene
                 this.rend.forEach(function (rend: if_renderable, id: string, m)
                 {
                         var mat_id = this_.mat_in_rend.get(id);
-                        result.set(rend, mat_id == null ? this_.mats.get(mat_id) : null);
+                        result.set(rend, mat_id != null ? this_.mats.get(mat_id) : null);
                 });
                 return result;
         }

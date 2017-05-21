@@ -7,8 +7,9 @@ var material_type;
     material_type[material_type["cooktorr"] = 4] = "cooktorr";
 })(material_type || (material_type = {}));
 class mat_lambert {
-    constructor() {
+    constructor(albedo) {
         this.albedo = null;
+        this.albedo = albedo;
     }
     type() {
         return material_type.lambert;
