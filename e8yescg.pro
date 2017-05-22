@@ -14,7 +14,10 @@ SOURCES += src/main.cpp \
     test/test.cpp \
     test/testrunner.cpp \
     test/testtensor.cpp \
-    src/resource.cpp
+    src/resource.cpp \
+    src/pathtracer.cpp \
+    src/raster.cpp \
+    src/frame.cpp
 
 HEADERS += \
     src/scene.h \
@@ -27,4 +30,7 @@ HEADERS += \
     src/material.h \
     test/testrunner.h \
     test/testtensor.h \
-    src/resource.h
+    src/resource.h \
+    src/pathtracer.h \
+    src/raster.h \
+    src/frame.h
