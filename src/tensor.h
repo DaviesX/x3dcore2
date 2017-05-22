@@ -215,16 +215,6 @@ inline std::ostream& operator<<(std::ostream& os, vec<N, T> const& v)
 }
 
 
-
-class ray
-{
-public:
-        ray(vec3 const& o, vec3 const& v): o(o), v(v) {}
-        vec3    o;
-        vec3    v;
-};
-
-
 template <unsigned M, unsigned N, typename T = float>
 class mat
 {
@@ -647,6 +637,155 @@ typedef mat<4,4>        mat44;
 typedef mat<2,1>        mat21;
 typedef mat<3,1>        mat31;
 typedef mat<4,1>        mat41;
+
+
+
+class ray
+{
+public:
+        ray(vec3 const& o, vec3 const& v);
+        bool    intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, float t_max, vec3& b, float& t0) const;
+
+        vec3    o;
+        vec3    v;
+};
+
+inline
+ray::ray(vec3 const& o, vec3 const& v): o(o), v(v)
+{
+}
+
+
+inline bool
+ray::intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, float t_max, vec3& b, float& t0) const
+{
+        // b0 = 1 - b1 - b2
+        // (1 - b1 - b2)*P0 + b1*P1 + b2*P2 = Pr0 + Vt
+        // -Vx*t + b1*(P1x - P0x) + b2*(P2x - P0x) = Pr0x - P0x
+        // substitution: va = P1 - P0, vb = P2 - P0, vc = Pr0 - P0
+        vec3 const& va = v1 - v0;
+        vec3 const& vb = v2 - v0;
+        vec3 const& vc = o - v0;
+
+        // solve for t, b1, b2, where
+        // 0 <= b0 <= 1 and 0 <= b1 <= 1 and 0 <= b2 <= 1
+        // or, b1 + b2 <= 1 and 0 <= b1 <= 1 and b2 => 0
+        // which means that the intersect is within the triangle
+        vec3 const& e2 = v.outer(vb);
+
+        float det = va.inner(e2);
+        if (det == 0.0f)
+                return false;
+
+        float inv = 1.0f/det;
+        b(1) = vc.inner(e2)*inv;
+        if (b(1) < 0.0f || b(1) > 1.0f)
+                return false;
+
+        vec3 const& e1 = vc.outer(va);
+        b(2) = v.inner(e1)*inv;
+        if (b(2) < 0.0f || b(1) + b(2) > 1.0f)
+                return false;
+
+        // within the ray ?
+        t0 = vb.inner(e1)*inv;
+        if (t0 < t_min || t0 > t_max)
+                return false;
+
+        b(0) = 1.0f - b(1) - b(2);
+        return true;
+}
+
+
+
+class aabb
+{
+public:
+        aabb(vec3 const& min, vec3 const& max);
+
+        aabb    operator+(aabb const& rhs) const;
+        aabb    operator^(aabb const& rhs) const;
+
+        bool    is_empty() const;
+        float   surf_area() const;
+        bool    intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) const;
+private:
+        float   area;
+        vec3    min;
+        vec3    max;
+};
+
+inline aabb::aabb(vec3 const& min, vec3 const& max):
+        min(min), max(max)
+{
+        if (min(0) > max(0) || min(1) > max(1) || min(2) > max(2)) {
+                area = 0;
+        } else {
+                vec3 d = max - min;
+                area = 2.0f*(d(0)*d(1) + d(0)*d(2) + d(1)*d(2));
+        }
+}
+
+inline aabb
+aabb::operator+(aabb const& rhs) const
+{
+        return aabb(vec3({std::min(min(0), rhs.min(0)),
+                          std::min(min(1), rhs.min(1)),
+                          std::min(min(2), rhs.min(2))}),
+                    vec3({std::max(max(0), rhs.max(0)),
+                          std::max(max(1), rhs.max(1)),
+                          std::max(max(2), rhs.max(2))}));
+}
+
+inline aabb
+aabb::operator^(aabb const& rhs) const
+{
+        return aabb(vec3({std::max(min(0), rhs.min(0)),
+                          std::max(min(1), rhs.min(1)),
+                          std::max(min(2), rhs.min(2))}),
+                    vec3({std::min(max(0), rhs.max(0)),
+                          std::min(max(1), rhs.max(1)),
+                          std::min(max(2), rhs.max(2))}));
+}
+
+inline bool
+aabb::is_empty() const
+{
+        return surf_area() == 0;
+}
+
+inline float
+aabb::surf_area() const
+{
+        return area;
+}
+
+inline bool
+aabb::intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) const
+{
+        // test against the plane parallels to x, y, z axis respectively
+        int i;
+        for ( i = 0; i < 3; i ++ ) {
+                float inv = 1.0f/r.v(i);
+                float k0 = (min(i) - r.o(i))*inv;
+                float k1 = (max(i) - r.o(i))*inv;
+
+                // march toward the middle of the ray
+                if (k0 > k1) {
+                        t_min = std::max(k1, t_min);
+                        t_max = std::min(k0, t_max);
+                } else {
+                        t_min = std::max(k0, t_min);
+                        t_max = std::min(k1, t_max);
+                }
+                // out of the corner
+                if (t_min > t_max) {
+                        return false;
+                }
+        }
+        t0 = t_min;
+        t1 = t_max;
+}
 
 
 inline mat44

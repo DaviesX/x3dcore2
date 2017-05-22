@@ -6,12 +6,18 @@
 namespace e8
 {
 
+typedef e8util::vec<3, unsigned> triangle;
+
 class if_geometry
 {
 public:
         if_geometry();
         ~if_geometry();
-        virtual bool intersect(e8util::ray const& r, float& t) const = 0;
+
+        virtual std::vector<e8util::vec3> const&        vertices() const = 0;
+        virtual std::vector<e8util::vec3> const&        normals() const = 0;
+        virtual std::vector<triangle> const&            triangles() const = 0;
+        virtual e8util::aabb                            aabb() const = 0;
 };
 
 }

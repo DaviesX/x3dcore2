@@ -58,7 +58,8 @@ SOURCES       = ../src/main.cpp \
 		../src/material.cpp \
 		../test/test.cpp \
 		../test/testrunner.cpp \
-		../test/testtensor.cpp 
+		../test/testtensor.cpp \
+		../src/resource.cpp 
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -69,7 +70,8 @@ OBJECTS       = main.o \
 		material.o \
 		test.o \
 		testrunner.o \
-		testtensor.o
+		testtensor.o \
+		resource.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -133,7 +135,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		test/test.h \
 		src/material.h \
 		test/testrunner.h \
-		test/testtensor.h ../src/main.cpp \
+		test/testtensor.h \
+		src/resource.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -143,7 +146,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/material.cpp \
 		../test/test.cpp \
 		../test/testrunner.cpp \
-		../test/testtensor.cpp
+		../test/testtensor.cpp \
+		../src/resource.cpp
 QMAKE_TARGET  = e8yescg
 DESTDIR       = 
 TARGET        = e8yescg
@@ -326,7 +330,12 @@ geometry.o: ../src/geometry.cpp ../src/geometry.h \
 light.o: ../src/light.cpp ../src/light.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o light.o ../src/light.cpp
 
-scene.o: ../src/scene.cpp ../src/scene.h
+scene.o: ../src/scene.cpp ../src/scene.h \
+		../src/tensor.h \
+		../src/geometry.h \
+		../src/material.h \
+		../src/resource.h \
+		../src/light.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scene.o ../src/scene.cpp
 
 renderer.o: ../src/renderer.cpp ../src/renderer.h
@@ -347,6 +356,9 @@ testtensor.o: ../test/testtensor.cpp ../src/tensor.h \
 		../test/testtensor.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testtensor.o ../test/testtensor.cpp
+
+resource.o: ../src/resource.cpp ../src/resource.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o resource.o ../src/resource.cpp
 
 ####### Install
 
