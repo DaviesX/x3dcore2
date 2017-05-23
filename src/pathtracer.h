@@ -16,6 +16,16 @@ public:
         virtual std::vector<e8util::vec3>       sample(std::vector<e8util::ray> const& rays, if_scene const& scene, unsigned n) const = 0;
 };
 
+
+class direct_pathtracer: public if_pathtracer
+{
+public:
+        direct_pathtracer();
+        ~direct_pathtracer();
+
+        std::vector<e8util::vec3>       sample(std::vector<e8util::ray> const& rays, if_scene const& scene, unsigned n) const;
+};
+
 }
 
 

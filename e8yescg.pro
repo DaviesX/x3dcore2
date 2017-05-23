@@ -1,7 +1,10 @@
+QT       += core gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+TARGET = qt
+
 TEMPLATE = app
-CONFIG += console c++11
-CONFIG -= app_bundle
-CONFIG -= qt
+
+CONFIG += c++14
 
 SOURCES += src/main.cpp \
     src/camera.cpp \
@@ -17,7 +20,8 @@ SOURCES += src/main.cpp \
     src/resource.cpp \
     src/pathtracer.cpp \
     src/raster.cpp \
-    src/frame.cpp
+    src/frame.cpp \
+    src/mainwindow.cpp
 
 HEADERS += \
     src/scene.h \
@@ -33,10 +37,14 @@ HEADERS += \
     src/resource.h \
     src/pathtracer.h \
     src/raster.h \
-    src/frame.h
+    src/frame.h \
+    src/mainwindow.h
 
 LIBS += -lGLEW
 LIBS += -lglfw
 LIBS += -lglut
 LIBS += -lGL
 LIBS += -lGLU
+
+FORMS += \
+    src/mainwindow.ui

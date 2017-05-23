@@ -2,6 +2,7 @@
 #define GEOMETRY_H
 
 #include "tensor.h"
+#include "material.h"
 
 namespace e8
 {
@@ -14,9 +15,12 @@ public:
         if_geometry();
         ~if_geometry();
 
+        virtual void                                    bind(if_material const& mat) = 0;
+
         virtual std::vector<e8util::vec3> const&        vertices() const = 0;
         virtual std::vector<e8util::vec3> const&        normals() const = 0;
         virtual std::vector<triangle> const&            triangles() const = 0;
+        virtual if_material const&                      material() const = 0;
         virtual e8util::aabb                            aabb() const = 0;
 };
 
