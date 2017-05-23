@@ -34,3 +34,9 @@ HEADERS += \
     src/pathtracer.h \
     src/raster.h \
     src/frame.h
+
+LIBS += -lGLEW
+LIBS += -lglfw
+LIBS += -lglut
+LIBS += -lGL
+LIBS += -lGLU
