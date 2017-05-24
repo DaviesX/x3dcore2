@@ -26,7 +26,7 @@ public:
         ol_image_renderer(if_pathtracer* pt);
         ~ol_image_renderer();
 
-        void    render(if_scene const& scene, if_camera const& cam, if_frame& frame);
+        void    render(if_scene const& scene, if_camera const& cam, if_frame& frame) override;
 private:
         if_pathtracer*                  m_pt;
         std::vector<e8util::ray>        m_rays;
