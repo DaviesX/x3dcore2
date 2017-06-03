@@ -3,6 +3,7 @@
 #include <iostream>
 #include "testrunner.h"
 #include "testtensor.h"
+#include "testgeometry.h"
 
 
 test::test_runner::test_runner()
@@ -56,6 +57,7 @@ test::load(int argc, char** argv)
 {
         test_runner runner;
         runner.add("test_tensor", new test_tensor(), false);
+        runner.add("test_geometry", new test_geometry(), false);
 
         for (int i = 1; i < argc; i ++) {
                 if ((!std::strcmp(argv[i], "--test") || !std::strcmp(argv[i], "-t")) && (i + 1 < argc)) {

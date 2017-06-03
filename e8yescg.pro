@@ -21,7 +21,8 @@ SOURCES += src/main.cpp \
     src/pathtracer.cpp \
     src/raster.cpp \
     src/frame.cpp \
-    src/mainwindow.cpp
+    src/mainwindow.cpp \
+    test/testgeometry.cpp
 
 HEADERS += \
     src/scene.h \
@@ -38,7 +39,8 @@ HEADERS += \
     src/pathtracer.h \
     src/raster.h \
     src/frame.h \
-    src/mainwindow.h
+    src/mainwindow.h \
+    test/testgeometry.h
 
 LIBS += -lGLEW
 LIBS += -lglfw

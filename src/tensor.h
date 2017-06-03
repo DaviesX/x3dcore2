@@ -704,6 +704,7 @@ public:
         aabb(vec3 const& min, vec3 const& max);
 
         aabb    operator+(aabb const& rhs) const;
+        aabb    operator+(vec3 const& rhs) const;
         aabb    operator^(aabb const& rhs) const;
 
         bool    is_empty() const;
@@ -735,6 +736,17 @@ aabb::operator+(aabb const& rhs) const
                     vec3({std::max(max(0), rhs.max(0)),
                           std::max(max(1), rhs.max(1)),
                           std::max(max(2), rhs.max(2))}));
+}
+
+inline aabb
+aabb::operator+(vec3 const& rhs) const
+{
+        return aabb(vec3({std::min(min(0), rhs(0)),
+                          std::min(min(1), rhs(1)),
+                          std::min(min(2), rhs(2))}),
+                    vec3({std::max(max(0), rhs(0)),
+                          std::max(max(1), rhs(1)),
+                          std::max(max(2), rhs(2))}));
 }
 
 inline aabb

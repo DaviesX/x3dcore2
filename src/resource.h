@@ -1,6 +1,7 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
+#include <string>
 #include <vector>
 #include "geometry.h"
 #include "material.h"
@@ -15,18 +16,36 @@ public:
         if_resource();
         virtual ~if_resource();
 
-        virtual std::vector<e8::if_geometry*>           load_geometries() = 0;
-        virtual std::vector<e8::if_material*>           load_materials() = 0;
-        virtual std::vector<e8::if_light*>              load_lights() = 0;
+        virtual std::vector<e8::if_geometry*>           load_geometries() const = 0;
+        virtual std::vector<e8::if_material*>           load_materials() const = 0;
+        virtual std::vector<e8::if_light*>              load_lights() const = 0;
+
+        virtual bool                                    save_geometries(std::vector<e8::if_geometry*> const& geometries);
 };
 
 class cornell_scene: public if_resource
 {
 public:
-        std::vector<e8::if_geometry*>           load_geometries() override;
-        std::vector<e8::if_material*>           load_materials() override;
-        std::vector<e8::if_light*>              load_lights() override;
+        std::vector<e8::if_geometry*>   load_geometries() const override;
+        std::vector<e8::if_material*>   load_materials() const override;
+        std::vector<e8::if_light*>      load_lights() const override;
 };
+
+class wavefront_obj: if_resource
+{
+public:
+        wavefront_obj(std::string const& location);
+        ~wavefront_obj();
+
+        std::vector<e8::if_geometry*>   load_geometries() const override;
+        std::vector<e8::if_material*>   load_materials() const override;
+        std::vector<e8::if_light*>      load_lights() const override;
+
+        bool                            save_geometries(std::vector<e8::if_geometry*> const& geometries) override;
+private:
+        std::string     m_location;
+};
+
 
 }
 

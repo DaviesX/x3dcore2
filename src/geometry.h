@@ -28,21 +28,34 @@ protected:
 };
 
 
-class sphere: public if_geometry
+class trimesh: public if_geometry
 {
 public:
-        sphere(e8util::vec3 const& o, float r, unsigned res);
-        ~sphere();
+        trimesh();
+        virtual ~trimesh();
 
-        std::vector<e8util::vec3> const&        vertices() const override;
-        std::vector<e8util::vec3> const&        normals() const override;
-        std::vector<triangle> const&            triangles() const override;
-        e8util::aabb                            aabb() const override;
-private:
-        e8util::vec3    m_o;
-        float           m_r;
-        unsigned        m_res;
+        virtual std::vector<e8util::vec3> const&        vertices() const override;
+        virtual std::vector<e8util::vec3> const&        normals() const override;
+        virtual std::vector<triangle> const&            triangles() const override;
+        virtual e8util::aabb                            aabb() const override;
+
+        void                                            compute_aabb();
+protected:
+        std::vector<e8util::vec3>       m_verts;
+        std::vector<e8util::vec3>       m_norms;
+        std::vector<triangle>           m_tris;
+        e8util::aabb                    m_aabb;
 };
+
+
+class uv_sphere: public trimesh
+{
+public:
+        uv_sphere(e8util::vec3 const& o, float r, unsigned const res);
+        ~uv_sphere();
+};
+
+
 
 }
 

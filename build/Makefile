@@ -63,7 +63,8 @@ SOURCES       = ../src/main.cpp \
 		../src/pathtracer.cpp \
 		../src/raster.cpp \
 		../src/frame.cpp \
-		../src/mainwindow.cpp moc_mainwindow.cpp
+		../src/mainwindow.cpp \
+		../test/testgeometry.cpp moc_mainwindow.cpp
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -80,6 +81,7 @@ OBJECTS       = main.o \
 		raster.o \
 		frame.o \
 		mainwindow.o \
+		testgeometry.o \
 		moc_mainwindow.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -156,7 +158,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/pathtracer.h \
 		../src/raster.h \
 		../src/frame.h \
-		../src/mainwindow.h ../src/main.cpp \
+		../src/mainwindow.h \
+		../test/testgeometry.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -171,7 +174,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/pathtracer.cpp \
 		../src/raster.cpp \
 		../src/frame.cpp \
-		../src/mainwindow.cpp
+		../src/mainwindow.cpp \
+		../test/testgeometry.cpp
 QMAKE_TARGET  = qt
 DESTDIR       = 
 TARGET        = qt
@@ -328,8 +332,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../src/mainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../src/mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../src/mainwindow.h ../test/testgeometry.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../src/mainwindow.cpp ../test/testgeometry.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../src/mainwindow.ui $(DISTDIR)/
 
 
@@ -431,7 +435,8 @@ test.o: ../test/test.cpp ../test/test.h
 
 testrunner.o: ../test/testrunner.cpp ../test/testrunner.h \
 		../test/test.h \
-		../test/testtensor.h
+		../test/testtensor.h \
+		../test/testgeometry.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testrunner.o ../test/testrunner.cpp
 
 testtensor.o: ../test/testtensor.cpp ../src/tensor.h \
@@ -439,7 +444,11 @@ testtensor.o: ../test/testtensor.cpp ../src/tensor.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testtensor.o ../test/testtensor.cpp
 
-resource.o: ../src/resource.cpp ../src/resource.h
+resource.o: ../src/resource.cpp ../src/geometry.h \
+		../src/tensor.h \
+		../src/material.h \
+		../src/resource.h \
+		../src/light.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o resource.o ../src/resource.cpp
 
 pathtracer.o: ../src/pathtracer.cpp ../src/pathtracer.h \
@@ -461,6 +470,13 @@ frame.o: ../src/frame.cpp ../src/frame.h \
 mainwindow.o: ../src/mainwindow.cpp ../src/mainwindow.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../src/mainwindow.cpp
+
+testgeometry.o: ../test/testgeometry.cpp ../src/geometry.h \
+		../src/tensor.h \
+		../src/material.h \
+		../test/testgeometry.h \
+		../test/test.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testgeometry.o ../test/testgeometry.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp
