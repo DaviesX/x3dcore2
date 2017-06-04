@@ -20,6 +20,7 @@ public:
 
         virtual std::vector<e8util::vec3> const&        vertices() const = 0;
         virtual std::vector<e8util::vec3> const&        normals() const = 0;
+        virtual std::vector<e8util::vec2> const&        texcoords() const = 0;
         virtual std::vector<triangle> const&            triangles() const = 0;
         virtual e8util::aabb                            aabb() const = 0;
 
@@ -36,13 +37,20 @@ public:
 
         virtual std::vector<e8util::vec3> const&        vertices() const override;
         virtual std::vector<e8util::vec3> const&        normals() const override;
+        virtual std::vector<e8util::vec2> const&        texcoords() const override;
         virtual std::vector<triangle> const&            triangles() const override;
         virtual e8util::aabb                            aabb() const override;
+
+        void                                            vertices(std::vector<e8util::vec3> const& v);
+        void                                            normals(std::vector<e8util::vec3> const& n);
+        void                                            texcoords(std::vector<e8util::vec2> const& t);
+        void                                            triangles(std::vector<triangle> const& t);
 
         void                                            compute_aabb();
 protected:
         std::vector<e8util::vec3>       m_verts;
         std::vector<e8util::vec3>       m_norms;
+        std::vector<e8util::vec2>       m_texcoords;
         std::vector<triangle>           m_tris;
         e8util::aabb                    m_aabb;
 };

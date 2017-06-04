@@ -25,7 +25,7 @@ e8::if_geometry::material() const
 
 // trimesh
 e8::trimesh::trimesh():
-        m_aabb(0, 0)
+        m_aabb(0.0f, 0.0f)
 {
 }
 
@@ -45,6 +45,12 @@ e8::trimesh::normals() const
         return m_norms;
 }
 
+std::vector<e8util::vec2> const&
+e8::trimesh::texcoords() const
+{
+        return m_texcoords;
+}
+
 std::vector<e8::triangle> const&
 e8::trimesh::triangles() const
 {
@@ -55,6 +61,30 @@ e8util::aabb
 e8::trimesh::aabb() const
 {
         return m_aabb;
+}
+
+void
+e8::trimesh::vertices(std::vector<e8util::vec3> const& v)
+{
+        m_verts = v;
+}
+
+void
+e8::trimesh::normals(std::vector<e8util::vec3> const& n)
+{
+        m_norms = n;
+}
+
+void
+e8::trimesh::texcoords(std::vector<e8util::vec2> const& t)
+{
+        m_texcoords = t;
+}
+
+void
+e8::trimesh::triangles(std::vector<triangle> const& t)
+{
+        m_tris = t;
 }
 
 void
@@ -76,24 +106,31 @@ e8::uv_sphere::uv_sphere(e8util::vec3 const& o, float r, unsigned const res)
         // vertex generation.
         // south pole.
         m_verts.push_back(e8util::vec3({0, 0, -r}) + o);
+        m_norms.push_back(e8util::vec3({0, 0, -1}));
+        m_texcoords.push_back((e8util::vec2({0, 0})));
 
         // rings.
         for (unsigned j = 1; j < res - 1; j ++) {
-                float phi = static_cast<float>(j)/res * M_PI - M_PI/2;
+                float u = static_cast<float>(j)/res;
+                float phi = u * M_PI - M_PI/2;
 
                 for (unsigned i = 0; i < res; i ++) {
-                        float theta = static_cast<float>(i)/res * 2*M_PI;
+                        float v = static_cast<float>(i)/res;
+                        float theta = v * 2*M_PI;
 
                         float x = std::cos(phi)*std::cos(theta);
                         float y = std::cos(phi)*std::sin(theta);
                         float z = std::sin(phi);
                         m_verts.push_back(r*e8util::vec3({x, y, z}) + o);
                         m_norms.push_back(e8util::vec3({x, y, z}));
+                        m_texcoords.push_back(e8util::vec2({u, v}));
                 }
         }
 
         // north pole.
         m_verts.push_back(e8util::vec3({0, 0, r}) + o);
+        m_norms.push_back(e8util::vec3({0, 0, 1}));
+        m_texcoords.push_back((e8util::vec2({1, 1})));
 
         // face generation.
         // connect the south pole with the first bottom ring.

@@ -27,25 +27,30 @@ class vec
 {
 public:
         vec(std::initializer_list<T> const& v);
+        vec(T const* v);
         vec(T v);
         vec();
 
-        vec     operator+(vec const& rhs) const;
-        vec     operator-(vec const& rhs) const;
-        vec     operator-() const;
-        vec     operator*(T k) const;
-        T       operator()(unsigned i) const;
-        T&      operator()(unsigned i);
-        bool    operator==(vec const& rhs) const;
-        bool    operator!=(vec const& rhs) const;
+        vec             operator+(vec const& rhs) const;
+        vec             operator-(vec const& rhs) const;
+        vec             operator-() const;
+        vec             operator*(T k) const;
+        T               operator()(unsigned i) const;
+        T&              operator()(unsigned i);
+        bool            operator==(vec const& rhs) const;
+        bool            operator!=(vec const& rhs) const;
 
-        vec     operator*(vec const& rhs) const;
+        vec             operator*(vec const& rhs) const;
 
-        T   inner(vec const& rhs) const;
-        vec     outer(vec const& rhs) const;
+        T               inner(vec const& rhs) const;
+        vec             outer(vec const& rhs) const;
 
-        T   norm() const;
-        vec     normalize() const;
+        T               norm() const;
+        vec             normalize() const;
+
+        vec<N + 1, T>   homo(T p) const;
+        vec<N - 1, T>   cart() const;
+        vec<N - 1, T>   trunc() const;
 private:
         T   e[N];
 };
@@ -53,6 +58,7 @@ private:
 typedef vec<2>  vec2;
 typedef vec<3>  vec3;
 typedef vec<4>  vec4;
+
 
 template<unsigned N, typename T>
 vec<N, T>::vec(std::initializer_list<T> const& v)
@@ -62,6 +68,13 @@ vec<N, T>::vec(std::initializer_list<T> const& v)
                 (*this)(i) = *it;
                 ++ it;
         }
+}
+
+template<unsigned N, typename T>
+vec<N, T>::vec(T const* v)
+{
+        for (unsigned i = 0; i < N; i ++)
+                (*this)(i) = v[i];
 }
 
 template<unsigned N, typename T>
@@ -201,6 +214,39 @@ vec<N, T>
 vec<N, T>::normalize() const
 {
         return 1.0f/norm()*(*this);
+}
+
+template<unsigned N, typename T>
+vec<N + 1, T>
+vec<N, T>::homo(T p) const
+{
+        T v[N + 1];
+        for (unsigned i = 0; i < N; i ++)
+                v[i] = (*this)(i);
+        v[N] = p;
+        return vec<N + 1, T>(v);
+}
+
+template<unsigned N, typename T>
+vec<N - 1, T>
+vec<N, T>::cart() const
+{
+        T inv_w = 1.0f/(*this)(N - 1);
+
+        T v[N - 1];
+        for (unsigned i = 0; i < N - 1; i ++)
+                v[i] = inv_w*(*this)(i);
+        return vec<N - 1, T>(v);
+}
+
+template<unsigned N, typename T>
+vec<N - 1, T>
+vec<N, T>::trunc() const
+{
+        T v[N - 1];
+        for (unsigned i = 0; i < N - 1; i ++)
+                v[i] = (*this)(i);
+        return vec<N - 1, T>(v);
 }
 
 template<unsigned N, typename T>
@@ -919,12 +965,18 @@ frustum::projective_transform()
 }
 
 inline frustum
-frustum_perspective(float fovy, float aspect, float z_near, float z_far)
+frustum_perspective2(float tan_fovy, float aspect, float z_near, float z_far)
 {
-        float tan = std::tan(fovy * M_PI / 360.0f);
+        float tan = tan_fovy;
         float top = z_near * tan;
         float right = top * aspect;
         return frustum(-right, right, top, -top, z_near, z_far);
+}
+
+inline frustum
+frustum_perspective(float fovy, float aspect, float z_near, float z_far)
+{
+        return frustum_perspective2(std::tan(fovy), aspect, z_near, z_far);
 }
 
 inline mat44

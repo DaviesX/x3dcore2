@@ -6,6 +6,8 @@
 #include "geometry.h"
 #include "material.h"
 #include "light.h"
+#include "camera.h"
+
 
 namespace e8util
 {
@@ -16,10 +18,10 @@ public:
         if_resource();
         virtual ~if_resource();
 
-        virtual std::vector<e8::if_geometry*>           load_geometries() const = 0;
-        virtual std::vector<e8::if_material*>           load_materials() const = 0;
-        virtual std::vector<e8::if_light*>              load_lights() const = 0;
-
+        virtual std::vector<e8::if_geometry*>           load_geometries() const;
+        virtual std::vector<e8::if_material*>           load_materials() const;
+        virtual std::vector<e8::if_light*>              load_lights() const;
+        virtual e8::if_camera*                          load_camera() const;
         virtual bool                                    save_geometries(std::vector<e8::if_geometry*> const& geometries);
 };
 
@@ -29,6 +31,7 @@ public:
         std::vector<e8::if_geometry*>   load_geometries() const override;
         std::vector<e8::if_material*>   load_materials() const override;
         std::vector<e8::if_light*>      load_lights() const override;
+        e8::if_camera*                  load_camera() const override;
 };
 
 class wavefront_obj: if_resource
@@ -38,9 +41,6 @@ public:
         ~wavefront_obj();
 
         std::vector<e8::if_geometry*>   load_geometries() const override;
-        std::vector<e8::if_material*>   load_materials() const override;
-        std::vector<e8::if_light*>      load_lights() const override;
-
         bool                            save_geometries(std::vector<e8::if_geometry*> const& geometries) override;
 private:
         std::string     m_location;

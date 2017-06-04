@@ -33,7 +33,7 @@ test::test_tensor::run() const
                 b = {draw_rand(), draw_rand(), draw_rand()};
                 c = {draw_rand(), draw_rand(), draw_rand()};
 
-                assert(a.outer(b.outer(c)) + c.outer(a.outer(b)) + b.outer(c.outer(a)) == 0);
+                assert(a.outer(b.outer(c)) + c.outer(a.outer(b)) + b.outer(c.outer(a)) == 0.0f);
                 assert(e8util::equals((a + b).inner(c), a.inner(c) + b.inner(c)));
                 assert(e8util::equals(a.inner(b.outer(c)), b.inner(c.outer(a))));
         }
