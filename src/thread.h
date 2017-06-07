@@ -15,6 +15,10 @@ typedef unsigned int            tid_t;
 class if_task
 {
 public:
+        if_task()
+        {
+        }
+
         virtual ~if_task()
         {
         }
@@ -32,6 +36,11 @@ class task_info
 public:
         task_info(tid_t tid, pthread_t thread, if_task* task):
                 m_tid(tid), m_thread(thread), m_task(task)
+        {
+        }
+
+        task_info():
+                task_info(-1, -1, nullptr)
         {
         }
 
@@ -65,7 +74,7 @@ private:
 };
 
 unsigned        cpu_core_count();
-mutex_t         create();
+mutex_t         mutex();
 void            destroy(mutex_t& mutex);
 void            lock(mutex_t& mutex);
 void            unlock(mutex_t& mutex);

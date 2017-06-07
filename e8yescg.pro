@@ -1,6 +1,6 @@
 QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-TARGET = qt
+TARGET = e8yescg
 
 TEMPLATE = app
 
@@ -21,9 +21,9 @@ SOURCES += src/main.cpp \
     src/pathtracer.cpp \
     src/raster.cpp \
     src/frame.cpp \
-    src/mainwindow.cpp \
     test/testgeometry.cpp \
-    src/thread.cpp
+    src/thread.cpp \
+    src/app.cpp
 
 HEADERS += \
     src/scene.h \
@@ -40,9 +40,9 @@ HEADERS += \
     src/pathtracer.h \
     src/raster.h \
     src/frame.h \
-    src/mainwindow.h \
     test/testgeometry.h \
-    src/thread.h
+    src/thread.h \
+    src/app.h
 
 LIBS += -lGLEW
 LIBS += -lglfw

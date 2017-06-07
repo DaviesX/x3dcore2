@@ -9,7 +9,7 @@ e8util::cpu_core_count()
 }
 
 e8util::mutex_t
-e8util::create()
+e8util::mutex()
 {
         mutex_t mutex;
         pthread_mutex_init(&mutex, nullptr);
@@ -39,7 +39,7 @@ worker(void* p)
 {
         e8util::if_task* task = static_cast<e8util::if_task*>(p);
         task->main(nullptr);
-        return nullptr;
+        pthread_exit(nullptr);
 }
 
 e8util::task_info
@@ -100,7 +100,7 @@ e8util::thread_pool_worker(void* p)
         } while (this_->m_is_running);
 
         delete static_cast<e8util::thread_pool_worker_data*>(p);
-        return nullptr;
+        pthread_exit(nullptr);
 }
 
 e8util::thread_pool::thread_pool(unsigned num_thrs, std::vector<void*>& worker_storage):
