@@ -28,8 +28,10 @@ test::test_runner::run_all() const
 void
 test::test_runner::run(std::string const& t) const
 {
-        m_tests.at(t)->run();
-        std::cout << "Test case " << t << " has passed." << std::endl;
+        if (m_status.at(t)) {
+                m_tests.at(t)->run();
+                std::cout << "Test case " << t << " has passed." << std::endl;
+        }
 }
 
 void

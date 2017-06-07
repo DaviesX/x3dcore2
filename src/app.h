@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include "frame.h"
 #include "thread.h"
 
 namespace Ui {
@@ -55,7 +56,9 @@ private slots:
 private:
         Ui::MainWindow*         m_ui;
 
-        QTimer                  m_timer;
+        QTimer                  m_stats_update_timer;
+
+        e8::ram_ogl_frame*      m_frame;
 
         rendering_task          m_task;
         e8util::task_info       m_info;

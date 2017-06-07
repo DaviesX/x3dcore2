@@ -36,7 +36,7 @@ DISTNAME      = e8yescg1.0.0
 DISTDIR = /home/davis/e8yescg/build/.tmp/e8yescg1.0.0
 LINK          = g++
 LFLAGS        = -m64
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lGLEW -lglfw -lglut -lGLU -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -65,7 +65,8 @@ SOURCES       = ../src/main.cpp \
 		../src/frame.cpp \
 		../test/testgeometry.cpp \
 		../src/thread.cpp \
-		../src/app.cpp moc_app.cpp
+		../src/app.cpp \
+		../src/compositor.cpp moc_app.cpp
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -84,6 +85,7 @@ OBJECTS       = main.o \
 		testgeometry.o \
 		thread.o \
 		app.o \
+		compositor.o \
 		moc_app.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -162,7 +164,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/frame.h \
 		../test/testgeometry.h \
 		../src/thread.h \
-		../src/app.h ../src/main.cpp \
+		../src/app.h \
+		../src/compositor.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -179,7 +182,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/frame.cpp \
 		../test/testgeometry.cpp \
 		../src/thread.cpp \
-		../src/app.cpp
+		../src/app.cpp \
+		../src/compositor.cpp
 QMAKE_TARGET  = e8yescg
 DESTDIR       = 
 TARGET        = e8yescg
@@ -336,8 +340,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../src/mainwindow.ui $(DISTDIR)/
 
 
@@ -367,7 +371,9 @@ compiler_rcc_clean:
 compiler_moc_header_make_all: moc_app.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_app.cpp
-moc_app.cpp: ../src/thread.h \
+moc_app.cpp: ../src/frame.h \
+		../src/tensor.h \
+		../src/thread.h \
 		../src/app.h \
 		/usr/lib/x86_64-linux-gnu/qt5/bin/moc
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/davis/e8yescg -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../src/app.h -o moc_app.cpp
@@ -394,6 +400,8 @@ compiler_clean: compiler_moc_header_clean compiler_uic_clean
 main.o: ../src/main.cpp ../test/testrunner.h \
 		../test/test.h \
 		../src/app.h \
+		../src/frame.h \
+		../src/tensor.h \
 		../src/thread.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../src/main.cpp
 
@@ -432,7 +440,9 @@ renderer.o: ../src/renderer.cpp ../src/renderer.h \
 		../src/resource.h \
 		../src/light.h \
 		../src/camera.h \
+		../src/compositor.h \
 		../src/frame.h \
+		../src/thread.h \
 		../src/pathtracer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o renderer.o ../src/renderer.cpp
 
@@ -476,7 +486,8 @@ raster.o: ../src/raster.cpp ../src/raster.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o raster.o ../src/raster.cpp
 
 frame.o: ../src/frame.cpp ../src/frame.h \
-		../src/tensor.h
+		../src/tensor.h \
+		../src/thread.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o frame.o ../src/frame.cpp
 
 testgeometry.o: ../test/testgeometry.cpp ../src/geometry.h \
@@ -493,9 +504,17 @@ thread.o: ../src/thread.cpp ../src/thread.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o thread.o ../src/thread.cpp
 
 app.o: ../src/app.cpp ../src/app.h \
+		../src/frame.h \
+		../src/tensor.h \
 		../src/thread.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o app.o ../src/app.cpp
+
+compositor.o: ../src/compositor.cpp ../src/compositor.h \
+		../src/tensor.h \
+		../src/frame.h \
+		../src/thread.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o compositor.o ../src/compositor.cpp
 
 moc_app.o: moc_app.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_app.o moc_app.cpp

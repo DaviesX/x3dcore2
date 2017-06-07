@@ -23,7 +23,8 @@ SOURCES += src/main.cpp \
     src/frame.cpp \
     test/testgeometry.cpp \
     src/thread.cpp \
-    src/app.cpp
+    src/app.cpp \
+    src/compositor.cpp
 
 HEADERS += \
     src/scene.h \
@@ -42,13 +43,14 @@ HEADERS += \
     src/frame.h \
     test/testgeometry.h \
     src/thread.h \
-    src/app.h
+    src/app.h \
+    src/compositor.h
 
-LIBS += -lGLEW
-LIBS += -lglfw
-LIBS += -lglut
-LIBS += -lGL
-LIBS += -lGLU
+#LIBS += -lGLEW
+#LIBS += -lglfw
+#LIBS += -lglut
+#LIBS += -lGL
+#LIBS += -lGLU
 
 FORMS += \
     src/mainwindow.ui

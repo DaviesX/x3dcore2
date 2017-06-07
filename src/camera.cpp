@@ -29,13 +29,17 @@ e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t, e8util::mat44 const& r
         m_inv = T * m_r * m_proj ^ (-1);
 }
 
-std::vector<e8util::ray>
-e8::pinhole_camera::sample(unsigned x, unsigned y, unsigned w, unsigned h, unsigned) const
+e8util::ray
+e8::pinhole_camera::sample(unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const
 {
-        e8util::vec4 const& e = m_inv*e8util::vec4({-m_znear*static_cast<float>(x)/w, -m_znear*static_cast<float>(y)/h, -m_znear, m_znear});
+        e8util::vec4 const& e = m_inv*e8util::vec4({-m_znear*(static_cast<float>(2*x)/w - 1.0f),
+                                                    -m_znear*(static_cast<float>(2*y)/h - 1.0f),
+                                                    -m_znear,
+                                                     m_znear});
         e8util::vec3 const& v = (e.trunc() - m_t).normalize();
         e8util::ray ray(m_t, v);
-        return std::vector<e8util::ray>({ray});
+        pdf = 1.0f;
+        return ray;
 }
 
 e8util::mat44

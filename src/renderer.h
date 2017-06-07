@@ -3,6 +3,7 @@
 
 #include "scene.h"
 #include "camera.h"
+#include "compositor.h"
 #include "frame.h"
 #include "pathtracer.h"
 
@@ -25,8 +26,8 @@ public:
         if_im_renderer();
         ~if_im_renderer();
 
-        virtual void            render(if_scene const& scene, if_camera const& cam, if_frame& frame) = 0;
-        virtual rendering_stats get_stats() const = 0;
+        virtual void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) = 0;
+        virtual rendering_stats         get_stats() const = 0;
 };
 
 
@@ -36,8 +37,8 @@ public:
         ol_image_renderer(if_pathtracer* pt);
         ~ol_image_renderer();
 
-        void            render(if_scene const& scene, if_camera const& cam, if_frame& frame) override;
-        rendering_stats get_stats() const override;
+        void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) override;
+        rendering_stats         get_stats() const override;
 private:
         if_pathtracer*                  m_pt;
         std::vector<e8util::ray>        m_rays;

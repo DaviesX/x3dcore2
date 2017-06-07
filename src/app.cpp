@@ -57,7 +57,10 @@ App::App(QWidget *parent) :
         m_ui->combo_structure->addItem("linear");
         m_ui->combo_structure->addItem("static bvh");
 
-        connect(&m_timer, SIGNAL(timeout()), this, SLOT(on_update_stats()));
+        connect(&m_stats_update_timer, SIGNAL(timeout()), this, SLOT(on_update_stats()));
+
+        m_frame = new e8::ram_ogl_frame(m_ui->centralwidget);
+        m_ui->gridLayout->addWidget(m_frame, 0, 0, 10, 1);
 
         m_ui->statusbar->showMessage("e8yescg started.");
 }
@@ -65,6 +68,7 @@ App::App(QWidget *parent) :
 App::~App()
 {
         delete m_ui;
+        delete m_frame;
 }
 
 void
@@ -86,7 +90,7 @@ App::on_button_save_clicked()
         QString file_name = QFileDialog::getSaveFileName(this,
             tr("Save Image"), ".", tr("Image Files (*.png)"));
         if (file_name.length() > 0) {
-                QImage const& img = m_ui->ogl_surface->grabFramebuffer();
+                QImage const& img = m_frame->grabFramebuffer();
                 if (img.save(file_name, "png"))
                         m_ui->statusbar->showMessage("Image has been saved to " + file_name + ".");
                 else
@@ -103,12 +107,12 @@ App::on_button_render_clicked()
 
                 m_ui->button_render->setText("start");
                 m_ui->statusbar->showMessage("paused.");
-                m_timer.stop();
+                m_stats_update_timer.stop();
         } else {
                 m_task.enable(true);
                 m_info = e8util::run(&m_task);
 
-                m_timer.start(500);
+                m_stats_update_timer.start(500);
                 m_ui->button_render->setText("pause");
                 m_ui->statusbar->showMessage("rendering...");
         }
