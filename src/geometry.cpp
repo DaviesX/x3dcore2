@@ -1,3 +1,4 @@
+#include "tensor.h"
 #include "geometry.h"
 
 
@@ -9,19 +10,6 @@ e8::if_geometry::if_geometry()
 e8::if_geometry::~if_geometry()
 {
 }
-
-void
-e8::if_geometry::bind(if_material const& mat)
-{
-        m_mat = &mat;
-}
-
-e8::if_material const&
-e8::if_geometry::material() const
-{
-        return *m_mat;
-}
-
 
 // trimesh
 e8::trimesh::trimesh():
@@ -57,6 +45,36 @@ e8::trimesh::triangles() const
         return m_tris;
 }
 
+void
+e8::trimesh::sample(e8util::vec3& p, e8util::vec3& n, float& pdf) const
+{
+        // select a triangle.
+        // @todo: use cdf.
+        float q = e8util::rng_uniform();
+        unsigned i = static_cast<unsigned>(q*m_tris.size());
+
+        e8::triangle const& t = m_tris[i];
+
+        float u = e8util::rng_uniform();
+        float v = e8util::rng_uniform();
+
+        float r = std::sqrt(u);
+        float b0 = 1 - r;
+        float b1 = r*v;
+        float b2 = 1 - b0 - b1;
+
+        p = b0*m_verts[t(0)] + b1*m_verts[t(1)] + b2*m_verts[t(2)];
+        n = (b0*m_norms[t(0)] + b1*m_norms[t(1)] + b2*m_norms[t(2)]).normalize();
+
+        pdf = 1.0f/m_area;
+}
+
+float
+e8::trimesh::surface_area() const
+{
+        return m_area;
+}
+
 e8util::aabb
 e8::trimesh::aabb() const
 {
@@ -88,15 +106,29 @@ e8::trimesh::triangles(std::vector<triangle> const& t)
 }
 
 void
-e8::trimesh::compute_aabb()
+e8::trimesh::update()
 {
         if (m_verts.empty())
                 return;
 
+        // compute aabb box.
         m_aabb = e8util::aabb(m_verts[0], m_verts[0]);
         for (unsigned i = 1; i < m_verts.size(); i ++) {
                 m_aabb = m_aabb + m_verts[i];
         }
+
+        // compute area distribution.
+        m_cum_area.resize(m_tris.size());
+        float cum = 0;
+        for (unsigned i = 0; i < m_tris.size(); i ++) {
+                unsigned v0 = m_tris[i](0);
+                unsigned v1 = m_tris[i](1);
+                unsigned v2 = m_tris[i](2);
+                float a = 0.5f*(m_verts[v1] - m_verts[v0]).outer(m_verts[v2] - m_verts[v0]).norm();
+                cum += a;
+                m_cum_area[i] = cum;
+        }
+        m_area = cum;
 }
 
 

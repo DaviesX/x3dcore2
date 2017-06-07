@@ -203,14 +203,6 @@ e8util::wavefront_obj::load_geometries() const
         }
 
         // Assemble the face indices with vertex attributes -- shift vertex data to the proper location.
-        if ((iverts.size() != itex.size() && !itex.empty()) ||
-            (iverts.size() != inorms.size() && !inorms.empty())) {
-                throw std::string("Vertex attributes mismatch as ")
-                                + "|v|=" + std::to_string(iverts.size())
-                                + ",|n|=" + std::to_string(inorms.size())
-                                + ",|t|=" + std::to_string(itex.size());
-        }
-
         if (vertices.empty())
                 throw std::string("The mesh doesn't contain vertex data");
 
@@ -235,7 +227,7 @@ e8util::wavefront_obj::load_geometries() const
 
         mesh->normals(packed_norms);
         mesh->texcoords(packed_tex);
-        mesh->compute_aabb();
+        mesh->update();
         return std::vector<e8::if_geometry*>({mesh});
 }
 

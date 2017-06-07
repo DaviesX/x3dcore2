@@ -20,7 +20,9 @@ e8::if_scene::get_lights() const
 void
 e8::if_scene::add_geometry(if_geometry const* geometry)
 {
-        m_geometries.insert(geometry);
+        m_geometries.insert(
+                std::pair<if_geometry const*, if_scene::binded_geometry>(geometry,
+                                                                         if_scene::binded_geometry(geometry, nullptr, nullptr)));
 }
 
 void
@@ -33,6 +35,18 @@ void
 e8::if_scene::add_light(if_light const* light)
 {
         m_lights.insert(light);
+}
+
+void
+e8::if_scene::bind(if_geometry const* geometry, if_material const* mat)
+{
+        m_geometries.at(geometry).mat = mat;
+}
+
+void
+e8::if_scene::bind(if_geometry const* geometry, if_light const* light)
+{
+        m_geometries.at(geometry).light = light;
 }
 
 void

@@ -1009,6 +1009,19 @@ deg2rad(float deg)
 }
 
 
+inline void
+rng_init(unsigned)
+{
+}
+
+
+inline float
+rng_uniform()
+{
+        return 0;
+}
+
+
 } // namespace.
 
 

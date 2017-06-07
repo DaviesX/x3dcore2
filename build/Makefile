@@ -64,7 +64,8 @@ SOURCES       = ../src/main.cpp \
 		../src/raster.cpp \
 		../src/frame.cpp \
 		../src/mainwindow.cpp \
-		../test/testgeometry.cpp moc_mainwindow.cpp
+		../test/testgeometry.cpp \
+		../src/thread.cpp moc_mainwindow.cpp
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -82,6 +83,7 @@ OBJECTS       = main.o \
 		frame.o \
 		mainwindow.o \
 		testgeometry.o \
+		thread.o \
 		moc_mainwindow.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -159,7 +161,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/raster.h \
 		../src/frame.h \
 		../src/mainwindow.h \
-		../test/testgeometry.h ../src/main.cpp \
+		../test/testgeometry.h \
+		../src/thread.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -175,7 +178,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/raster.cpp \
 		../src/frame.cpp \
 		../src/mainwindow.cpp \
-		../test/testgeometry.cpp
+		../test/testgeometry.cpp \
+		../src/thread.cpp
 QMAKE_TARGET  = qt
 DESTDIR       = 
 TARGET        = qt
@@ -332,8 +336,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../src/mainwindow.h ../test/testgeometry.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../src/mainwindow.cpp ../test/testgeometry.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../src/mainwindow.h ../test/testgeometry.h ../src/thread.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../src/mainwindow.cpp ../test/testgeometry.cpp ../src/thread.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../src/mainwindow.ui $(DISTDIR)/
 
 
@@ -390,20 +394,22 @@ main.o: ../src/main.cpp ../test/testrunner.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../src/main.cpp
 
-camera.o: ../src/camera.cpp ../src/camera.h \
-		../src/tensor.h
+camera.o: ../src/camera.cpp ../src/tensor.h \
+		../src/camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o camera.o ../src/camera.cpp
 
 tensor.o: ../src/tensor.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tensor.o ../src/tensor.cpp
 
-geometry.o: ../src/geometry.cpp ../src/geometry.h \
-		../src/tensor.h \
+geometry.o: ../src/geometry.cpp ../src/tensor.h \
+		../src/geometry.h \
 		../src/material.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o geometry.o ../src/geometry.cpp
 
 light.o: ../src/light.cpp ../src/light.h \
-		../src/tensor.h
+		../src/tensor.h \
+		../src/geometry.h \
+		../src/material.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o light.o ../src/light.cpp
 
 scene.o: ../src/scene.cpp ../src/scene.h \
@@ -411,7 +417,8 @@ scene.o: ../src/scene.cpp ../src/scene.h \
 		../src/geometry.h \
 		../src/material.h \
 		../src/resource.h \
-		../src/light.h
+		../src/light.h \
+		../src/camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scene.o ../src/scene.cpp
 
 renderer.o: ../src/renderer.cpp ../src/renderer.h \
@@ -448,7 +455,8 @@ resource.o: ../src/resource.cpp ../src/geometry.h \
 		../src/tensor.h \
 		../src/material.h \
 		../src/resource.h \
-		../src/light.h
+		../src/light.h \
+		../src/camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o resource.o ../src/resource.cpp
 
 pathtracer.o: ../src/pathtracer.cpp ../src/pathtracer.h \
@@ -457,7 +465,8 @@ pathtracer.o: ../src/pathtracer.cpp ../src/pathtracer.h \
 		../src/geometry.h \
 		../src/material.h \
 		../src/resource.h \
-		../src/light.h
+		../src/light.h \
+		../src/camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o pathtracer.o ../src/pathtracer.cpp
 
 raster.o: ../src/raster.cpp ../src/raster.h
@@ -474,9 +483,15 @@ mainwindow.o: ../src/mainwindow.cpp ../src/mainwindow.h \
 testgeometry.o: ../test/testgeometry.cpp ../src/geometry.h \
 		../src/tensor.h \
 		../src/material.h \
+		../src/resource.h \
+		../src/light.h \
+		../src/camera.h \
 		../test/testgeometry.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testgeometry.o ../test/testgeometry.cpp
+
+thread.o: ../src/thread.cpp ../src/thread.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o thread.o ../src/thread.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp

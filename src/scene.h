@@ -14,8 +14,8 @@ namespace e8
 
 struct intersect_info
 {
-        intersect_info(bool valid, float t, e8util::vec3 const& vertex, e8util::vec3 const& normal, if_material const& mat):
-                valid(valid), t(t), vertex(vertex), normal(normal), mat(mat)
+        intersect_info(bool valid, float t, e8util::vec3 const& vertex, e8util::vec3 const& normal, if_material const& mat, if_light const& light):
+                valid(valid), t(t), vertex(vertex), normal(normal), mat(mat), light(light)
         {
         }
 
@@ -24,6 +24,7 @@ struct intersect_info
         e8util::vec3 const&     vertex;
         e8util::vec3 const&     normal;
         if_material const&      mat;
+        if_light const&         light;
 };
 
 typedef std::map<if_material const*, std::vector<if_geometry const*>>   batched_geometry;
@@ -44,12 +45,26 @@ public:
         void                                    add_geometry(if_geometry const* geometry);
         void                                    add_material(if_material const* mat);
         void                                    add_light(if_light const* light);
+        void                                    bind(if_geometry const* geometry, if_material const* mat);
+        void                                    bind(if_geometry const* geometry, if_light const* light);
 
         void                                    load(e8util::if_resource* res);
 protected:
-        std::set<if_geometry const*>    m_geometries;
-        std::set<if_material const*>    m_mats;
-        std::set<if_light const*>       m_lights;
+        struct binded_geometry
+        {
+                binded_geometry(if_geometry const* geometry, if_material const* mat, if_light const* light):
+                        mat(mat), light(light)
+                {
+                }
+
+                if_geometry const*      geometry;
+                if_material const*      mat;
+                if_light const*         light;
+        };
+
+        std::map<if_geometry const*, binded_geometry>  m_geometries;
+        std::set<if_material const*>                    m_mats;
+        std::set<if_light const*>                       m_lights;
 };
 
 

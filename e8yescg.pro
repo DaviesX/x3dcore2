@@ -22,7 +22,8 @@ SOURCES += src/main.cpp \
     src/raster.cpp \
     src/frame.cpp \
     src/mainwindow.cpp \
-    test/testgeometry.cpp
+    test/testgeometry.cpp \
+    src/thread.cpp
 
 HEADERS += \
     src/scene.h \
@@ -40,7 +41,8 @@ HEADERS += \
     src/raster.h \
     src/frame.h \
     src/mainwindow.h \
-    test/testgeometry.h
+    test/testgeometry.h \
+    src/thread.h
 
 LIBS += -lGLEW
 LIBS += -lglfw
