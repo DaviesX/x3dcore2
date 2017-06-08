@@ -12,23 +12,34 @@ typedef e8util::vec<4, float>           rgba_color;
 class if_compositor
 {
 public:
-        if_compositor();
+        if_compositor(unsigned width, unsigned height);
         virtual ~if_compositor();
 
-        virtual rgba_color      operator()(unsigned i, unsigned j) const = 0;
-        virtual rgba_color&     operator()(unsigned i, unsigned j) = 0;
+        rgba_color      operator()(unsigned i, unsigned j) const;
+        rgba_color&     operator()(unsigned i, unsigned j);
 
-        virtual unsigned        width() const = 0;
-        virtual unsigned        height() const = 0;
+        unsigned        width() const;
+        unsigned        height() const;
 
-        virtual void            width(unsigned w) = 0;
-        virtual void            height(unsigned h) = 0;
+        void            resize(unsigned w, unsigned h);
 
-        virtual void            commit(if_frame* frame) const = 0;
+        virtual void    commit(if_frame* frame) const = 0;
+protected:
+        unsigned        m_w;
+        unsigned        m_h;
+        rgba_color*     m_fbuffer;
 };
 
 class aces_compositor: public if_compositor
 {
+public:
+        aces_compositor();
+        ~aces_compositor();
+
+        void            commit(if_frame* frame) const override;
+        void            enable_auto_exposure(bool s);
+        void            set_exposure(float e);
+private:
 };
 
 }
