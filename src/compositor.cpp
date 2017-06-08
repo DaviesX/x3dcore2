@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <cmath>
+#include "tensor.h"
 #include "compositor.h"
 
 
@@ -42,4 +45,79 @@ e8::if_compositor::resize(unsigned w, unsigned h)
         m_h = h;
         delete [] m_fbuffer;
         m_fbuffer = new rgba_color [w*h];
+}
+
+
+
+e8::aces_compositor::aces_compositor(unsigned width, unsigned height):
+        if_compositor(width, height)
+{
+}
+
+e8::aces_compositor::~aces_compositor()
+{
+}
+
+void
+e8::aces_compositor::commit(if_frame* frame) const
+{
+        float e = m_is_auto_exposure ? exposure() : m_e;
+        for (unsigned j = 0; j < m_h; j ++) {
+                for (unsigned i = 0; i < m_w; i ++) {
+                        (*frame)(i, j) = pixel_of(aces_tonemap((*this)(i,j), e));
+                }
+        }
+}
+
+void
+e8::aces_compositor::enable_auto_exposure(bool s)
+{
+        m_is_auto_exposure = s;
+}
+
+void
+e8::aces_compositor::exposure(float e)
+{
+        m_e = e;
+}
+
+e8::pixel
+e8::aces_compositor::pixel_of(rgba_color const& c) const
+{
+        unsigned r = static_cast<unsigned>(std::pow(CLAMP(c(0), 0.0f, 1.0f), 1.0/2.2)*255.0f + .5f);
+        unsigned g = static_cast<unsigned>(std::pow(CLAMP(c(1), 0.0f, 1.0f), 1.0/2.2)*255.0f + .5f);
+        unsigned b = static_cast<unsigned>(std::pow(CLAMP(c(2), 0.0f, 1.0f), 1.0/2.2)*255.0f + .5f);
+        unsigned a = static_cast<unsigned>(c(3)*255.0f);
+        return r << 24 | g << 16 | b << 8 | a;
+}
+
+e8::rgba_color
+e8::aces_compositor::aces_tonemap(rgba_color const& c, float exposure) const
+{
+        const float A = 2.51;
+        const float B = 0.03;
+        const float C = 2.43;
+        const float D = 0.59;
+        const float E = 0.14;
+
+        e8util::vec3 const& color = c.trunc()*exposure;
+        e8util::vec3 const& ldr = color * (color * A + B) / (color * (color * C + D) + E);
+        return ldr.homo(c(4));
+}
+
+float
+e8::aces_compositor::luminance(rgba_color const& c) const
+{
+        return c(0)*0.299f + c(1)*0.587f + c(2)*0.114f;
+}
+
+float
+e8::aces_compositor::exposure() const
+{
+        float sum = 0;
+        for (unsigned i = 0; i < m_w*m_h; i ++) {
+                sum += std::log(luminance(m_fbuffer[i]) + 1e-3f);
+        }
+        sum /= (m_w*m_h);
+        return std::exp(sum);
 }

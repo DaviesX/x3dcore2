@@ -35,12 +35,14 @@ public:
         vec             operator-(vec const& rhs) const;
         vec             operator-() const;
         vec             operator*(T k) const;
+        vec             operator/(T k) const;
         T               operator()(unsigned i) const;
         T&              operator()(unsigned i);
         bool            operator==(vec const& rhs) const;
         bool            operator!=(vec const& rhs) const;
 
         vec             operator*(vec const& rhs) const;
+        vec             operator/(vec const& rhs) const;
 
         T               inner(vec const& rhs) const;
         vec             outer(vec const& rhs) const;
@@ -164,6 +166,16 @@ vec<N, T>::operator*(T k) const
 }
 
 template<unsigned N, typename T>
+vec<N, T>
+vec<N, T>::operator/(T k) const
+{
+        vec<N, T> v;
+        for (unsigned i = 0; i < N; i ++)
+                v(i) = (*this)(i)/k;
+        return v;
+}
+
+template<unsigned N, typename T>
 inline vec<N, T>
 operator*(T k, vec<N, T> const& rhs)
 {
@@ -187,6 +199,16 @@ vec<N, T>::operator*(vec const& rhs) const
         vec<N, T> v;
         for (unsigned i = 0; i < N; i ++)
                 v(i) = (*this)(i)*rhs(i);
+        return v;
+}
+
+template<unsigned N, typename T>
+vec<N, T>
+vec<N, T>::operator/(vec const& rhs) const
+{
+        vec<N, T> v;
+        for (unsigned i = 0; i < N; i ++)
+                v(i) = (*this)(i)/rhs(i);
         return v;
 }
 
@@ -1020,6 +1042,8 @@ rng_uniform()
 {
         return 0;
 }
+
+#define CLAMP(x, hi, lo) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 
 
 } // namespace.

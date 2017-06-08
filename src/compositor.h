@@ -33,13 +33,20 @@ protected:
 class aces_compositor: public if_compositor
 {
 public:
-        aces_compositor();
+        aces_compositor(unsigned width, unsigned height);
         ~aces_compositor();
 
         void            commit(if_frame* frame) const override;
         void            enable_auto_exposure(bool s);
-        void            set_exposure(float e);
+        void            exposure(float e);
 private:
+        pixel           pixel_of(rgba_color const& c) const;
+        rgba_color      aces_tonemap(rgba_color const& c, float exposure) const;
+        float           luminance(rgba_color const& c) const;
+        float           exposure() const;
+
+        float           m_e = 0.0f;
+        bool            m_is_auto_exposure = true;
 };
 
 }
