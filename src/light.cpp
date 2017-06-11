@@ -16,9 +16,9 @@ e8::area_light::area_light(if_geometry const* geo, e8util::vec3 const& rad):
 }
 
 void
-e8::area_light::sample(float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
+e8::area_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
 {
-        m_geo->sample(p, n, pdf);
+        m_geo->sample(rng, p, n, pdf);
 }
 
 e8util::vec3

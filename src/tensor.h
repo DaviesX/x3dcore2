@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <random>
 #include <initializer_list>
 
 namespace e8util
@@ -1030,18 +1031,29 @@ deg2rad(float deg)
         return deg / 180 * M_PI;
 }
 
-
-inline void
-rng_init(unsigned)
+class rng
 {
-}
+public:
+        rng(unsigned int seed):
+                engine(seed), ur(0,1)
+        {
+        }
 
+        rng():
+                ur(0,1)
+        {
+                std::random_device rd;
+                engine.seed(rd());
+        }
 
-inline float
-rng_uniform()
-{
-        return 0;
-}
+        float draw()
+        {
+                return ur(engine);
+        }
+private:
+        std::mt19937                            engine;
+        std::uniform_real_distribution<float>   ur;
+};
 
 #define CLAMP(x, hi, lo) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 

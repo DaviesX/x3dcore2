@@ -20,6 +20,6 @@ e8::direct_pathtracer::~direct_pathtracer()
 }
 
 std::vector<e8util::vec3>
-e8::direct_pathtracer::sample(std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const
+e8::direct_pathtracer::sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const
 {
 }

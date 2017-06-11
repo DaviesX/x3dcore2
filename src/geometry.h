@@ -19,7 +19,7 @@ public:
         virtual std::vector<e8util::vec3> const&        normals() const = 0;
         virtual std::vector<e8util::vec2> const&        texcoords() const = 0;
         virtual std::vector<triangle> const&            triangles() const = 0;
-        virtual void                                    sample(e8util::vec3& p, e8util::vec3& n, float& pdf) const = 0;
+        virtual void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const = 0;
         virtual float                                   surface_area() const = 0;
         virtual e8util::aabb                            aabb() const = 0;
 };
@@ -34,7 +34,7 @@ public:
         std::vector<e8util::vec3> const&        normals() const override;
         std::vector<e8util::vec2> const&        texcoords() const override;
         std::vector<triangle> const&            triangles() const override;
-        void                                    sample(e8util::vec3& p, e8util::vec3& n, float& pdf) const override;
+        void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const override;
         float                                   surface_area() const override;
         virtual e8util::aabb                    aabb() const override;
 

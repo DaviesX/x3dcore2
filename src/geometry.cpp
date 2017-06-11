@@ -46,17 +46,17 @@ e8::trimesh::triangles() const
 }
 
 void
-e8::trimesh::sample(e8util::vec3& p, e8util::vec3& n, float& pdf) const
+e8::trimesh::sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const
 {
         // select a triangle.
         // @todo: use cdf.
-        float q = e8util::rng_uniform();
+        float q = rng.draw();
         unsigned i = static_cast<unsigned>(q*m_tris.size());
 
         e8::triangle const& t = m_tris[i];
 
-        float u = e8util::rng_uniform();
-        float v = e8util::rng_uniform();
+        float u = rng.draw();
+        float v = rng.draw();
 
         float r = std::sqrt(u);
         float b0 = 1 - r;

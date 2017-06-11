@@ -13,7 +13,7 @@ public:
         if_light();
         virtual ~if_light();
 
-        virtual void            sample(float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const = 0;
+        virtual void            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const = 0;
         virtual e8util::vec3    eval(e8util::vec3 const& i, e8util::vec3 const& n) const = 0;
         virtual e8util::vec3    power() const = 0;
 };
@@ -22,7 +22,7 @@ class area_light: public if_light
 {
 public:
         area_light(if_geometry const* geo, e8util::vec3 const& rad);
-        void            sample(float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
+        void            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
         e8util::vec3    eval(e8util::vec3 const& i, e8util::vec3 const& n) const override;
         e8util::vec3    power() const override;
 private:

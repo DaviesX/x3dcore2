@@ -175,6 +175,6 @@ e8::linear_scene_layout::get_relevant_lights(e8util::frustum const&) const
 }
 
 e8::if_light const*
-e8::linear_scene_layout::sample_light(float& pdf) const
+e8::linear_scene_layout::sample_light(e8util::rng& rng, float& pdf) const
 {
 }

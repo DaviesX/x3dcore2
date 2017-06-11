@@ -30,7 +30,7 @@ e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t, e8util::mat44 const& r
 }
 
 e8util::ray
-e8::pinhole_camera::sample(unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const
+e8::pinhole_camera::sample(e8util::rng&, unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const
 {
         e8util::vec4 const& e = m_inv*e8util::vec4({-m_znear*(static_cast<float>(2*x)/w - 1.0f),
                                                     -m_znear*(static_cast<float>(2*y)/h - 1.0f),

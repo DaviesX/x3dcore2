@@ -45,7 +45,7 @@ public:
         virtual bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const = 0;
         virtual batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const = 0;
         virtual std::vector<if_light const*>    get_relevant_lights(e8util::frustum const& frustum) const = 0;
-        virtual if_light const*                 sample_light(float& pdf) const = 0;
+        virtual if_light const*                 sample_light(e8util::rng& rng, float& pdf) const = 0;
 
         void                                    add_geometry(if_geometry const* geometry);
         void                                    add_material(if_material const* mat);
@@ -85,7 +85,7 @@ public:
         bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const override;
         batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const override;
         std::vector<if_light const*>    get_relevant_lights(e8util::frustum const& frustum) const override;
-        if_light const*                 sample_light(float& pdf) const override;
+        if_light const*                 sample_light(e8util::rng& rng, float& pdf) const override;
 private:
         std::vector<if_light const*>    m_light_list;
         std::vector<float>              m_cum_power;

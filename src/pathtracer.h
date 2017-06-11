@@ -13,7 +13,7 @@ public:
         if_pathtracer();
         ~if_pathtracer();
 
-        virtual std::vector<e8util::vec3>       sample(std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const = 0;
+        virtual std::vector<e8util::vec3>       sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const = 0;
 };
 
 
@@ -23,7 +23,7 @@ public:
         direct_pathtracer();
         ~direct_pathtracer();
 
-        std::vector<e8util::vec3>       sample(std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const override;
+        std::vector<e8util::vec3>       sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const override;
 };
 
 }
