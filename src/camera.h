@@ -28,11 +28,13 @@ public:
         e8util::mat44                   projection() const override;
 private:
         float           m_znear;
+        float           m_sensor_size;
+        float           m_focal_len;
+        float           m_aspect;
         e8util::vec3    m_t;
         e8util::mat44   m_r;
         e8util::mat44   m_proj;
         e8util::mat44   m_forward;
-        e8util::mat44   m_inv;
 };
 
 }
