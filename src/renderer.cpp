@@ -55,4 +55,5 @@ e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
 e8::rendering_stats
 e8::ol_image_renderer::get_stats() const
 {
+        throw std::string("Not implemented yet");
 }

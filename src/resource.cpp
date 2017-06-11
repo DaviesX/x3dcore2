@@ -78,6 +78,8 @@ e8util::cornell_scene::load_materials() const
 std::vector<e8::if_light*>
 e8util::cornell_scene::load_lights() const
 {
+        return std::vector<e8::if_light*>({new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometries()[0],
+                                                              e8util::vec3({0.911, 0.660f, 0.345f})*15.0f)});
 }
 
 e8::if_camera*
@@ -101,11 +103,10 @@ std::vector<std::string>
 split(std::string const& s, char delim)
 {
         std::vector<std::string> parts;
-        unsigned i = 0;
         std::stringstream ss(s);
         std::string item;
         while (std::getline(ss, item, delim))
-                parts[i ++] = item;
+                parts.push_back(item);
         return parts;
 }
 
@@ -175,7 +176,7 @@ e8util::wavefront_obj::load_geometries() const
                                                 iverts.push_back(iattri);
                                         }
 
-                                        if (s_index[1].empty()) {
+                                        if (!s_index[1].empty()) {
                                                 unsigned iattri = std::stoi(s_index[1]) - 1;
                                                 if (iattri >= texcoords.size())
                                                         throw "At line " + std::to_string(i + 1)
@@ -185,7 +186,7 @@ e8util::wavefront_obj::load_geometries() const
                                                 itex.push_back(iattri);
                                         }
 
-                                        if (s_index[2].empty()) {
+                                        if (!s_index[2].empty()) {
                                                 unsigned iattri = std::stoi(s_index[2]) - 1;
                                                 if (iattri >= normals.size())
                                                         throw "At line " + std::to_string(i + 1)
@@ -220,13 +221,14 @@ e8util::wavefront_obj::load_geometries() const
                 triangles[f] = e8::triangle(&iverts[f*3 + 0]);
 
                 for (unsigned v = 3*f + 0; v < 3*f + 3; v ++) {
-                        packed_norms[iverts[v]] = normals[inorms[v]];
+                        packed_norms[inorms[v]] = normals[inorms[v]];
                         packed_tex[iverts[v]] = texcoords[itex[v]];
                 }
         }
 
         mesh->normals(packed_norms);
         mesh->texcoords(packed_tex);
+        mesh->triangles(triangles);
         mesh->update();
         return std::vector<e8::if_geometry*>({mesh});
 }
@@ -260,6 +262,13 @@ e8util::wavefront_obj::save_geometries(std::vector<e8::if_geometry*> const& geom
         for (unsigned i = 0; i < norms.size(); i ++) {
                 e8util::vec3 const& n = norms[i];
                 file << "vn " << n(0) << ' ' << n(1) << ' ' << n(2) << std::endl;
+        }
+
+        // output texture coordinate.
+        std::vector<e8util::vec2> const& texcoords = geo->texcoords();
+        for (unsigned i = 0; i < texcoords.size(); i ++) {
+                e8util::vec2 const& t = texcoords[i];
+                file << "vt " << t(0) << ' ' << t(1) << ' ' << t(2) << std::endl;
         }
 
         // output faces.

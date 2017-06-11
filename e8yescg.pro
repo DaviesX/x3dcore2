@@ -24,7 +24,8 @@ SOURCES += src/main.cpp \
     test/testgeometry.cpp \
     src/thread.cpp \
     src/app.cpp \
-    src/compositor.cpp
+    src/compositor.cpp \
+    test/testresource.cpp
 
 HEADERS += \
     src/scene.h \
@@ -44,7 +45,8 @@ HEADERS += \
     test/testgeometry.h \
     src/thread.h \
     src/app.h \
-    src/compositor.h
+    src/compositor.h \
+    test/testresource.h
 
 #LIBS += -lGLEW
 #LIBS += -lglfw
