@@ -1031,6 +1031,13 @@ deg2rad(float deg)
         return deg / 180 * M_PI;
 }
 
+inline void
+vec3_basis(vec3 const& n, vec3& u, vec3& v)
+{
+        u = ((std::abs(n(0)) > .1 ? vec3({0.0f, 1.0f, 0.0f}) : vec3({1.0f, 1.0f, 1.0f})).outer(n)).normalize();
+        v = n.outer(u);
+}
+
 class rng
 {
 public:

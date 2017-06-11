@@ -6,6 +6,7 @@
 #include "testgeometry.h"
 #include "testresource.h"
 #include "testcamera.h"
+#include "testrenderer.h"
 
 
 test::test_runner::test_runner()
@@ -64,6 +65,7 @@ test::load(int argc, char** argv)
         runner.add("test_geometry", new test_geometry(), false);
         runner.add("test_resource", new test_resource(), false);
         runner.add("test_camera", new test_camera(), false);
+        runner.add("test_renderer", new test_renderer(), false);
 
         for (int i = 1; i < argc; i ++) {
                 if ((!std::strcmp(argv[i], "--test") || !std::strcmp(argv[i], "-t")) && (i + 1 < argc)) {

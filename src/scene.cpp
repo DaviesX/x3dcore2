@@ -177,4 +177,16 @@ e8::linear_scene_layout::get_relevant_lights(e8util::frustum const&) const
 e8::if_light const*
 e8::linear_scene_layout::sample_light(e8util::rng& rng, float& pdf) const
 {
+        float e = rng.draw()*m_total_power;
+        unsigned lo = 0;
+        unsigned hi = m_cum_power.size();
+        while (lo < hi) {
+                unsigned mi = (lo + hi) >> 1;
+                if (m_cum_power[mi] < e)
+                        lo = mi + 1;
+                else
+                        hi = mi;
+        }
+        pdf = m_light_list[lo]->power().norm()/m_total_power;
+        return m_light_list[lo];
 }

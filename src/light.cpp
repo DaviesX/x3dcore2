@@ -1,4 +1,5 @@
 #include <cmath>
+#include "tensor.h"
 #include "light.h"
 
 e8::if_light::if_light()
@@ -19,6 +20,19 @@ void
 e8::area_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
 {
         m_geo->sample(rng, p, n, pdf);
+        e8util::vec3 u, v;
+        e8util::vec3_basis(n, u, v);
+
+        float e0 = rng.draw()*2*M_PI;
+        float e1 = rng.draw();
+
+        float z = std::sqrt(e1);
+        float r = std::sqrt(1.0f - z*z);
+        float x = r*std::cos(e0);
+        float y = r*std::sin(e0);
+
+        w = x*u + y*v + z*n;
+        pdf = n.inner(w)/M_PI;
 }
 
 e8util::vec3
