@@ -770,7 +770,8 @@ ray::intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, floa
 class aabb
 {
 public:
-        aabb(vec3 const& min, vec3 const& max);
+        aabb();
+        aabb(vec3 const& m_min, vec3 const& m_max);
 
         aabb    operator+(aabb const& rhs) const;
         aabb    operator+(vec3 const& rhs) const;
@@ -779,54 +780,75 @@ public:
         bool    is_empty() const;
         float   surf_area() const;
         bool    intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) const;
+
+        vec3    min() const;
+        vec3    max() const;
 private:
-        float   area;
-        vec3    min;
-        vec3    max;
+        float   m_area;
+        vec3    m_min;
+        vec3    m_max;
 };
 
+inline
+aabb::aabb():
+        aabb(vec3(), vec3())
+{
+}
+
 inline aabb::aabb(vec3 const& min, vec3 const& max):
-        min(min), max(max)
+        m_min(min), m_max(max)
 {
         if (min(0) > max(0) || min(1) > max(1) || min(2) > max(2)) {
-                area = 0;
+                m_area = 0;
         } else {
                 vec3 d = max - min;
-                area = 2.0f*(d(0)*d(1) + d(0)*d(2) + d(1)*d(2));
+                m_area = 2.0f*(d(0)*d(1) + d(0)*d(2) + d(1)*d(2));
         }
 }
 
 inline aabb
 aabb::operator+(aabb const& rhs) const
 {
-        return aabb(vec3({std::min(min(0), rhs.min(0)),
-                          std::min(min(1), rhs.min(1)),
-                          std::min(min(2), rhs.min(2))}),
-                    vec3({std::max(max(0), rhs.max(0)),
-                          std::max(max(1), rhs.max(1)),
-                          std::max(max(2), rhs.max(2))}));
+        return aabb(vec3({std::min(m_min(0), rhs.m_min(0)),
+                          std::min(m_min(1), rhs.m_min(1)),
+                          std::min(m_min(2), rhs.m_min(2))}),
+                    vec3({std::max(m_max(0), rhs.m_max(0)),
+                          std::max(m_max(1), rhs.m_max(1)),
+                          std::max(m_max(2), rhs.m_max(2))}));
 }
 
 inline aabb
 aabb::operator+(vec3 const& rhs) const
 {
-        return aabb(vec3({std::min(min(0), rhs(0)),
-                          std::min(min(1), rhs(1)),
-                          std::min(min(2), rhs(2))}),
-                    vec3({std::max(max(0), rhs(0)),
-                          std::max(max(1), rhs(1)),
-                          std::max(max(2), rhs(2))}));
+        return aabb(vec3({std::min(m_min(0), rhs(0)),
+                          std::min(m_min(1), rhs(1)),
+                          std::min(m_min(2), rhs(2))}),
+                    vec3({std::max(m_max(0), rhs(0)),
+                          std::max(m_max(1), rhs(1)),
+                          std::max(m_max(2), rhs(2))}));
 }
 
 inline aabb
 aabb::operator^(aabb const& rhs) const
 {
-        return aabb(vec3({std::max(min(0), rhs.min(0)),
-                          std::max(min(1), rhs.min(1)),
-                          std::max(min(2), rhs.min(2))}),
-                    vec3({std::min(max(0), rhs.max(0)),
-                          std::min(max(1), rhs.max(1)),
-                          std::min(max(2), rhs.max(2))}));
+        return aabb(vec3({std::max(m_min(0), rhs.m_min(0)),
+                          std::max(m_min(1), rhs.m_min(1)),
+                          std::max(m_min(2), rhs.m_min(2))}),
+                    vec3({std::min(m_max(0), rhs.m_max(0)),
+                          std::min(m_max(1), rhs.m_max(1)),
+                          std::min(m_max(2), rhs.m_max(2))}));
+}
+
+inline vec3
+aabb::min() const
+{
+        return m_min;
+}
+
+inline vec3
+aabb::max() const
+{
+        return m_max;
 }
 
 inline bool
@@ -838,7 +860,7 @@ aabb::is_empty() const
 inline float
 aabb::surf_area() const
 {
-        return area;
+        return m_area;
 }
 
 inline bool
@@ -848,8 +870,8 @@ aabb::intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) co
         int i;
         for ( i = 0; i < 3; i ++ ) {
                 float inv = 1.0f/r.v(i);
-                float k0 = (min(i) - r.o(i))*inv;
-                float k1 = (max(i) - r.o(i))*inv;
+                float k0 = (m_min(i) - r.o(i))*inv;
+                float k1 = (m_max(i) - r.o(i))*inv;
 
                 // march toward the middle of the ray
                 if (k0 > k1) {
@@ -1078,7 +1100,7 @@ private:
         std::uniform_real_distribution<float>   ur;
 };
 
-#define CLAMP(x, hi, lo) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
+#define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 
 
 } // namespace.

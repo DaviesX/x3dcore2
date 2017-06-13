@@ -18,6 +18,7 @@ e8::ol_image_renderer::ol_image_renderer(if_pathtracer* pt):
 
 e8::ol_image_renderer::~ol_image_renderer()
 {
+        delete m_pt;
 }
 
 void

@@ -42,8 +42,10 @@ protected:
                 void    resize(unsigned w, unsigned h);
         };
 
-        surface                 front() const;
-        surface                 back() const;
+        surface&                front();
+        surface&                back();
+        surface const&          front() const;
+        surface const&          back() const;
         void                    swap();
 
         e8util::mutex_t         m_mutex;
@@ -63,6 +65,17 @@ public:
         void            resizeGL(int w, int h) override;
         void            paintGL() override;
 
+};
+
+class img_file_frame: public if_frame
+{
+public:
+        img_file_frame(std::string const& file_name, unsigned width, unsigned height);
+        ~img_file_frame();
+
+        void    commit() override;
+private:
+        std::string     m_file_name;
 };
 
 }

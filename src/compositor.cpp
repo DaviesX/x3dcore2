@@ -84,11 +84,11 @@ e8::aces_compositor::exposure(float e)
 e8::pixel
 e8::aces_compositor::pixel_of(rgba_color const& c) const
 {
-        unsigned r = static_cast<unsigned>(std::pow(CLAMP(c(0), 0.0f, 1.0f), 1.0/2.2)*255.0f + .5f);
-        unsigned g = static_cast<unsigned>(std::pow(CLAMP(c(1), 0.0f, 1.0f), 1.0/2.2)*255.0f + .5f);
-        unsigned b = static_cast<unsigned>(std::pow(CLAMP(c(2), 0.0f, 1.0f), 1.0/2.2)*255.0f + .5f);
-        unsigned a = static_cast<unsigned>(c(3)*255.0f);
-        return r << 24 | g << 16 | b << 8 | a;
+        unsigned char r = static_cast<unsigned char>(std::pow(CLAMP(c(0), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
+        unsigned char g = static_cast<unsigned char>(std::pow(CLAMP(c(1), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
+        unsigned char b = static_cast<unsigned char>(std::pow(CLAMP(c(2), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
+        unsigned char a = static_cast<unsigned char>(c(3)*255.0f);
+        return e8::pixel({r, g, b, a});
 }
 
 e8::rgba_color
@@ -102,7 +102,7 @@ e8::aces_compositor::aces_tonemap(rgba_color const& c, float exposure) const
 
         e8util::vec3 const& color = c.trunc()*exposure;
         e8util::vec3 const& ldr = color * (color * A + B) / (color * (color * C + D) + E);
-        return ldr.homo(c(4));
+        return ldr.homo(c(3));
 }
 
 float

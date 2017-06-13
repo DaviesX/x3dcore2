@@ -52,6 +52,7 @@ public:
         void                                    add_light(if_light const* light);
         void                                    bind(if_geometry const* geometry, if_material const* mat);
         void                                    bind(if_geometry const* geometry, if_light const* light);
+        e8util::aabb                            aabb() const;
 
         void                                    load(e8util::if_resource* res);
 protected:
@@ -70,6 +71,7 @@ protected:
         std::map<if_geometry const*, binded_geometry>   m_geometries;
         std::set<if_material const*>                    m_mats;
         std::set<if_light const*>                       m_lights;
+        e8util::aabb                                    m_bound;
 };
 
 

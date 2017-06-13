@@ -13,7 +13,7 @@ class if_camera
 {
 public:
         if_camera();
-        ~if_camera();
+        virtual ~if_camera();
 
         virtual e8util::ray             sample(e8util::rng& rng, unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const = 0;
         virtual e8util::mat44           projection() const = 0;

@@ -27,7 +27,8 @@ SOURCES += src/main.cpp \
     src/compositor.cpp \
     test/testresource.cpp \
     test/testcamera.cpp \
-    test/testrenderer.cpp
+    test/testrenderer.cpp \
+    test/testframe.cpp
 
 HEADERS += \
     src/scene.h \
@@ -50,13 +51,16 @@ HEADERS += \
     src/compositor.h \
     test/testresource.h \
     test/testcamera.h \
-    test/testrenderer.h
+    test/testrenderer.h \
+    test/testframe.h
 
 #LIBS += -lGLEW
 #LIBS += -lglfw
 #LIBS += -lglut
 #LIBS += -lGL
 #LIBS += -lGLU
+LIBS += -lopencv_core
+LIBS += -lopencv_imgcodecs
 
 FORMS += \
     src/mainwindow.ui

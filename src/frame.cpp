@@ -1,3 +1,5 @@
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include "frame.h"
 
 
@@ -32,13 +34,25 @@ e8::if_frame::~if_frame()
         e8util::destroy(m_mutex);
 }
 
-e8::if_frame::surface
+e8::if_frame::surface&
+e8::if_frame::front()
+{
+        return m_surface[!m_spin];
+}
+
+e8::if_frame::surface&
+e8::if_frame::back()
+{
+        return m_surface[m_spin];
+}
+
+e8::if_frame::surface const&
 e8::if_frame::front() const
 {
         return m_surface[!m_spin];
 }
 
-e8::if_frame::surface
+e8::if_frame::surface const&
 e8::if_frame::back() const
 {
         return m_surface[m_spin];
@@ -123,4 +137,31 @@ e8::ram_ogl_frame::paintGL()
         if (front().w != 0 && front().h != 0)
                 glDrawPixels(front().w, front().h, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, front().pixels);
         e8util::unlock(m_mutex);
+}
+
+
+e8::img_file_frame::img_file_frame(std::string const& file_name, unsigned width, unsigned height):
+        m_file_name(file_name)
+{
+        resize(width, height);
+        swap();
+}
+
+e8::img_file_frame::~img_file_frame()
+{
+}
+
+void
+e8::img_file_frame::commit()
+{
+        cv::Mat4b pixels(height(), width());
+        pixels.forEach([this](cv::Vec4b& v, int const* p) {
+                e8::pixel const& pixel = (*this)(p[1], p[0]);
+                v[0] = pixel(0);
+                v[1] = pixel(1);
+                v[2] = pixel(2);
+                v[3] = pixel(3);
+        });
+        cv::imwrite(m_file_name, pixels);
+        swap();
 }

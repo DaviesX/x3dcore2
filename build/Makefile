@@ -36,7 +36,7 @@ DISTNAME      = e8yescg1.0.0
 DISTDIR = /home/davis/e8yescg/build/.tmp/e8yescg1.0.0
 LINK          = g++
 LFLAGS        = -m64
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lopencv_core -lopencv_imgcodecs -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -69,7 +69,8 @@ SOURCES       = ../src/main.cpp \
 		../src/compositor.cpp \
 		../test/testresource.cpp \
 		../test/testcamera.cpp \
-		../test/testrenderer.cpp moc_app.cpp
+		../test/testrenderer.cpp \
+		../test/testframe.cpp moc_app.cpp
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -92,6 +93,7 @@ OBJECTS       = main.o \
 		testresource.o \
 		testcamera.o \
 		testrenderer.o \
+		testframe.o \
 		moc_app.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -189,7 +191,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/compositor.h \
 		../test/testresource.h \
 		../test/testcamera.h \
-		../test/testrenderer.h ../src/main.cpp \
+		../test/testrenderer.h \
+		../test/testframe.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -210,7 +213,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../src/compositor.cpp \
 		../test/testresource.cpp \
 		../test/testcamera.cpp \
-		../test/testrenderer.cpp
+		../test/testrenderer.cpp \
+		../test/testframe.cpp
 QMAKE_TARGET  = e8yescg
 DESTDIR       = 
 TARGET        = e8yescg
@@ -397,8 +401,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h ../test/testresource.h ../test/testcamera.h ../test/testrenderer.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp ../test/testresource.cpp ../test/testcamera.cpp ../test/testrenderer.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h ../test/testresource.h ../test/testcamera.h ../test/testrenderer.h ../test/testframe.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp ../test/testresource.cpp ../test/testcamera.cpp ../test/testrenderer.cpp ../test/testframe.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../src/mainwindow.ui $(DISTDIR)/
 
 
@@ -474,8 +478,8 @@ geometry.o: ../src/geometry.cpp ../src/tensor.h \
 		../src/material.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o geometry.o ../src/geometry.cpp
 
-light.o: ../src/light.cpp ../src/light.h \
-		../src/tensor.h \
+light.o: ../src/light.cpp ../src/tensor.h \
+		../src/light.h \
 		../src/geometry.h \
 		../src/material.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o light.o ../src/light.cpp
@@ -515,7 +519,8 @@ testrunner.o: ../test/testrunner.cpp ../test/testrunner.h \
 		../test/testtensor.h \
 		../test/testgeometry.h \
 		../test/testresource.h \
-		../test/testcamera.h
+		../test/testcamera.h \
+		../test/testrenderer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testrunner.o ../test/testrunner.cpp
 
 testtensor.o: ../test/testtensor.cpp ../src/tensor.h \
@@ -591,9 +596,25 @@ testcamera.o: ../test/testcamera.cpp ../src/camera.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testcamera.o ../test/testcamera.cpp
 
-testrenderer.o: ../test/testrenderer.cpp ../test/testrenderer.h \
+testrenderer.o: ../test/testrenderer.cpp ../src/pathtracer.h \
+		../src/tensor.h \
+		../src/scene.h \
+		../src/geometry.h \
+		../src/material.h \
+		../src/resource.h \
+		../src/light.h \
+		../src/camera.h \
+		../src/renderer.h \
+		../src/compositor.h \
+		../src/frame.h \
+		../src/thread.h \
+		../test/testrenderer.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testrenderer.o ../test/testrenderer.cpp
+
+testframe.o: ../test/testframe.cpp ../test/testframe.h \
+		../test/test.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testframe.o ../test/testframe.cpp
 
 moc_app.o: moc_app.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_app.o moc_app.cpp

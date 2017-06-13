@@ -17,6 +17,8 @@ e8::if_scene::~if_scene()
 void
 e8::if_scene::add_geometry(if_geometry const* geometry)
 {
+        if (m_geometries.find(geometry) == m_geometries.end())
+                m_bound = m_bound + geometry->aabb();
         m_geometries.insert(
                 std::pair<if_geometry const*, if_scene::binded_geometry>(geometry,
                                                                          if_scene::binded_geometry(geometry, nullptr, nullptr)));
@@ -44,6 +46,12 @@ void
 e8::if_scene::bind(if_geometry const* geometry, if_light const* light)
 {
         m_geometries.at(geometry).light = light;
+}
+
+e8util::aabb
+e8::if_scene::aabb() const
+{
+        return m_bound;
 }
 
 void
