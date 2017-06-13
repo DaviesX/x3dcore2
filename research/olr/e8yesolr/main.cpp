@@ -162,21 +162,28 @@ struct OrenNayarBRDF : public BRDF {
 
         Vec eval(const Vec &n, const Vec &o, const Vec &i) const
         {
-                const float A = 1 - 0.5 * roughness / (roughness + 0.57);
+                const float A = 1 - 0.5 * roughness / (roughness + 0.33);
                 const float B = 0.45 * roughness / (roughness + 0.09);
 
-                double cos_thei = std::max(i.dot(n), 0.0);
+                double cos_thei = i.dot(n);
                 double cos_theo = o.dot(n);
-                double alpha = std::min(cos_thei, cos_theo);
-                double beta = std::max(cos_thei, cos_theo);
+                float cos_alpha, cos_beta;
+                
+                if (cos_thei < cos_theo) {
+                        cos_alpha = cos_thei;
+                        cos_beta = cos_theo;                    
+                } else {
+                        cos_alpha = cos_theo;
+                        cos_beta = cos_thei;
+                }
+                
+                double sin_alpha = std::sqrt(1.0 - cos_alpha*cos_alpha);
+                double sin_beta = std::sqrt(1.0 - cos_beta*cos_beta);
+                double tan_beta = sin_beta/cos_beta;
 
-                double sin_alpha = std::sqrt(1.0 - alpha*alpha);
-                double tan_beta = std::sqrt(1.0/(beta*beta) - 1.0);
+                double cos_theio = cos_alpha*cos_beta + sin_alpha*sin_beta;
 
-                Vec r = n*2.0*cos_theo - o;
-                double cos_theio = r.dot(i);
-
-                return kd * (1.0/M_PI) * (A + (B * std::max(0.0, cos_theio) * sin_alpha * tan_beta));
+                return kd * (1.0/M_PI) * (A + B * std::max(0.0, cos_theio) * sin_alpha * tan_beta);
         }
 
         void sample(const Vec &n, const Vec &o, Vec &i, double &pdf) const
@@ -200,8 +207,8 @@ struct OrenNayarBRDF : public BRDF {
 
 // Cook Torrance
 struct CookTorrBRDF : public BRDF {
-        CookTorrBRDF(Vec kd, double beta, double ior):
-                kd(kd), beta(beta), ior(ior)
+        CookTorrBRDF(Vec ks, double beta, double ior):
+                ks(ks), beta(beta), ior(ior)
         {
         }
 
@@ -249,25 +256,31 @@ struct CookTorrBRDF : public BRDF {
                 double G = ggx_shadow(i, o, n);
 
                 double cook = F*D*G*(1.0 / (4.0 * b_cos_the * n.dot(o)));
-                return (kd*(1 - F) + (Vec(1,1,1) - kd)*cook);
+                return ks*cook;
         }
 
         void sample(const Vec &n, const Vec &o, Vec &i, double &pdf) const
         {
-                double z = sqrt(rng());
-                double r = std::sqrt(1.0 - z*z);
-                double phi = 2.0 * M_PI * rng();
-                double x = r*std::cos(phi);
-                double y = r*std::sin(phi);
-
                 Vec b1, b2;
                 createLocalCoord(n, b1, b2);
-
-                i = b1*x + b2*y + n*z;
-                pdf = i.dot(n)/M_PI;
+                
+                double theta = 2.0 * M_PI * rng();
+                double t = rng();
+                double phi = std::atan(beta*std::sqrt(t/(1.0 - t)));
+                double sin_phi = std::sin(phi);
+                double cos_phi = std::cos(phi);
+                double x = sin_phi*std::cos(theta);
+                double y = sin_phi*std::sin(theta);
+                double z = cos_phi;
+                
+                Vec m = b1*x + b2*y + n*z;
+                double m_dot_o = m.dot(o);
+                i = m*m_dot_o*2.0 - o;
+                
+                pdf = ggx_distri(n, m)*sin_phi*cos_phi/(4.0*m_dot_o);
         }
 
-        Vec     kd;
+        Vec     ks;
         double  beta;
         double  ior;
 };
@@ -293,7 +306,7 @@ blackSurf(Vec(0.0,0.0,0.0),0.8),
 brightSurf(Vec(0.9,0.9,0.9),0.8);
 
 //const MirrorBRDF mirrorSurf(Vec(0.9,0.9,0.9));
-const CookTorrBRDF metalSurf(Vec(0.3, 0.3, 0.3), 0.1, 1.8);
+const CookTorrBRDF metalSurf(Vec(1.0, 1.0, 1.0), 0.4, 1.8);
 
 // Scene: list of spheres
 const Sphere spheres[] = {
@@ -456,7 +469,7 @@ int main(int argc, char *argv[]) {
         omp_set_num_threads(nworkers);
         rng.init(nworkers);
 
-        int w = 1024, h = 768, samps = argc==2 ? atoi(argv[1])/4 : 1024; // # samples
+        int w = 1024, h = 768, samps = argc==2 ? atoi(argv[1])/4 : 32; // # samples
         Vec cx = Vec(w*.5135/h), cy = (cx.cross(cam.d)).normalize()*.5135;
         std::vector<Vec> c(w*h);
 
@@ -484,7 +497,7 @@ int main(int argc, char *argv[]) {
         }
         fprintf(stderr, "\n");
 
-        aces_tonemap(c, exposure(c));
+        //aces_tonemap(c, exposure(c));
 
         // Write resulting image to a PPM file
         FILE *f = fopen("image.ppm", "w");
