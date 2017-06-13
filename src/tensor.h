@@ -1038,6 +1038,22 @@ vec3_basis(vec3 const& n, vec3& u, vec3& v)
         v = n.outer(u);
 }
 
+inline vec3
+vec3_cos_hemisphere_sample(vec3 const& n, float e0, float e1)
+{
+        e8util::vec3 u, v;
+        e8util::vec3_basis(n, u, v);
+
+        float phi = e0*2*M_PI;
+
+        float z = std::sqrt(e1);
+        float r = std::sqrt(1.0f - z*z);
+        float x = r*std::cos(phi);
+        float y = r*std::sin(phi);
+
+        return x*u + y*v + z*n;
+}
+
 class rng
 {
 public:
