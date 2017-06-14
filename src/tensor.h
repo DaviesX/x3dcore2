@@ -932,6 +932,7 @@ aabb::intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) co
         }
         t0 = t_min;
         t1 = t_max;
+        return true;
 }
 
 

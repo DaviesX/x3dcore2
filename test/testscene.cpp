@@ -20,8 +20,8 @@ test::test_scene::~test_scene()
 void
 test::test_scene::run() const
 {
-        unsigned const width = 133;
-        unsigned const height = 100;
+        unsigned const width = 1024;
+        unsigned const height = 768;
 
         e8::ol_image_renderer r(new e8::normal_pathtracer());
 
@@ -38,7 +38,7 @@ test::test_scene::run() const
         std::cout << "dev_depth: " << scene.dev_depth() << std::endl;
         std::cout << "num_nodes: " << scene.num_nodes() << std::endl;
 
-/*
+
         e8::img_file_frame img("test.png", width, height);
         e8::aces_compositor com(width, height);
         com.enable_auto_exposure(false);
@@ -47,7 +47,7 @@ test::test_scene::run() const
 
         com.commit(&img);
         img.commit();
-*/
+
         delete res;
         delete cam;
 }

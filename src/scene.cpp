@@ -309,12 +309,20 @@ e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start,
                 if (cost_split < cost_nonsplit ||
                     end - start > BVH_MAX_PRIMS) {
                         // split the primitives.
-                        float split = b.min()(split_axis) + (split_antiaxis + 1)*range(split_axis)/BVH_BUCKET_COUNT;
+                        /*float split = b.min()(split_axis) + (split_antiaxis + 1)*range(split_axis)/BVH_BUCKET_COUNT;
                         std::vector<primitive_details>::iterator it = std::partition(prims.begin() + start, prims.begin() + end,
                                        [split_axis, split](primitive_details const& a) -> bool {
                                 return a.centroid(split_axis) < split;
                         });
-                        unsigned mid = it - prims.begin();
+                        unsigned mid = it - prims.begin();*/
+
+                        std::sort(prims.begin() + start, prims.begin() + end,
+                                  [split_axis](primitive_details const& a, primitive_details const& b) -> bool {
+                                return a.centroid(split_axis) < b.centroid(split_axis);
+
+                        });
+
+                        unsigned mid = (start + end)/2;
 
                         // ensure each node has at least 1 element.
                         if (mid == start)
@@ -355,7 +363,7 @@ e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 {
         if (bvh_node->num_prims > 0) {
                 // exterior node.
-                bvh.push_back(flattened_node(bvh_node->bound, bvh_node->split_axis, bvh_node->num_prims));
+                bvh.push_back(flattened_node(bvh_node->bound, bvh_node->prim_start, bvh_node->num_prims));
         } else {
                 // interior node.
                 unsigned p = bvh.size();
@@ -369,9 +377,9 @@ e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 void
 e8::bvh_scene_layout::update()
 {
-        m_mats.clear();
-        m_lights.clear();
-        m_geos.clear();
+        m_mats_list.clear();
+        m_lights_list.clear();
+        m_geos_list.clear();
         m_prims.clear();
         m_bvh.clear();
 
@@ -380,17 +388,21 @@ e8::bvh_scene_layout::update()
         std::map<if_material const*, unsigned short> mat_map;
         std::map<if_light const*, unsigned short> light_map;
         for (std::pair<if_geometry const*, binded_geometry> geo: m_geometries) {
-                geo_map.insert(std::pair<if_geometry const*, unsigned int>(geo.first, m_geos.size()));
-                m_geos.push_back(geo.first);
+                geo_map.insert(std::pair<if_geometry const*, unsigned int>(geo.first, m_geos_list.size()));
+                m_geos_list.push_back(geo.first);
         }
+
         for (if_material const* mat: m_mats) {
-                mat_map.insert(std::pair<if_material const*, unsigned short>(mat, m_mats.size()));
-                m_mats.push_back(mat);
+                mat_map.insert(std::pair<if_material const*, unsigned short>(mat, m_mats_list.size()));
+                m_mats_list.push_back(mat);
         }
+        mat_map.insert(std::pair<if_material const*, unsigned short>(nullptr, 0xFFFF));
+
         for (if_light const* light: m_lights) {
-                light_map.insert(std::pair<if_light const*, unsigned short>(light, m_lights.size()));
-                m_lights.push_back(light);
+                light_map.insert(std::pair<if_light const*, unsigned short>(light, m_lights_list.size()));
+                m_lights_list.push_back(light);
         }
+        light_map.insert(std::pair<if_light const*, unsigned short>(nullptr, 0xFFFF));
 
         // construct primitive list.
         std::vector<primitive_details> prims;
@@ -421,11 +433,121 @@ e8::bvh_scene_layout::update()
 e8::intersect_info
 e8::bvh_scene_layout::intersect(e8util::ray const& r) const
 {
+        float const t_min = 1e-4f;
+        float const t_max = 1000.0f;
+
+        float t = INFINITY;
+
+        primitive const*        hit_prim = nullptr;
+        e8util::vec3            hit_b;
+
+        std::vector<unsigned> candids({0});
+        while (!candids.empty()) {
+                unsigned n = candids.back();
+                candids.pop_back();
+
+                if (m_bvh[n].num_prims > 0) {
+                        // exterior node.
+                        unsigned ps = m_bvh[n].prim_start;
+                        unsigned pe = ps + m_bvh[n].num_prims;
+
+                        for (unsigned i = ps; i < pe; i ++) {
+                                primitive const& prim = m_prims[i];
+                                std::vector<e8util::vec3> const& verts = m_geos_list[prim.i_geo]->vertices();
+
+                                e8util::vec3 const& v0 = verts[prim.tri(0)];
+                                e8util::vec3 const& v1 = verts[prim.tri(1)];
+                                e8util::vec3 const& v2 = verts[prim.tri(2)];
+
+                                e8util::vec3 b;
+                                float t0;
+                                if (r.intersect(v0, v1, v2, t_min, t_max, b, t0) && t0 < t) {
+                                        t = t0;
+                                        hit_prim = &prim;
+                                        hit_b = b;
+                                }
+                        }
+                } else {
+                        // interior node.
+                        unsigned left = n + 1;
+                        unsigned right = m_bvh[n].next_child;
+
+                        float t0, t1;
+                        if (m_bvh[left].bound.intersect(r, t_min, t_max, t0, t1)) {
+                                candids.push_back(left);
+                        }
+
+                        if (m_bvh[right].bound.intersect(r, t_min, t_max, t0, t1)) {
+                                candids.push_back(right);
+                        }
+                }
+        }
+
+        if (hit_prim) {
+                if_geometry const* hit_geo = m_geos_list[hit_prim->i_geo];
+                std::vector<e8util::vec3> const& verts = hit_geo->vertices();
+                e8util::vec3 const& v0 = verts[hit_prim->tri(0)];
+                e8util::vec3 const& v1 = verts[hit_prim->tri(1)];
+                e8util::vec3 const& v2 = verts[hit_prim->tri(2)];
+
+                e8util::vec3 const& vertex = hit_b(0)*v0 + hit_b(1)*v1 + hit_b(2)*v2;
+
+                std::vector<e8util::vec3> const& normals = hit_geo->normals();
+                e8util::vec3 const& n0 = normals[hit_prim->tri(0)];
+                e8util::vec3 const& n1 = normals[hit_prim->tri(1)];
+                e8util::vec3 const& n2 = normals[hit_prim->tri(2)];
+                e8util::vec3 const& normal = (hit_b(0)*n0 + hit_b(1)*n1 + hit_b(2)*n2).normalize();
+
+                return intersect_info(t, vertex, normal,
+                                      hit_prim->i_mat == 0xFFFF ? nullptr : m_mats_list[hit_prim->i_mat],
+                                      hit_prim->i_light == 0xFFFF ? nullptr : m_lights_list[hit_prim->i_light]);
+        } else {
+                return intersect_info();
+        }
 }
 
 bool
 e8::bvh_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
 {
+        std::vector<unsigned> candids({0});
+        while (!candids.empty()) {
+                unsigned n = candids.back();
+                candids.pop_back();
+
+                if (m_bvh[n].num_prims > 0) {
+                        // exterior node.
+                        unsigned ps = m_bvh[n].prim_start;
+                        unsigned pe = ps + m_bvh[n].num_prims;
+
+                        for (unsigned i = ps; i < pe; i ++) {
+                                primitive const& prim = m_prims[i];
+                                std::vector<e8util::vec3> const& verts = m_geos_list[prim.i_geo]->vertices();
+
+                                e8util::vec3 const& v0 = verts[prim.tri(0)];
+                                e8util::vec3 const& v1 = verts[prim.tri(1)];
+                                e8util::vec3 const& v2 = verts[prim.tri(2)];
+
+                                e8util::vec3 b;
+                                if (r.intersect(v0, v1, v2, t_min, t_max, b, t)) {
+                                        return true;
+                                }
+                        }
+                } else {
+                        // interior node.
+                        unsigned left = n + 1;
+                        unsigned right = m_bvh[n].next_child;
+
+                        float t0, t1;
+                        if (m_bvh[left].bound.intersect(r, t_min, t_max, t0, t1)) {
+                                candids.push_back(left);
+                        }
+
+                        if (m_bvh[right].bound.intersect(r, t_min, t_max, t0, t1)) {
+                                candids.push_back(right);
+                        }
+                }
+        }
+        return false;
 }
 
 unsigned

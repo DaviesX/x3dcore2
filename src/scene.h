@@ -218,9 +218,9 @@ private:
         unsigned                                m_num_nodes = 0;
         std::vector<flattened_node>             m_bvh;
         std::vector<primitive>                  m_prims;
-        std::vector<if_geometry const*>         m_geos;
-        std::vector<if_material const*>         m_mats;
-        std::vector<if_light const*>            m_lights;
+        std::vector<if_geometry const*>         m_geos_list;
+        std::vector<if_material const*>         m_mats_list;
+        std::vector<if_light const*>            m_lights_list;
 };
 
 }
