@@ -308,28 +308,34 @@ e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start,
                 // decide whether to split based on cost and number of primitives.
                 if (cost_split < cost_nonsplit ||
                     end - start > BVH_MAX_PRIMS) {
+                        unsigned mid;
+
                         // split the primitives.
-                        /*float split = b.min()(split_axis) + (split_antiaxis + 1)*range(split_axis)/BVH_BUCKET_COUNT;
-                        std::vector<primitive_details>::iterator it = std::partition(prims.begin() + start, prims.begin() + end,
-                                       [split_axis, split](primitive_details const& a) -> bool {
-                                return a.centroid(split_axis) < split;
-                        });
-                        unsigned mid = it - prims.begin();*/
+                        if (depth > std::log2(prims.size())) {
+                                // objects may be too large, sah won't work well. Use median heuristics instead.
+                                std::sort(prims.begin() + start, prims.begin() + end,
+                                          [split_axis](primitive_details const& a, primitive_details const& b) -> bool {
+                                        return a.centroid(split_axis) < b.centroid(split_axis);
 
-                        std::sort(prims.begin() + start, prims.begin() + end,
-                                  [split_axis](primitive_details const& a, primitive_details const& b) -> bool {
-                                return a.centroid(split_axis) < b.centroid(split_axis);
+                                });
+                                mid = (start + end) >> 1;
+                        } else {
+                                // use sah heuristics.
+                                float split = b.min()(split_axis) + (split_antiaxis + 1)*range(split_axis)/BVH_BUCKET_COUNT;
+                                std::vector<primitive_details>::iterator it = std::partition(prims.begin() + start, prims.begin() + end,
+                                                                                             [split_axis, split](primitive_details const& a) -> bool {
+                                        return a.centroid(split_axis) < split;
+                                });
+                                mid = it - prims.begin();
 
-                        });
+                                // ensure each node has at least 1 element.
+                                if (mid == start)
+                                        mid ++;
+                                else if (mid == end)
+                                        mid --;
+                                m_num_nodes ++;
+                        }
 
-                        unsigned mid = (start + end)/2;
-
-                        // ensure each node has at least 1 element.
-                        if (mid == start)
-                                mid ++;
-                        else if (mid == end)
-                                mid --;
-                        m_num_nodes ++;
                         return new node(b, split_axis,
                                         bvh(prims, start, mid, depth + 1),
                                         bvh(prims, mid, end, depth + 1));
@@ -419,6 +425,7 @@ e8::bvh_scene_layout::update()
         m_sum_depth2 = 0;
         m_max_depth = 0;
         m_num_nodes = 0;
+
         node* tmp_bvh = bvh(prims, 0, prims.size(), 0);
         flatten(m_bvh, tmp_bvh);
         delete_bvh(tmp_bvh, 0);
