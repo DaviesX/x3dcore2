@@ -713,22 +713,27 @@ class ray
 {
 public:
         ray();
-        ray(vec3 const& o, vec3 const& v);
+        ray(vec3 const& m_o, vec3 const& m_v);
         bool    intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, float t_max, vec3& b, float& t0) const;
 
-        vec3    o;
-        vec3    v;
+        vec3    o() const;
+        vec3    v() const;
+        vec3    v_inv() const;
+private:
+        vec3    m_o;
+        vec3    m_v;
+        vec3    m_v_inv;
 };
 
 inline
 ray::ray():
-        o(0.0f), v(0.0f)
+        m_o(0.0f), m_v(0.0f), m_v_inv(0.0f)
 {
 }
 
 inline
 ray::ray(vec3 const& o, vec3 const& v):
-        o(o), v(v)
+        m_o(o), m_v(v), m_v_inv(vec3(1.0f)/v)
 {
 }
 
@@ -742,13 +747,13 @@ ray::intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, floa
         // substitution: va = P1 - P0, vb = P2 - P0, vc = Pr0 - P0
         vec3 const& va = v1 - v0;
         vec3 const& vb = v2 - v0;
-        vec3 const& vc = o - v0;
+        vec3 const& vc = m_o - v0;
 
         // solve for t, b1, b2, where
         // 0 <= b0 <= 1 and 0 <= b1 <= 1 and 0 <= b2 <= 1
         // or, b1 + b2 <= 1 and 0 <= b1 <= 1 and b2 => 0
         // which means that the intersect is within the triangle
-        vec3 const& e2 = v.outer(vb);
+        vec3 const& e2 = m_v.outer(vb);
 
         float det = va.inner(e2);
         if (det == 0.0f)
@@ -760,7 +765,7 @@ ray::intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, floa
                 return false;
 
         vec3 const& e1 = vc.outer(va);
-        b(2) = v.inner(e1)*inv;
+        b(2) = m_v.inner(e1)*inv;
         if (b(2) < 0.0f || b(1) + b(2) > 1.0f)
                 return false;
 
@@ -771,6 +776,24 @@ ray::intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, floa
 
         b(0) = 1.0f - b(1) - b(2);
         return true;
+}
+
+inline vec3
+ray::o() const
+{
+        return m_o;
+}
+
+inline vec3
+ray::v() const
+{
+        return m_v;
+}
+
+inline vec3
+ray::v_inv() const
+{
+        return m_v_inv;
 }
 
 
@@ -792,59 +815,66 @@ public:
         vec3    min() const;
         vec3    max() const;
 private:
-        float   m_area;
         vec3    m_min;
         vec3    m_max;
+        bool    m_is_empty;
 };
 
 inline
 aabb::aabb():
-        aabb(vec3(), vec3())
+        m_is_empty(true)
 {
 }
 
 inline aabb::aabb(vec3 const& min, vec3 const& max):
         m_min(min), m_max(max)
 {
-        if (min(0) > max(0) || min(1) > max(1) || min(2) > max(2)) {
-                m_area = 0;
-        } else {
-                vec3 d = max - min;
-                m_area = 2.0f*(d(0)*d(1) + d(0)*d(2) + d(1)*d(2));
-        }
+        m_is_empty = min(0) > max(0) || min(1) > max(1) || min(2) > max(2);
 }
 
 inline aabb
 aabb::operator+(aabb const& rhs) const
 {
-        return aabb(vec3({std::min(m_min(0), rhs.m_min(0)),
-                          std::min(m_min(1), rhs.m_min(1)),
-                          std::min(m_min(2), rhs.m_min(2))}),
-                    vec3({std::max(m_max(0), rhs.m_max(0)),
-                          std::max(m_max(1), rhs.m_max(1)),
-                          std::max(m_max(2), rhs.m_max(2))}));
+        if (!m_is_empty) {
+                return aabb(vec3({std::min(m_min(0), rhs.m_min(0)),
+                                  std::min(m_min(1), rhs.m_min(1)),
+                                  std::min(m_min(2), rhs.m_min(2))}),
+                            vec3({std::max(m_max(0), rhs.m_max(0)),
+                                  std::max(m_max(1), rhs.m_max(1)),
+                                  std::max(m_max(2), rhs.m_max(2))}));
+        } else {
+                return rhs;
+        }
 }
 
 inline aabb
 aabb::operator+(vec3 const& rhs) const
 {
-        return aabb(vec3({std::min(m_min(0), rhs(0)),
-                          std::min(m_min(1), rhs(1)),
-                          std::min(m_min(2), rhs(2))}),
-                    vec3({std::max(m_max(0), rhs(0)),
-                          std::max(m_max(1), rhs(1)),
-                          std::max(m_max(2), rhs(2))}));
+        if (!m_is_empty) {
+                return aabb(vec3({std::min(m_min(0), rhs(0)),
+                                  std::min(m_min(1), rhs(1)),
+                                  std::min(m_min(2), rhs(2))}),
+                            vec3({std::max(m_max(0), rhs(0)),
+                                  std::max(m_max(1), rhs(1)),
+                                  std::max(m_max(2), rhs(2))}));
+        } else {
+                return aabb(rhs, rhs);
+        }
 }
 
 inline aabb
 aabb::operator^(aabb const& rhs) const
 {
-        return aabb(vec3({std::max(m_min(0), rhs.m_min(0)),
-                          std::max(m_min(1), rhs.m_min(1)),
-                          std::max(m_min(2), rhs.m_min(2))}),
-                    vec3({std::min(m_max(0), rhs.m_max(0)),
-                          std::min(m_max(1), rhs.m_max(1)),
-                          std::min(m_max(2), rhs.m_max(2))}));
+        if (!m_is_empty) {
+                return aabb(vec3({std::max(m_min(0), rhs.m_min(0)),
+                                  std::max(m_min(1), rhs.m_min(1)),
+                                  std::max(m_min(2), rhs.m_min(2))}),
+                            vec3({std::min(m_max(0), rhs.m_max(0)),
+                                  std::min(m_max(1), rhs.m_max(1)),
+                                  std::min(m_max(2), rhs.m_max(2))}));
+        } else {
+                return aabb();
+        }
 }
 
 inline vec3
@@ -862,23 +892,30 @@ aabb::max() const
 inline bool
 aabb::is_empty() const
 {
-        return surf_area() == 0;
+        return m_is_empty;
 }
 
 inline float
 aabb::surf_area() const
 {
-        return m_area;
+        if (m_is_empty) {
+                return 0.0f;
+        } else {
+                vec3 d = m_max - m_min;
+                return 2.0f*(d(0)*d(1) + d(0)*d(2) + d(1)*d(2));
+        }
 }
 
 inline bool
 aabb::intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) const
 {
+        vec3 const& o = r.o();
+        vec3 const& v_inv = r.v_inv();
+
         // test against the plane parallels to x, y, z axis respectively
         for (unsigned i = 0; i < 3; i ++) {
-                float inv = 1.0f/r.v(i);
-                float k0 = (m_min(i) - r.o(i))*inv;
-                float k1 = (m_max(i) - r.o(i))*inv;
+                float k0 = (m_min(i) - o(i))*v_inv(i);
+                float k1 = (m_max(i) - o(i))*v_inv(i);
 
                 // march toward the middle of the ray
                 if (k0 > k1) {

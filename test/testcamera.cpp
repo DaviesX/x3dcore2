@@ -29,13 +29,13 @@ test::test_camera::run() const
 
         float s;
         e8util::ray const& r = cam.sample(rng, (resx - 1)/2, (resy - 1)/2, resx, resy, s);
-        assert(r.v == e8util::vec3({-1.0f/std::sqrt(2), 0.0f, -1.0f/std::sqrt(2)}));
+        assert(r.v() == e8util::vec3({-1.0f/std::sqrt(2), 0.0f, -1.0f/std::sqrt(2)}));
 
         for (unsigned j = 0; j < resy; j ++) {
                 for (unsigned i = 0; i < resx; i ++) {
                         float pdf;
                         e8util::ray const& ray = cam.sample(rng, i, j, resx, resy, pdf);
-                        assert(ray.o == trans);
+                        assert(ray.o() == trans);
 
                         float x = (static_cast<float>(i)/(resx - 1)*sensor_size - sensor_size/2.0f)*aspect;
                         float y = (resy - 1 - static_cast<float>(j))/(resy - 1)*sensor_size - sensor_size/2.0f;
@@ -44,7 +44,7 @@ test::test_camera::run() const
                         v = v.normalize();
                         v = (rot*v.homo(0.0f)).trunc();
 
-                        assert(ray.v == v);
+                        assert(ray.v() == v);
                 }
         }
 }

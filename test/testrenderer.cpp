@@ -27,13 +27,12 @@ test::test_renderer::run() const
         e8util::if_resource* res = new e8util::cornell_scene();
         e8::if_camera* cam = res->load_camera();
 
-        e8::linear_scene_layout scene;
+        e8::bvh_scene_layout scene;
         scene.load(res);
+        scene.update();
 
         e8::img_file_frame img("test.png", width, height);
         e8::aces_compositor com(width, height);
-        com.enable_auto_exposure(false);
-        com.exposure(1.0f);
         r.render(&scene, cam, &com);
 
         com.commit(&img);

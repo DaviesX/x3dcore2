@@ -7,6 +7,7 @@
 #include "testresource.h"
 #include "testcamera.h"
 #include "testframe.h"
+#include "testscene.h"
 #include "testrenderer.h"
 
 
@@ -66,6 +67,7 @@ test::load(int argc, char** argv)
         runner.add("test_geometry", new test_geometry(), false);
         runner.add("test_resource", new test_resource(), false);
         runner.add("test_camera", new test_camera(), false);
+        runner.add("test_scene", new test_scene(), false);
         runner.add("test_renderer", new test_renderer(), false);
         runner.add("test_frame", new test_frame(), false);
 

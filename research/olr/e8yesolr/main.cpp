@@ -274,10 +274,10 @@ struct CookTorrBRDF : public BRDF {
                 double z = cos_phi;
                 
                 Vec m = b1*x + b2*y + n*z;
-                double m_dot_o = m.dot(o);
+                double m_dot_o = std::abs(m.dot(o));
                 i = m*m_dot_o*2.0 - o;
                 
-                pdf = ggx_distri(n, m)*sin_phi*cos_phi/(4.0*m_dot_o);
+                pdf = ggx_distri(n, m)*std::abs(cos_phi)/(4.0*m_dot_o);
         }
 
         Vec     ks;
@@ -306,7 +306,7 @@ blackSurf(Vec(0.0,0.0,0.0),0.8),
 brightSurf(Vec(0.9,0.9,0.9),0.8);
 
 //const MirrorBRDF mirrorSurf(Vec(0.9,0.9,0.9));
-const CookTorrBRDF metalSurf(Vec(1.0, 1.0, 1.0), 0.4, 1.8);
+const CookTorrBRDF metalSurf(Vec(1.0, 1.0, 1.0), 0.01, 1.8);
 
 // Scene: list of spheres
 const Sphere spheres[] = {

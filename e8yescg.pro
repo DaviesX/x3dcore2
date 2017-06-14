@@ -28,7 +28,8 @@ SOURCES += src/main.cpp \
     test/testresource.cpp \
     test/testcamera.cpp \
     test/testrenderer.cpp \
-    test/testframe.cpp
+    test/testframe.cpp \
+    test/testscene.cpp
 
 HEADERS += \
     src/scene.h \
@@ -52,7 +53,8 @@ HEADERS += \
     test/testresource.h \
     test/testcamera.h \
     test/testrenderer.h \
-    test/testframe.h
+    test/testframe.h \
+    test/testscene.h
 
 #LIBS += -lGLEW
 #LIBS += -lglfw

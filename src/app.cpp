@@ -53,6 +53,8 @@ App::App(QWidget *parent) :
         m_ui->combo_tracer->addItem("direct lighting");
         m_ui->combo_tracer->addItem("unidirectional tracing");
         m_ui->combo_tracer->addItem("bidirectional tracing");
+        m_ui->combo_tracer->addItem("position tracing");
+        m_ui->combo_tracer->addItem("normal tracing");
 
         m_ui->combo_structure->addItem("linear");
         m_ui->combo_structure->addItem("static bvh");
