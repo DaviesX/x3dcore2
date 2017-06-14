@@ -63,10 +63,14 @@ e8::if_scene::load(e8util::if_resource* res)
 
         for (if_geometry* geo: geos)
                 add_geometry(geo);
-        for (if_material* mat: mats)
-                add_material(mat);
-        for (if_light* light: lights)
-                add_light(light);
+        for (unsigned i = 0; i < mats.size(); i ++) {
+                add_material(mats[i]);
+                bind(geos[i], mats[i]);
+        }
+        for (unsigned i = 0; i < lights.size(); i ++) {
+                add_light(lights[i]);
+                bind(geos[i], lights[i]);
+        }
 }
 
 
@@ -125,6 +129,7 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
                                 hit_geo = geo;
                                 hit_binded = &p.second;
                                 hit_tri = &tri;
+                                t = t0;
                         }
                 }
         }

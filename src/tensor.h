@@ -712,6 +712,7 @@ typedef mat<4,1>        mat41;
 class ray
 {
 public:
+        ray();
         ray(vec3 const& o, vec3 const& v);
         bool    intersect(vec3 const& v0, vec3 const& v1, vec3 const& v2, float t_min, float t_max, vec3& b, float& t0) const;
 
@@ -720,7 +721,14 @@ public:
 };
 
 inline
-ray::ray(vec3 const& o, vec3 const& v): o(o), v(v)
+ray::ray():
+        o(0.0f), v(0.0f)
+{
+}
+
+inline
+ray::ray(vec3 const& o, vec3 const& v):
+        o(o), v(v)
 {
 }
 
@@ -867,8 +875,7 @@ inline bool
 aabb::intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) const
 {
         // test against the plane parallels to x, y, z axis respectively
-        int i;
-        for ( i = 0; i < 3; i ++ ) {
+        for (unsigned i = 0; i < 3; i ++) {
                 float inv = 1.0f/r.v(i);
                 float k0 = (m_min(i) - r.o(i))*inv;
                 float k1 = (m_max(i) - r.o(i))*inv;

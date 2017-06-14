@@ -33,6 +33,7 @@ e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
                 m_w = compositor->width();
                 m_h = compositor->height();
                 m_rad.resize(m_w*m_h);
+                m_rays.resize(m_w*m_h);
                 m_samps = 0;
                 for (unsigned j = 0; j < m_h; j ++) {
                         for (unsigned i = 0; i < m_w; i ++) {

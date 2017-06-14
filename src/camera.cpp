@@ -35,7 +35,7 @@ e8::pinhole_camera::sample(e8util::rng&, unsigned x, unsigned y, unsigned w, uns
                         (h - 1 - static_cast<float>(y))/(h - 1)*m_sensor_size - m_sensor_size/2.0f,
                         -m_focal_len});
 
-        e8util::ray ray(m_t, (m_r*v.normalize().homo(0.0f)).trunc());
+        e8util::ray ray(m_t, (m_r*v.homo(0.0f)).trunc().normalize());
         pdf = 1.0f;
         return ray;
 }

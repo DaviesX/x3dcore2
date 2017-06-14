@@ -85,7 +85,10 @@ e8util::cornell_scene::load_lights() const
 e8::if_camera*
 e8util::cornell_scene::load_camera() const
 {
-        return new e8::pinhole_camera(e8util::vec3({0.0f, -3.4f, 0.795f}), e8util::mat44(1.0f), 0.032f, 0.035f, 4.0f/3.0f);
+        /*return new e8::pinhole_camera(e8util::vec3({0.0f, -3.4f, 0.795f}),
+                                      e8util::mat44_rotate(M_PI/2.0f, e8util::vec3({1, 0, 0})),
+                                      0.032f, 0.035f, 4.0f/3.0f);*/
+        return new e8::pinhole_camera(e8util::vec3({0.0f, 0.795f, 3.4f}), 1.0f, 0.032f, 0.035f, 4.0f/3.0f);
 }
 
 

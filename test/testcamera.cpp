@@ -22,9 +22,15 @@ test::test_camera::run() const
         float const aspect = 4.0f/3.0f;
 
         e8::pinhole_camera cam(trans, rot, sensor_size, focal_len, aspect);
-        unsigned const resx = 1024;
-        unsigned const resy = 768;
+
+        unsigned const resx = 1025;
+        unsigned const resy = 769;
         e8util::rng rng(10);
+
+        float s;
+        e8util::ray const& r = cam.sample(rng, (resx - 1)/2, (resy - 1)/2, resx, resy, s);
+        assert(r.v == e8util::vec3({-1.0f/std::sqrt(2), 0.0f, -1.0f/std::sqrt(2)}));
+
         for (unsigned j = 0; j < resy; j ++) {
                 for (unsigned i = 0; i < resx; i ++) {
                         float pdf;
