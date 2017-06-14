@@ -13,7 +13,10 @@ public:
         if_pathtracer();
         virtual ~if_pathtracer();
 
-        virtual std::vector<e8util::vec3>       sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const = 0;
+        virtual std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                                       std::vector<e8util::ray> const& rays,
+                                                       if_scene const* scene,
+                                                       unsigned n) const = 0;
 };
 
 
@@ -23,7 +26,10 @@ public:
         position_pathtracer();
         ~position_pathtracer() override;
 
-        std::vector<e8util::vec3>       sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const override;
+        std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                               std::vector<e8util::ray> const& rays,
+                                               if_scene const* scene,
+                                               unsigned n) const override;
 };
 
 class normal_pathtracer: public if_pathtracer
@@ -32,7 +38,10 @@ public:
         normal_pathtracer();
         ~normal_pathtracer() override;
 
-        std::vector<e8util::vec3>       sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const override;
+        std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                               std::vector<e8util::ray> const& rays,
+                                               if_scene const* scene,
+                                               unsigned n) const override;
 };
 
 class direct_pathtracer: public if_pathtracer
@@ -41,7 +50,16 @@ public:
         direct_pathtracer();
         ~direct_pathtracer() override;
 
-        std::vector<e8util::vec3>       sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned n) const override;
+        std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                               std::vector<e8util::ray> const& rays,
+                                               if_scene const* scene,
+                                               unsigned n) const override;
+private:
+        e8util::vec3                    sample_direct_illum(e8util::rng& rng,
+                                                            e8util::vec3 const& o,
+                                                            e8::intersect_info const& inf,
+                                                            if_scene const* scene,
+                                                            unsigned n) const;
 };
 
 }

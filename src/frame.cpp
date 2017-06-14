@@ -157,9 +157,9 @@ e8::img_file_frame::commit()
         cv::Mat4b pixels(height(), width());
         pixels.forEach([this](cv::Vec4b& v, int const* p) {
                 e8::pixel const& pixel = (*this)(p[1], p[0]);
-                v[0] = pixel(0);
+                v[0] = pixel(2);
                 v[1] = pixel(1);
-                v[2] = pixel(2);
+                v[2] = pixel(0);
                 v[3] = pixel(3);
         });
         cv::imwrite(m_file_name, pixels);

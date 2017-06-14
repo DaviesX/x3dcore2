@@ -114,10 +114,14 @@ e8::aces_compositor::luminance(rgba_color const& c) const
 float
 e8::aces_compositor::exposure() const
 {
+        unsigned n = 0;
         float sum = 0;
         for (unsigned i = 0; i < m_w*m_h; i ++) {
-                sum += std::log(luminance(m_fbuffer[i]) + 1e-3f);
+                if (m_fbuffer[i] != 0.0f) {
+                        sum += std::log(luminance(m_fbuffer[i]) + 1e-3f);
+                        n ++;
+                }
         }
-        sum /= (m_w*m_h);
+        sum /= n;
         return std::exp(sum);
 }

@@ -216,11 +216,13 @@ private:
         unsigned                                m_sum_depth = 0;
         unsigned                                m_num_paths = 0;
         unsigned                                m_num_nodes = 0;
+
         std::vector<flattened_node>             m_bvh;
+
         std::vector<primitive>                  m_prims;
-        std::vector<if_geometry const*>         m_geos_list;
-        std::vector<if_material const*>         m_mats_list;
-        std::vector<if_light const*>            m_lights_list;
+        std::vector<if_geometry const*>         m_geo_list;
+        std::vector<if_material const*>         m_mat_list;
+        std::vector<if_light const*>            m_light_list;
 };
 
 }

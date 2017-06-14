@@ -44,11 +44,11 @@ e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
                 }
         }
 
-        unsigned const n_samples = 5;
+        unsigned const n_samples = 20;
         std::vector<e8util::vec3> const& estimate = m_pt->sample(rng, m_rays, scene, n_samples);
 
         // accumulate result.
-        m_samps += n_samples;
+        m_samps += 1;
         float pr = 1.0f/m_samps;
         for (unsigned j = 0; j < m_h; j ++) {
                 for (unsigned i = 0; i < m_w; i ++) {

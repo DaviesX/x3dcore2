@@ -67,12 +67,16 @@ e8::if_scene::load(e8util::if_resource* res)
         for (if_geometry* geo: geos)
                 add_geometry(geo);
         for (unsigned i = 0; i < mats.size(); i ++) {
-                add_material(mats[i]);
-                bind(geos[i], mats[i]);
+                if (mats[i]) {
+                        add_material(mats[i]);
+                        bind(geos[i], mats[i]);
+                }
         }
         for (unsigned i = 0; i < lights.size(); i ++) {
-                add_light(lights[i]);
-                bind(geos[i], lights[i]);
+                if (lights[i]) {
+                        add_light(lights[i]);
+                        bind(geos[i], lights[i]);
+                }
         }
 }
 
@@ -383,9 +387,11 @@ e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 void
 e8::bvh_scene_layout::update()
 {
-        m_mats_list.clear();
-        m_lights_list.clear();
-        m_geos_list.clear();
+        this->linear_scene_layout::update();
+
+        m_mat_list.clear();
+        m_light_list.clear();
+        m_geo_list.clear();
         m_prims.clear();
         m_bvh.clear();
 
@@ -394,19 +400,19 @@ e8::bvh_scene_layout::update()
         std::map<if_material const*, unsigned short> mat_map;
         std::map<if_light const*, unsigned short> light_map;
         for (std::pair<if_geometry const*, binded_geometry> geo: m_geometries) {
-                geo_map.insert(std::pair<if_geometry const*, unsigned int>(geo.first, m_geos_list.size()));
-                m_geos_list.push_back(geo.first);
+                geo_map.insert(std::pair<if_geometry const*, unsigned int>(geo.first, m_geo_list.size()));
+                m_geo_list.push_back(geo.first);
         }
 
         for (if_material const* mat: m_mats) {
-                mat_map.insert(std::pair<if_material const*, unsigned short>(mat, m_mats_list.size()));
-                m_mats_list.push_back(mat);
+                mat_map.insert(std::pair<if_material const*, unsigned short>(mat, m_mat_list.size()));
+                m_mat_list.push_back(mat);
         }
         mat_map.insert(std::pair<if_material const*, unsigned short>(nullptr, 0xFFFF));
 
         for (if_light const* light: m_lights) {
-                light_map.insert(std::pair<if_light const*, unsigned short>(light, m_lights_list.size()));
-                m_lights_list.push_back(light);
+                light_map.insert(std::pair<if_light const*, unsigned short>(light, m_light_list.size()));
+                m_light_list.push_back(light);
         }
         light_map.insert(std::pair<if_light const*, unsigned short>(nullptr, 0xFFFF));
 
@@ -460,7 +466,7 @@ e8::bvh_scene_layout::intersect(e8util::ray const& r) const
 
                         for (unsigned i = ps; i < pe; i ++) {
                                 primitive const& prim = m_prims[i];
-                                std::vector<e8util::vec3> const& verts = m_geos_list[prim.i_geo]->vertices();
+                                std::vector<e8util::vec3> const& verts = m_geo_list[prim.i_geo]->vertices();
 
                                 e8util::vec3 const& v0 = verts[prim.tri(0)];
                                 e8util::vec3 const& v1 = verts[prim.tri(1)];
@@ -491,7 +497,7 @@ e8::bvh_scene_layout::intersect(e8util::ray const& r) const
         }
 
         if (hit_prim) {
-                if_geometry const* hit_geo = m_geos_list[hit_prim->i_geo];
+                if_geometry const* hit_geo = m_geo_list[hit_prim->i_geo];
                 std::vector<e8util::vec3> const& verts = hit_geo->vertices();
                 e8util::vec3 const& v0 = verts[hit_prim->tri(0)];
                 e8util::vec3 const& v1 = verts[hit_prim->tri(1)];
@@ -506,8 +512,8 @@ e8::bvh_scene_layout::intersect(e8util::ray const& r) const
                 e8util::vec3 const& normal = (hit_b(0)*n0 + hit_b(1)*n1 + hit_b(2)*n2).normalize();
 
                 return intersect_info(t, vertex, normal,
-                                      hit_prim->i_mat == 0xFFFF ? nullptr : m_mats_list[hit_prim->i_mat],
-                                      hit_prim->i_light == 0xFFFF ? nullptr : m_lights_list[hit_prim->i_light]);
+                                      hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat],
+                                      hit_prim->i_light == 0xFFFF ? nullptr : m_light_list[hit_prim->i_light]);
         } else {
                 return intersect_info();
         }
@@ -528,7 +534,7 @@ e8::bvh_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_m
 
                         for (unsigned i = ps; i < pe; i ++) {
                                 primitive const& prim = m_prims[i];
-                                std::vector<e8util::vec3> const& verts = m_geos_list[prim.i_geo]->vertices();
+                                std::vector<e8util::vec3> const& verts = m_geo_list[prim.i_geo]->vertices();
 
                                 e8util::vec3 const& v0 = verts[prim.tri(0)];
                                 e8util::vec3 const& v1 = verts[prim.tri(1)];

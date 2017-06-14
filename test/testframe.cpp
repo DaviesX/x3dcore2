@@ -22,9 +22,9 @@ test::test_frame::run() const
         e8::aces_compositor com(fimg.size().width, fimg.size().height);
         fimg.forEach([&com](cv::Vec3f const& v, int const* p) {
                 e8::rgba_color& c = com(p[1], p[0]);
-                c(0) = v[0];
+                c(0) = v[2];
                 c(1) = v[1];
-                c(2) = v[2];
+                c(2) = v[0];
                 c(3) = 1.0f;
         });
 

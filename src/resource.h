@@ -28,6 +28,7 @@ public:
 class cornell_scene: public if_resource
 {
 public:
+        cornell_scene();
         std::vector<e8::if_geometry*>   load_geometries() const override;
         std::vector<e8::if_material*>   load_materials() const override;
         std::vector<e8::if_light*>      load_lights() const override;

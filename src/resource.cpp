@@ -48,6 +48,9 @@ e8util::if_resource::save_geometries(std::vector<e8::if_geometry*> const&)
 
 
 
+e8util::cornell_scene::cornell_scene()
+{
+}
 
 std::vector<e8::if_geometry*>
 e8util::cornell_scene::load_geometries() const
@@ -71,14 +74,15 @@ e8util::cornell_scene::load_materials() const
         e8::if_material* red = new e8::oren_nayar(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
         e8::if_material* green = new e8::oren_nayar(e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
         e8::if_material* glossy = new e8::cook_torr(e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
-        e8::if_material* light = new e8::oren_nayar(e8util::vec3({0.911, 0.660f, 0.345f}), 0.078f);
+        e8::if_material* light = new e8::oren_nayar(e8util::vec3({0, 0, 0}), 0.078f);
         return std::vector<e8::if_material*>({red, green, white, white, white, glossy, white, light});
 }
 
 std::vector<e8::if_light*>
 e8util::cornell_scene::load_lights() const
 {
-        return std::vector<e8::if_light*>({new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometries()[0],
+        return std::vector<e8::if_light*>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+                                                  new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometries()[0],
                                                               e8util::vec3({0.911, 0.660f, 0.345f})*15.0f)});
 }
 
