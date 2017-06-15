@@ -42,9 +42,13 @@ e8::area_light::eval(e8util::vec3 const& i, e8util::vec3 const& n) const
 }
 
 e8util::vec3
-e8::area_light::emission() const
+e8::area_light::emission(e8util::vec3 const& w, e8util::vec3 const& n) const
 {
-        return m_rad;
+        float cos = w.inner(n);
+        if (cos > 0)
+                return m_rad*cos;
+        else
+                return 0.0f;
 }
 
 e8util::vec3

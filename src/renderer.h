@@ -1,6 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include "thread.h"
 #include "scene.h"
 #include "camera.h"
 #include "compositor.h"
@@ -40,8 +41,10 @@ public:
         void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) override;
         rendering_stats         get_stats() const override;
 private:
+        unsigned                        m_ncores;
         if_pathtracer*                  m_pt;
         std::vector<e8util::ray>        m_rays;
+        std::vector<e8util::ray>*       m_ray_parts;
         std::vector<e8util::vec3>       m_rad;
         unsigned                        m_samps;
         e8util::mat44                   m_t;
@@ -50,6 +53,7 @@ private:
         unsigned                        m_h;
 
         e8util::rng                     m_rng;
+        e8util::thread_pool             m_thrpool;
 };
 
 }

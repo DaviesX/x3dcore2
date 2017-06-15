@@ -55,7 +55,7 @@ class thread_pool
 {
         friend void*    thread_pool_worker(void* p);
 public:
-        thread_pool(unsigned num_thrs, std::vector<void*>& worker_storage);
+        thread_pool(unsigned num_thrs, std::vector<void*> worker_storage = std::vector<void*>());
         ~thread_pool();
 
         task_info               run(if_task* task);

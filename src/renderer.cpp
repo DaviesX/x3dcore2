@@ -13,14 +13,42 @@ e8::if_im_renderer::~if_im_renderer()
 
 
 e8::ol_image_renderer::ol_image_renderer(if_pathtracer* pt):
-        m_pt(pt), m_rng(100)
+        m_pt(pt), m_rng(100), m_thrpool(e8util::cpu_core_count())
 {
+        m_ncores = e8util::cpu_core_count();
+        m_ray_parts = new std::vector<e8util::ray> [m_ncores];
+        for (unsigned i = 0; i < m_ncores; i ++) {
+                m_ray_parts[i] = std::vector<e8util::ray>();
+        }
 }
 
 e8::ol_image_renderer::~ol_image_renderer()
 {
         delete m_pt;
+        delete [] m_ray_parts;
 }
+
+class sampling_task: public e8util::if_task
+{
+public:
+        sampling_task(e8::if_pathtracer const* pt,
+                      std::vector<e8util::ray> const& rays,
+                      e8::if_scene const* scene):
+                m_pt(pt), m_rays(rays), m_scene(scene)
+        {
+        }
+
+        void main(void*) override
+        {
+                m_estimate = m_pt->sample(m_rng, m_rays, m_scene, 1);
+        }
+private:
+        e8util::rng                             m_rng;
+        e8::if_pathtracer const*                m_pt;
+        std::vector<e8util::ray> const&         m_rays;
+        e8::if_scene const*                     m_scene;
+        std::vector<e8util::vec3>               m_estimate;
+};
 
 void
 e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_compositor* compositor)

@@ -83,6 +83,34 @@ private:
                                                               unsigned m) const;
 };
 
+class bidirect_pathtracer: public if_pathtracer
+{
+public:
+        bidirect_pathtracer();
+        ~bidirect_pathtracer() override;
+
+        std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                               std::vector<e8util::ray> const& rays,
+                                               if_scene const* scene,
+                                               unsigned n) const override;
+private:
+        e8util::vec3                    sample_light_illum(e8util::rng& rng,
+                                                           e8util::vec3 const& rad,
+                                                           e8util::vec3 const& w,
+                                                           e8::intersect_info const& info,
+                                                           if_scene const* scene,
+                                                           unsigned depth,
+                                                           e8::intersect_info& terminate,
+                                                           e8util::vec3& t) const;
+        e8util::vec3                    sample_illum(e8util::rng& rng, e8util::vec3 const& o, e8::intersect_info const& info,
+                                                     if_scene const* scene) const;
+        e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
+                                                              e8util::vec3 const& o,
+                                                              e8::intersect_info const& info,
+                                                              if_scene const* scene,
+                                                              unsigned depth) const;
+};
+
 }
 
 

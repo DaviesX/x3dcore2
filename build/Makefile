@@ -635,9 +635,9 @@ testrenderer.o: ../test/testrenderer.cpp ../src/pathtracer.h \
 		../src/light.h \
 		../src/camera.h \
 		../src/renderer.h \
+		../src/thread.h \
 		../src/compositor.h \
 		../src/frame.h \
-		../src/thread.h \
 		../test/testrenderer.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testrenderer.o ../test/testrenderer.cpp
@@ -659,9 +659,9 @@ testscene.o: ../test/testscene.cpp ../src/pathtracer.h \
 		../src/light.h \
 		../src/camera.h \
 		../src/renderer.h \
+		../src/thread.h \
 		../src/compositor.h \
 		../src/frame.h \
-		../src/thread.h \
 		../test/testscene.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testscene.o ../test/testscene.cpp

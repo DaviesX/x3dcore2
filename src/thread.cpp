@@ -103,7 +103,7 @@ e8util::thread_pool_worker(void* p)
         pthread_exit(nullptr);
 }
 
-e8util::thread_pool::thread_pool(unsigned num_thrs, std::vector<void*>& worker_storage):
+e8util::thread_pool::thread_pool(unsigned num_thrs, std::vector<void*> worker_storage):
         m_num_thrs(num_thrs)
 {
         sem_init(&m_global_sem, 0, 0);
