@@ -134,8 +134,20 @@ e8::ram_ogl_frame::paintGL()
 {
         e8util::lock(m_mutex);
         glClear(GL_COLOR_BUFFER_BIT);
-        if (front().w != 0 && front().h != 0)
-                glDrawPixels(front().w, front().h, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, front().pixels);
+        if (front().w != 0 && front().h != 0) {
+                unsigned* gl_pixels = new unsigned[front().w * front().h];
+                for (unsigned j = 0; j < front().h; j ++) {
+                        for (unsigned i = 0; i < front().w; i ++) {
+                                unsigned* gl_pixel = &gl_pixels[i + (front().h - 1- j)*front().w];
+                                pixel const& internal_pixel = front().pixels[i + j*front().w];
+                                *gl_pixel = internal_pixel(0) << 24 |
+                                                                 internal_pixel(1) << 16 |
+                                                                 internal_pixel(2) << 8 |
+                                                                 internal_pixel(3);
+                        }
+                }
+                glDrawPixels(front().w, front().h, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, gl_pixels);
+        }
         e8util::unlock(m_mutex);
 }
 

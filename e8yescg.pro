@@ -4,6 +4,9 @@ TARGET = e8yescg
 
 TEMPLATE = app
 
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE += -Ofast
+
 CONFIG += c++14
 
 SOURCES += src/main.cpp \

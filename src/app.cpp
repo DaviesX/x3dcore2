@@ -7,6 +7,7 @@
 rendering_task::rendering_task()
 {
         m_mutex = e8util::mutex();
+        m_com = new e8::aces_compositor(0, 0);
 }
 
 rendering_task::~rendering_task()
@@ -19,6 +20,12 @@ rendering_task::main(void*)
 {
         while (m_is_running) {
                 e8util::lock(m_mutex);
+                m_com->resize(m_frame->width(), m_frame->height());
+                m_com->enable_auto_exposure(false);
+                m_com->exposure(m_old.exposure);
+                m_renderer->render(m_scene, m_cam, m_com);
+                m_com->commit(m_frame);
+                m_frame->commit();
                 e8util::unlock(m_mutex);
         }
 }
@@ -27,6 +34,38 @@ void
 rendering_task::update()
 {
         e8util::lock(m_mutex);
+        if (m_current != m_old) {
+                // update.
+                if (m_current.renderer != m_old.renderer) {
+                        delete m_renderer;
+                        if (m_current.renderer == "normal tracing") {
+                                m_renderer = new e8::ol_image_renderer(new e8::normal_pathtracer());
+                        } else if (m_current.renderer == "position tracing") {
+                                m_renderer = new e8::ol_image_renderer(new e8::position_pathtracer());
+                        } else if (m_current.renderer == "direct tracing") {
+                                m_renderer = new e8::ol_image_renderer(new e8::direct_pathtracer());
+                        } else if (m_current.renderer == "unidirectional tracing") {
+                                m_renderer = new e8::ol_image_renderer(new e8::unidirect_pathtracer());
+                        }
+                }
+                if (m_current.layout != m_old.layout) {
+                        delete m_scene;
+                        if (m_current.layout == "linear") {
+                                m_scene = new e8::linear_scene_layout();
+                        } else if (m_current.layout == "static bvh") {
+                                m_scene = new e8::bvh_scene_layout();
+                        }
+                }
+                if (m_current.scene != m_old.scene) {
+                        if (m_current.scene == "cornellball") {
+                                e8util::cornell_scene res;
+                                m_scene->load(&res);
+                                m_scene->update();
+                                m_cam = res.load_camera();
+                        }
+                }
+                m_old = m_current;
+        }
         e8util::unlock(m_mutex);
 }
 
@@ -50,14 +89,15 @@ App::App(QWidget *parent) :
 {
         m_ui->setupUi(this);
 
-        m_ui->combo_tracer->addItem("direct lighting");
+        m_ui->combo_tracer->addItem("direct tracing");
         m_ui->combo_tracer->addItem("unidirectional tracing");
         m_ui->combo_tracer->addItem("bidirectional tracing");
         m_ui->combo_tracer->addItem("position tracing");
         m_ui->combo_tracer->addItem("normal tracing");
 
-        m_ui->combo_structure->addItem("linear");
         m_ui->combo_structure->addItem("static bvh");
+        m_ui->combo_structure->addItem("linear");
+
 
         connect(&m_stats_update_timer, SIGNAL(timeout()), this, SLOT(on_update_stats()));
 
@@ -111,6 +151,14 @@ App::on_button_render_clicked()
                 m_ui->statusbar->showMessage("paused.");
                 m_stats_update_timer.stop();
         } else {
+                m_task.m_frame = m_frame;
+                m_task.m_current.exposure = m_ui->spin_manualexposure->value();
+                m_task.m_current.layout = m_ui->combo_structure->currentText().toStdString();
+                m_task.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
+                m_task.m_current.num_samps = m_ui->spin_sample->value();
+                m_task.m_current.scene = "cornellball";
+                m_task.update();
+
                 m_task.enable(true);
                 m_info = e8util::run(&m_task);
 
@@ -123,7 +171,8 @@ App::on_button_render_clicked()
 void
 App::on_update_stats()
 {
-        std::cout << "Updating stats" << std::endl;
+        //std::cout << "Updating stats" << std::endl;
+        m_frame->repaint();
 }
 
 void

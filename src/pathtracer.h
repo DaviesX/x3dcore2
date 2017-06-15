@@ -50,16 +50,37 @@ public:
         direct_pathtracer();
         ~direct_pathtracer() override;
 
-        std::vector<e8util::vec3>       sample(e8util::rng& rng,
-                                               std::vector<e8util::ray> const& rays,
-                                               if_scene const* scene,
-                                               unsigned n) const override;
-private:
+        virtual std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                                       std::vector<e8util::ray> const& rays,
+                                                       if_scene const* scene,
+                                                       unsigned n) const override;
+protected:
         e8util::vec3                    sample_direct_illum(e8util::rng& rng,
                                                             e8util::vec3 const& o,
                                                             e8::intersect_info const& inf,
                                                             if_scene const* scene,
                                                             unsigned n) const;
+};
+
+
+class unidirect_pathtracer: public direct_pathtracer
+{
+public:
+        unidirect_pathtracer();
+        ~unidirect_pathtracer() override;
+
+        std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                               std::vector<e8util::ray> const& rays,
+                                               if_scene const* scene,
+                                               unsigned n) const override;
+private:
+        e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
+                                                              e8util::vec3 const& o,
+                                                              e8::intersect_info const& info,
+                                                              if_scene const* scene,
+                                                              unsigned depth,
+                                                              unsigned n,
+                                                              unsigned m) const;
 };
 
 }

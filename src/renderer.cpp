@@ -1,3 +1,4 @@
+#include "thread.h"
 #include "renderer.h"
 
 
@@ -12,7 +13,7 @@ e8::if_im_renderer::~if_im_renderer()
 
 
 e8::ol_image_renderer::ol_image_renderer(if_pathtracer* pt):
-        m_pt(pt)
+        m_pt(pt), m_rng(100)
 {
 }
 
@@ -24,8 +25,6 @@ e8::ol_image_renderer::~ol_image_renderer()
 void
 e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_compositor* compositor)
 {
-        e8util::rng rng(100);
-
         // generate camera seed ray.
         e8util::mat44 const& proj = cam->projection();
         if (proj != m_t || compositor->width() != m_w || compositor->height() != m_h) {
@@ -38,14 +37,14 @@ e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
                 for (unsigned j = 0; j < m_h; j ++) {
                         for (unsigned i = 0; i < m_w; i ++) {
                                 float pdf;
-                                m_rays[i + j*m_w] = cam->sample(rng, i, j, m_w, m_h, pdf);
+                                m_rays[i + j*m_w] = cam->sample(m_rng, i, j, m_w, m_h, pdf);
                                 m_rad[i + j*m_w] = 0.0f;
                         }
                 }
         }
 
-        unsigned const n_samples = 20;
-        std::vector<e8util::vec3> const& estimate = m_pt->sample(rng, m_rays, scene, n_samples);
+        unsigned const n_samples = 1;
+        std::vector<e8util::vec3> const& estimate = m_pt->sample(m_rng, m_rays, scene, n_samples);
 
         // accumulate result.
         m_samps += 1;

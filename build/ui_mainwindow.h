@@ -37,7 +37,7 @@ public:
     QAction *actionCornellball;
     QWidget *centralwidget;
     QGridLayout *gridLayout;
-    QSpinBox *spinBox;
+    QSpinBox *spin_sample;
     QLabel *label_7;
     QLabel *label_5;
     QLabel *label_6;
@@ -75,11 +75,11 @@ public:
         gridLayout = new QGridLayout(centralwidget);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
         gridLayout->setContentsMargins(0, 0, 9, 0);
-        spinBox = new QSpinBox(centralwidget);
-        spinBox->setObjectName(QStringLiteral("spinBox"));
-        spinBox->setValue(16);
+        spin_sample = new QSpinBox(centralwidget);
+        spin_sample->setObjectName(QStringLiteral("spin_sample"));
+        spin_sample->setValue(16);
 
-        gridLayout->addWidget(spinBox, 2, 3, 1, 1);
+        gridLayout->addWidget(spin_sample, 2, 3, 1, 1);
 
         label_7 = new QLabel(centralwidget);
         label_7->setObjectName(QStringLiteral("label_7"));

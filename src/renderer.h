@@ -24,7 +24,7 @@ class if_im_renderer
 {
 public:
         if_im_renderer();
-        ~if_im_renderer();
+        virtual ~if_im_renderer();
 
         virtual void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) = 0;
         virtual rendering_stats         get_stats() const = 0;
@@ -48,6 +48,8 @@ private:
 
         unsigned                        m_w;
         unsigned                        m_h;
+
+        e8util::rng                     m_rng;
 };
 
 }
