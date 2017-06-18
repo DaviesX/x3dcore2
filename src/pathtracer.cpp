@@ -180,7 +180,7 @@ e8::unidirect_pathtracer::sample(e8util::rng& rng, std::vector<e8util::ray> cons
                 e8::intersect_info const& info = scene->intersect(ray);
                 if (info.valid) {
                         // compute radiance.
-                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0, 2, 1);
+                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0, 1, 1);
                         if (info.light)
                                 rad[i] = rad[i] + info.light->emission(-ray.v(), info.normal);
                 }

@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -m64 -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -m64 -pipe -Ofast -std=gnu++1y -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -m64 -pipe -Ofast -flto -std=gnu++1y -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I../../e8yescg -I. -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt5/bin/qmake
 DEL_FILE      = rm -f
@@ -35,7 +35,7 @@ COMPRESS      = gzip -9f
 DISTNAME      = e8yescg1.0.0
 DISTDIR = /home/davis/e8yescg/build/.tmp/e8yescg1.0.0
 LINK          = g++
-LFLAGS        = -m64 -Wl,-O1
+LFLAGS        = -m64 -Wl,-O1 -Ofast -flto -march=native
 LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -lopencv_core -lopencv_imgcodecs -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 

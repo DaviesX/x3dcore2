@@ -5,7 +5,9 @@ TARGET = e8yescg
 TEMPLATE = app
 
 QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE += -Ofast
+QMAKE_CXXFLAGS_RELEASE += -Ofast -flto
+
+QMAKE_LFLAGS_RELEASE += -Ofast -flto -march=native
 
 CONFIG += c++14
 

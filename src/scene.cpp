@@ -113,7 +113,6 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
         float const t_max = 1000.0f;
 
         float t = INFINITY;
-        binded_geometry const*  hit_binded = nullptr;
         if_geometry const*      hit_geo = nullptr;
         triangle const*         hit_tri = nullptr;
         e8util::vec3            hit_b;
@@ -134,7 +133,6 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
                         if (r.intersect(v0, v1, v2, t_min, t_max, b, t0) && t0 < t) {
                                 hit_b = b;
                                 hit_geo = geo;
-                                hit_binded = &p.second;
                                 hit_tri = &tri;
                                 t = t0;
                         }
@@ -142,6 +140,8 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
         }
 
         if (hit_geo != nullptr) {
+                binded_geometry const& hit_binded = m_geometries.at(hit_geo);
+
                 std::vector<e8util::vec3> const& verts = hit_geo->vertices();
                 e8util::vec3 const& v0 = verts[(*hit_tri)(0)];
                 e8util::vec3 const& v1 = verts[(*hit_tri)(1)];
@@ -153,7 +153,7 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
                 e8util::vec3 const& n1 = normals[(*hit_tri)(1)];
                 e8util::vec3 const& n2 = normals[(*hit_tri)(2)];
                 e8util::vec3 const& normal = (hit_b(0)*n0 + hit_b(1)*n1 + hit_b(2)*n2).normalize();
-                return intersect_info(t, vertex, normal, hit_binded->mat, hit_binded->light);
+                return intersect_info(t, vertex, normal, hit_binded.mat, hit_binded.light);
         } else {
                 return intersect_info();
         }

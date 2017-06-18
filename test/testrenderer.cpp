@@ -22,9 +22,9 @@ test::test_renderer::run() const
         unsigned const width = 800;
         unsigned const height = 600;
 
-        //e8::ol_image_renderer r(new e8::direct_pathtracer());
+        e8::ol_image_renderer r(new e8::direct_pathtracer());
         //e8::ol_image_renderer r(new e8::unidirect_pathtracer());
-        e8::ol_image_renderer r(new e8::bidirect_pathtracer());
+        //e8::ol_image_renderer r(new e8::bidirect_pathtracer());
 
         e8util::if_resource* res = new e8util::cornell_scene();
         e8::if_camera* cam = res->load_camera();

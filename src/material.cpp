@@ -101,7 +101,7 @@ e8::cook_torr::eval(e8util::vec3 const &n, e8util::vec3 const &o, e8util::vec3 c
         float D = ggx_distri(n, h);
         float G = ggx_shadow(i, o, n);
 
-        float c = F*D*G*(1.0f / (4.0f * cos_the * n.inner(o)));
+        float c = (1.0f - F)*D*G*(1.0f / (4.0f * cos_the * n.inner(o)));
         return c*m_albedo;
 }
 
@@ -123,7 +123,7 @@ e8::cook_torr::sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 cons
 
         e8util::vec3 const& m = u*x + v*y + n*z;
         float m_dot_o = m.inner(o);
-        pdf = ggx_distri(n, m)*sin_phi*cos_phi/(4.0*m_dot_o);
+        pdf = ggx_distri(n, m)*cos_phi/(4.0*m_dot_o);
 
         return 2.0f*m_dot_o*m - o;
 }
