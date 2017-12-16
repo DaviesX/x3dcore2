@@ -5,26 +5,25 @@
 #include "src/scene.h"
 #include "src/frame.h"
 #include "src/compositor.h"
-#include "testrenderer.h"
+#include "testunidirectrenderer.h"
 
 
-test::test_renderer::test_renderer()
+test::test_unidirect_renderer::test_unidirect_renderer()
 {
 }
 
-test::test_renderer::~test_renderer()
+test::test_unidirect_renderer::~test_unidirect_renderer()
 {
 }
 
 void
-test::test_renderer::run() const
+test::test_unidirect_renderer::run() const
 {
+
         unsigned const width = 800;
         unsigned const height = 600;
 
-        e8::ol_image_renderer r(new e8::direct_pathtracer());
-        //e8::ol_image_renderer r(new e8::unidirect_pathtracer());
-        //e8::ol_image_renderer r(new e8::bidirect_pathtracer());
+        e8::ol_image_renderer r(new e8::unidirect_pathtracer());
 
         e8util::if_resource* res = new e8util::cornell_scene();
         e8::if_camera* cam = res->load_camera();

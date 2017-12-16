@@ -32,9 +32,11 @@ SOURCES += src/main.cpp \
     src/compositor.cpp \
     test/testresource.cpp \
     test/testcamera.cpp \
-    test/testrenderer.cpp \
     test/testframe.cpp \
-    test/testscene.cpp
+    test/testscene.cpp \
+    test/testdirectrenderer.cpp \
+    test/testunidirectrenderer.cpp \
+    test/testbidirectrenderer.cpp
 
 HEADERS += \
     src/scene.h \
@@ -57,9 +59,11 @@ HEADERS += \
     src/compositor.h \
     test/testresource.h \
     test/testcamera.h \
-    test/testrenderer.h \
     test/testframe.h \
-    test/testscene.h
+    test/testscene.h \
+    test/testdirectrenderer.h \
+    test/testunidirectrenderer.h \
+    test/testbidirectrenderer.h
 
 #LIBS += -lGLEW
 #LIBS += -lglfw
