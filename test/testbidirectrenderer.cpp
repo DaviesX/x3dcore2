@@ -33,11 +33,13 @@ test::test_bidirect_renderer::run() const
         scene.load(res);
         scene.update();
 
-        e8::img_file_frame img("test.png", width, height);
+        e8::img_file_frame img("test_bidirect.png", width, height);
         e8::aces_compositor com(width, height);
         com.enable_auto_exposure(false);
         com.exposure(1.0f);
-        r.render(&scene, cam, &com);
+
+        for (unsigned i = 0; i < 2; i ++)
+                r.render(&scene, cam, &com);
 
         com.commit(&img);
         img.commit();

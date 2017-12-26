@@ -20,7 +20,7 @@ inline bool equals(float a, float b)
 
 inline bool equals(double a, double b)
 {
-        return std::abs(a - b) <= T_CMP_EPSILON;
+        return std::abs(a - b) <= static_cast<double>(T_CMP_EPSILON);
 }
 
 template<unsigned N, typename T = float>
@@ -29,7 +29,7 @@ class vec
 public:
         vec(std::initializer_list<T> const& v);
         vec(T const* v);
-        vec(T v);
+        vec(T const& v);
         vec();
 
         vec             operator+(vec const& rhs) const;
@@ -42,8 +42,11 @@ public:
         bool            operator==(vec const& rhs) const;
         bool            operator!=(vec const& rhs) const;
 
-        vec             operator*(vec const& rhs) const;
+        vec             operator*(vec const& rhs) const;        // modulation, not cross product.
         vec             operator/(vec const& rhs) const;
+
+        vec&            operator+=(vec const& rhs) const;
+        vec&            operator*=(vec const& rhs) const;       // modulation, not cross product.
 
         T               inner(vec const& rhs) const;
         vec             outer(vec const& rhs) const;
@@ -81,7 +84,7 @@ vec<N, T>::vec(T const* v)
 }
 
 template<unsigned N, typename T>
-vec<N, T>::vec(T v)
+vec<N, T>::vec(T const& v)
 {
         for (unsigned i = 0; i < N; i ++)
                 (*this)(i) = v;
@@ -211,6 +214,24 @@ vec<N, T>::operator/(vec const& rhs) const
         for (unsigned i = 0; i < N; i ++)
                 v(i) = (*this)(i)/rhs(i);
         return v;
+}
+
+template<unsigned N, typename T>
+vec<N, T>&
+vec<N, T>::operator+=(vec const& rhs) const
+{
+        for (unsigned i = 0; i < N; i ++)
+                (*this)(i) += rhs(i);
+        return *this;
+}
+
+template<unsigned N, typename T>
+vec<N, T>&
+vec<N, T>::operator*=(vec const& rhs) const
+{
+        for (unsigned i = 0; i < N; i ++)
+                (*this)(i) *= rhs(i);
+        return *this;
 }
 
 template<unsigned N, typename T>

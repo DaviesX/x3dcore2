@@ -32,7 +32,7 @@ test::test_direct_renderer::run() const
         scene.load(res);
         scene.update();
 
-        e8::img_file_frame img("test.png", width, height);
+        e8::img_file_frame img("test_direct.png", width, height);
         e8::aces_compositor com(width, height);
         com.enable_auto_exposure(false);
         com.exposure(1.0f);
