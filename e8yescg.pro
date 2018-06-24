@@ -70,8 +70,8 @@ HEADERS += \
 #LIBS += -lglut
 #LIBS += -lGL
 #LIBS += -lGLU
-LIBS += -lopencv_core
-LIBS += -lopencv_imgcodecs
+CONFIG += link_pkgconfig
+PKGCONFIG += opencv
 
 FORMS += \
     src/mainwindow.ui

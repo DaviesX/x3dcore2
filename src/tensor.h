@@ -45,8 +45,8 @@ public:
         vec             operator*(vec const& rhs) const;        // modulation, not cross product.
         vec             operator/(vec const& rhs) const;
 
-        vec&            operator+=(vec const& rhs) const;
-        vec&            operator*=(vec const& rhs) const;       // modulation, not cross product.
+        vec&            operator+=(vec const& rhs);
+        vec&            operator*=(vec const& rhs);             // modulation, not cross product.
 
         T               inner(vec const& rhs) const;
         vec             outer(vec const& rhs) const;
@@ -218,7 +218,7 @@ vec<N, T>::operator/(vec const& rhs) const
 
 template<unsigned N, typename T>
 vec<N, T>&
-vec<N, T>::operator+=(vec const& rhs) const
+vec<N, T>::operator+=(vec const& rhs)
 {
         for (unsigned i = 0; i < N; i ++)
                 (*this)(i) += rhs(i);
@@ -227,7 +227,7 @@ vec<N, T>::operator+=(vec const& rhs) const
 
 template<unsigned N, typename T>
 vec<N, T>&
-vec<N, T>::operator*=(vec const& rhs) const
+vec<N, T>::operator*=(vec const& rhs)
 {
         for (unsigned i = 0; i < N; i ++)
                 (*this)(i) *= rhs(i);
