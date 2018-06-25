@@ -168,7 +168,7 @@ e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                 e8util::vec3 const& i = info.mat->sample(rng, info.normal, o, mat_pdf);
                 e8::intersect_info const& indirect_info = scene->intersect(e8util::ray(info.vertex, i));
                 if (indirect_info.valid) {
-                       e8util::vec3 const& indirect = sample_indirect_illum(rng, i, indirect_info,
+                       e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_info,
                                                                             scene,
                                                                             depth + 1,
                                                                             multi_light_samps,
