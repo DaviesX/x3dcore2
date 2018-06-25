@@ -57,6 +57,8 @@ public:
         vec<N + 1, T>   homo(T p) const;
         vec<N - 1, T>   cart() const;
         vec<N - 1, T>   trunc() const;
+
+        vec             max(T const& val) const;
 private:
         T   e[N];
 };
@@ -291,6 +293,16 @@ vec<N, T>::trunc() const
         for (unsigned i = 0; i < N - 1; i ++)
                 v[i] = (*this)(i);
         return vec<N - 1, T>(v);
+}
+
+template<unsigned N, typename T>
+vec<N, T>
+vec<N, T>::max(T const& val) const
+{
+        T v[N];
+        for (unsigned i = 0; i < N; i ++)
+                v[i] = val > (*this)(i) ? val : (*this)(i);
+        return vec<N, T>(v);
 }
 
 template<unsigned N, typename T>

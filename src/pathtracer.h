@@ -83,7 +83,7 @@ private:
                                                               unsigned m) const;
 };
 
-class bidirect_pathtracer: public if_pathtracer
+class bidirect_pathtracer: public direct_pathtracer
 {
 public:
         bidirect_pathtracer();

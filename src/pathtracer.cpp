@@ -253,41 +253,45 @@ e8::bidirect_pathtracer::sample_illum(e8util::rng& rng,
         float light_pdf;
         if_light const* light = scene->sample_light(rng, light_pdf);
 
-        float source_pdf;
-        e8util::vec3 p, n, w;
-        light->sample(rng, source_pdf, p, n, w);
+        float p_survive = 0.5f;
+        if (rng.draw() >= p_survive) {
+                // stop.
+                return sample_direct_illum(rng, o, poi, scene, 1)/(1.0f - p_survive);
+        } else {
+                float source_pdf;
+                e8util::vec3 p, n, w;
+                light->sample(rng, source_pdf, p, n, w);
+                e8util::ray light_path(p, w);
+                e8::intersect_info const& light_info = scene->intersect(light_path);
+                if (!light_info.valid)
+                        return 0.0f;
 
+                // construct light path.
+                e8util::vec3 const& l = light_info.vertex - p;
+                e8util::vec3 const& illum = light->eval(l, n)/(light_pdf*source_pdf);
+                e8::intersect_info terminate;
+                e8util::vec3 tray;
+                e8util::vec3 const& light_illum = sample_light_illum(rng, illum, -w, light_info, scene, 0, terminate, tray)/p_survive;
+                if (light_illum == 0.0f)
+                        return 0.0f;
 
-        e8util::ray light_path(p, w);
-        e8::intersect_info const& light_info = scene->intersect(light_path);
-        if (!light_info.valid)
-                return 0.0f;
-
-        // construct light path.
-        e8util::vec3 l = light_info.vertex - p;
-        e8util::vec3 illum = light->eval(l, n)/(light_pdf*source_pdf);
-
-        e8::intersect_info terminate;
-        e8util::vec3 tray;
-        e8util::vec3 const& light_illum = sample_light_illum(rng, illum, -w, light_info, scene, 0, terminate, tray);
-
-        if (light_illum == 0.0f)
-                return 0.0f;
-
-        // evaluate.
-        e8util::vec3 join_path = poi.vertex - terminate.vertex;
-        float distance = join_path.norm();
-        join_path = join_path/distance;
-        e8util::ray join_ray(terminate.vertex, join_path);
-        float t;
-        if (!scene->has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
-                float cos_w = terminate.normal.inner(join_path);
-                e8util::vec3 f1 = light_illum*terminate.mat->eval(terminate.normal, join_path, tray)*cos_w;
-                float cos_w2 = o.inner(-join_path);
-                e8util::vec3 f2 = poi.mat->eval(poi.normal, o, -join_path)*cos_w2;
-                return f1*f2;
-        } else
-                return 0.0f;
+                // evaluate.
+                e8util::vec3 join_path = poi.vertex - terminate.vertex;
+                float distance = join_path.norm();
+                join_path = join_path/distance;
+                e8util::ray join_ray(terminate.vertex, join_path);
+                float t;
+                if (!scene->has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
+                        float cos_w = terminate.normal.inner(join_path);
+                        float cos_w2 = o.inner(-join_path);
+                        if (cos_w < 0 || cos_w2 < 0)
+                                return 0.0f;
+                        e8util::vec3 f2 = light_illum*terminate.mat->eval(terminate.normal, join_path, tray)*cos_w;
+                        e8util::vec3 f1 = poi.mat->eval(poi.normal, o, -join_path)*cos_w2;
+                        return f1*f2;
+                } else
+                        return 0.0f;
+        }
 }
 
 e8util::vec3
@@ -302,7 +306,7 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
         if (depth >= mutate_depth) {
                 if (rng.draw() >= p_survive) {
                         // Mutate and trace from the other direction.
-                        return sample_illum(rng, o, info, scene);
+                        return sample_illum(rng, o, info, scene)/(1.0f - p_survive);
                 }
         } else
                 p_survive = 1.0f;
@@ -312,7 +316,7 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
         e8util::vec3 const& i = info.mat->sample(rng, info.normal, o, mat_pdf);
         e8::intersect_info const& indirect_info = scene->intersect(e8util::ray(info.vertex, i));
         if (indirect_info.valid) {
-                e8util::vec3 const& indirect = sample_indirect_illum(rng, i, indirect_info, scene, depth + 1);
+                e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_info, scene, depth + 1);
                 e8util::vec3 const& brdf = info.mat->eval(info.normal, o, i);
                 float cos_w = info.normal.inner(i);
                 e8util::vec3 r = indirect*brdf*cos_w/mat_pdf/p_survive;
@@ -333,7 +337,7 @@ e8::bidirect_pathtracer::sample(e8util::rng& rng,
                 e8::intersect_info const& info = scene->intersect(ray);
                 if (info.valid) {
                         // compute radiance.
-                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0);
+                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0).max(0.0f);
                         if (info.light)
                                 rad[i] += info.light->emission(-ray.v(), info.normal);
                 }
