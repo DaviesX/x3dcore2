@@ -112,9 +112,9 @@ e8::cook_torr::sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 cons
         e8util::vec3 u, v;
         e8util::vec3_basis(n, u, v);
 
-        float theta = 2.0f * M_PI * rng.draw();
+        float theta = 2.0f * static_cast<float>(M_PI) * rng.draw();
         float t = rng.draw();
-        float phi = std::atan(std::sqrt(m_beta2*t/(1.0 - t)));
+        float phi = std::atan(std::sqrt(m_beta2*t/(1.0f - t)));
         float sin_phi = std::sin(phi);
         float cos_phi = std::cos(phi);
         float x = sin_phi*std::cos(theta);
@@ -123,7 +123,7 @@ e8::cook_torr::sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 cons
 
         e8util::vec3 const& m = u*x + v*y + n*z;
         float m_dot_o = m.inner(o);
-        pdf = ggx_distri(n, m)*cos_phi/(4.0*m_dot_o);
+        pdf = ggx_distri(n, m)*cos_phi/(4.0f*m_dot_o);
 
         return 2.0f*m_dot_o*m - o;
 }
