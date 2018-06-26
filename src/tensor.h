@@ -58,7 +58,7 @@ public:
         vec<N - 1, T>   cart() const;
         vec<N - 1, T>   trunc() const;
 
-        vec             max(T const& val) const;
+        vec             at_least(T const& val) const;
 private:
         T   e[N];
 };
@@ -297,7 +297,7 @@ vec<N, T>::trunc() const
 
 template<unsigned N, typename T>
 vec<N, T>
-vec<N, T>::max(T const& val) const
+vec<N, T>::at_least(T const& val) const
 {
         T v[N];
         for (unsigned i = 0; i < N; i ++)

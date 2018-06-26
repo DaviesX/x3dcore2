@@ -38,7 +38,7 @@ test::test_bidirect_renderer::run() const
         com.enable_auto_exposure(false);
         com.exposure(1.0f);
 
-        for (unsigned i = 0; i < 10; i ++)
+        for (unsigned i = 0; i < 40; i ++)
                 r.render(&scene, cam, &com);
 
         com.commit(&img);

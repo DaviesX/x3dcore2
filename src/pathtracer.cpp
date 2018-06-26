@@ -1,3 +1,4 @@
+#include <iostream>
 #include "pathtracer.h"
 
 e8::if_pathtracer::if_pathtracer()
@@ -244,10 +245,10 @@ e8::bidirect_pathtracer::sample_light_illum(e8util::rng& rng,
 }
 
 e8util::vec3
-e8::bidirect_pathtracer::sample_illum(e8util::rng& rng,
-                                      e8util::vec3 const& o,
-                                      e8::intersect_info const& poi,
-                                      if_scene const* scene) const
+e8::bidirect_pathtracer::join_with_light_paths(e8util::rng& rng,
+                                               e8util::vec3 const& o,
+                                               e8::intersect_info const& poi,
+                                               if_scene const* scene) const
 {
         // sample light.
         float light_pdf;
@@ -306,7 +307,7 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
         if (depth >= mutate_depth) {
                 if (rng.draw() >= p_survive) {
                         // Mutate and trace from the other direction.
-                        return sample_illum(rng, o, info, scene)/(1.0f - p_survive);
+                        return join_with_light_paths(rng, o, info, scene)/(1.0f - p_survive);
                 }
         } else
                 p_survive = 1.0f;
@@ -337,7 +338,7 @@ e8::bidirect_pathtracer::sample(e8util::rng& rng,
                 e8::intersect_info const& info = scene->intersect(ray);
                 if (info.valid) {
                         // compute radiance.
-                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0).max(0.0f);
+                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0);
                         if (info.light)
                                 rad[i] += info.light->emission(-ray.v(), info.normal);
                 }
