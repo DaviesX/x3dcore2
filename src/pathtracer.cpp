@@ -192,9 +192,11 @@ e8::unidirect_pathtracer::sample(e8util::rng& rng, std::vector<e8util::ray> cons
                 e8::intersect_info const& info = scene->intersect(ray);
                 if (info.valid) {
                         // compute radiance.
-                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0, 1, 1);
+                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), info, scene, 0, 1, 1);
                         if (info.light)
-                                rad[i] += info.light->emission(-ray.v(), info.normal);
+                                rad[i] = p2_inf + info.light->emission(-ray.v(), info.normal);
+                        else
+                                rad[i] = p2_inf;
                 }
         }
         return rad;
@@ -320,6 +322,8 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                 e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_info, scene, depth + 1);
                 e8util::vec3 const& brdf = info.mat->eval(info.normal, o, i);
                 float cos_w = info.normal.inner(i);
+                if (cos_w < 0)
+                        return 0.0f;
                 e8util::vec3 r = indirect*brdf*cos_w/mat_pdf/p_survive;
                 return r;
         } else
@@ -338,9 +342,11 @@ e8::bidirect_pathtracer::sample(e8util::rng& rng,
                 e8::intersect_info const& info = scene->intersect(ray);
                 if (info.valid) {
                         // compute radiance.
-                        rad[i] = sample_indirect_illum(rng, -ray.v(), info, scene, 0);
+                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), info, scene, 0);
                         if (info.light)
-                                rad[i] += info.light->emission(-ray.v(), info.normal);
+                                rad[i] = p2_inf + info.light->emission(-ray.v(), info.normal);
+                        else
+                                rad[i] = p2_inf;
                 }
         }
         return rad;
