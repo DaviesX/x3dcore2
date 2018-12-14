@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cmath>
 #include "tensor.h"
 #include "compositor.h"
 
@@ -47,6 +46,37 @@ e8::if_compositor::resize(unsigned w, unsigned h)
         m_fbuffer = new rgba_color [w*h];
 }
 
+e8::pixel
+e8::if_compositor::pixel_of(rgba_color const& c) const
+{
+        unsigned char r = static_cast<unsigned char>(std::pow(CLAMP(c(0), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
+        unsigned char g = static_cast<unsigned char>(std::pow(CLAMP(c(1), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
+        unsigned char b = static_cast<unsigned char>(std::pow(CLAMP(c(2), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
+        unsigned char a = static_cast<unsigned char>(c(3)*255.0f);
+        return e8::pixel({r, g, b, a});
+}
+
+
+
+e8::clamp_compositor::clamp_compositor(unsigned width, unsigned height):
+        if_compositor(width, height)
+{
+}
+
+e8::clamp_compositor::~clamp_compositor()
+{
+}
+
+void
+e8::clamp_compositor::commit(if_frame* frame) const
+{
+        for (unsigned j = 0; j < m_h; j ++) {
+                for (unsigned i = 0; i < m_w; i ++) {
+                        (*frame)(i, j) = pixel_of((*this)(i,j).at_least(0).at_most(1));
+                }
+        }
+}
+
 
 
 e8::aces_compositor::aces_compositor(unsigned width, unsigned height):
@@ -79,16 +109,6 @@ void
 e8::aces_compositor::exposure(float e)
 {
         m_e = e;
-}
-
-e8::pixel
-e8::aces_compositor::pixel_of(rgba_color const& c) const
-{
-        unsigned char r = static_cast<unsigned char>(std::pow(CLAMP(c(0), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
-        unsigned char g = static_cast<unsigned char>(std::pow(CLAMP(c(1), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
-        unsigned char b = static_cast<unsigned char>(std::pow(CLAMP(c(2), 0.0f, 1.0f), 1.0f/2.2f)*255.0f);
-        unsigned char a = static_cast<unsigned char>(c(3)*255.0f);
-        return e8::pixel({r, g, b, a});
 }
 
 e8::rgba_color

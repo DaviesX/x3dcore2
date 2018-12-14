@@ -21,7 +21,7 @@ e8::area_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::ve
 {
         m_geo->sample(rng, p, n, pdf);
         w = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
-        pdf *= n.inner(w)/M_PI;
+        pdf *= n.inner(w)/static_cast<float>(M_PI);
 }
 
 void

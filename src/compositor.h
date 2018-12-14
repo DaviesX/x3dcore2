@@ -25,22 +25,34 @@ public:
 
         virtual void    commit(if_frame* frame) const = 0;
 protected:
+        pixel           pixel_of(rgba_color const& c) const;
+
         unsigned        m_w;
         unsigned        m_h;
         rgba_color*     m_fbuffer;
 };
 
+
+class clamp_compositor: public if_compositor
+{
+public:
+        clamp_compositor(unsigned width, unsigned height);
+        virtual ~clamp_compositor() override;
+
+        void            commit(if_frame* frame) const override;
+};
+
+
 class aces_compositor: public if_compositor
 {
 public:
         aces_compositor(unsigned width, unsigned height);
-        ~aces_compositor();
+        virtual ~aces_compositor() override;
 
         void            commit(if_frame* frame) const override;
         void            enable_auto_exposure(bool s);
         void            exposure(float e);
 private:
-        pixel           pixel_of(rgba_color const& c) const;
         rgba_color      aces_tonemap(rgba_color const& c, float exposure) const;
         float           luminance(rgba_color const& c) const;
         float           exposure() const;
