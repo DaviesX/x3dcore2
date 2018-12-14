@@ -34,9 +34,7 @@ test::test_bidirect_renderer::run() const
         scene.update();
 
         e8::img_file_frame img("test_bidirect.png", width, height);
-        e8::aces_compositor com(width, height);
-        com.enable_auto_exposure(false);
-        com.exposure(1.0f);
+        e8::clamp_compositor com(width, height);
 
         for (unsigned i = 0; i < 40; i ++)
                 r.render(&scene, cam, &com);
