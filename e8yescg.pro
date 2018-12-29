@@ -4,10 +4,10 @@ TARGET = e8yescg
 
 TEMPLATE = app
 
-#QMAKE_CXXFLAGS_RELEASE -= -O2
-#QMAKE_CXXFLAGS_RELEASE += -Ofast -flto
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE += -Ofast -flto
 
-#QMAKE_LFLAGS_RELEASE += -Ofast -flto -march=native
+QMAKE_LFLAGS_RELEASE += -Ofast -flto -march=native
 
 CONFIG += c++14
 
@@ -36,7 +36,8 @@ SOURCES += src/main.cpp \
     test/testscene.cpp \
     test/testdirectrenderer.cpp \
     test/testunidirectrenderer.cpp \
-    test/testbidirectrenderer.cpp
+    test/testbidirectrenderer.cpp \
+    test/testbidirectmisrenderer.cpp
 
 HEADERS += \
     src/scene.h \
@@ -63,7 +64,8 @@ HEADERS += \
     test/testscene.h \
     test/testdirectrenderer.h \
     test/testunidirectrenderer.h \
-    test/testbidirectrenderer.h
+    test/testbidirectrenderer.h \
+    test/testbidirectmisrenderer.h
 
 #LIBS += -lGLEW
 #LIBS += -lglfw

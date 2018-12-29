@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -O2 -std=gnu++1y -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -pipe -Ofast -flto -std=gnu++1y -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I../../e8yescg -I. -isystem /usr/local/include/opencv -isystem /usr/local/include -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -isystem /usr/include/libdrm -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
@@ -37,7 +37,7 @@ COMPRESS      = gzip -9f
 DISTNAME      = e8yescg1.0.0
 DISTDIR = /home/davis/e8yescg/build/.tmp/e8yescg1.0.0
 LINK          = g++
-LFLAGS        = -Wl,-O1
+LFLAGS        = -Wl,-O1 -Ofast -flto -march=native
 LIBS          = $(SUBLIBS) -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_cvv -lopencv_dpm -lopencv_freetype -lopencv_fuzzy -lopencv_hdf -lopencv_line_descriptor -lopencv_optflow -lopencv_reg -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_rgbd -lopencv_viz -lopencv_surface_matching -lopencv_tracking -lopencv_datasets -lopencv_text -lopencv_face -lopencv_plot -lopencv_dnn -lopencv_xfeatures2d -lopencv_shape -lopencv_video -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_flann -lopencv_xobjdetect -lopencv_objdetect -lopencv_ml -lopencv_xphoto -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
@@ -75,7 +75,8 @@ SOURCES       = ../src/main.cpp \
 		../test/testscene.cpp \
 		../test/testdirectrenderer.cpp \
 		../test/testunidirectrenderer.cpp \
-		../test/testbidirectrenderer.cpp moc_app.cpp
+		../test/testbidirectrenderer.cpp \
+		../test/testbidirectmisrenderer.cpp moc_app.cpp
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -102,6 +103,7 @@ OBJECTS       = main.o \
 		testdirectrenderer.o \
 		testunidirectrenderer.o \
 		testbidirectrenderer.o \
+		testbidirectmisrenderer.o \
 		moc_app.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -201,7 +203,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../test/testscene.h \
 		../test/testdirectrenderer.h \
 		../test/testunidirectrenderer.h \
-		../test/testbidirectrenderer.h ../src/main.cpp \
+		../test/testbidirectrenderer.h \
+		../test/testbidirectmisrenderer.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -226,7 +229,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../test/testscene.cpp \
 		../test/testdirectrenderer.cpp \
 		../test/testunidirectrenderer.cpp \
-		../test/testbidirectrenderer.cpp
+		../test/testbidirectrenderer.cpp \
+		../test/testbidirectmisrenderer.cpp
 QMAKE_TARGET  = e8yescg
 DESTDIR       = 
 TARGET        = e8yescg
@@ -410,8 +414,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h ../test/testresource.h ../test/testcamera.h ../test/testframe.h ../test/testscene.h ../test/testdirectrenderer.h ../test/testunidirectrenderer.h ../test/testbidirectrenderer.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp ../test/testresource.cpp ../test/testcamera.cpp ../test/testframe.cpp ../test/testscene.cpp ../test/testdirectrenderer.cpp ../test/testunidirectrenderer.cpp ../test/testbidirectrenderer.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h ../test/testresource.h ../test/testcamera.h ../test/testframe.h ../test/testscene.h ../test/testdirectrenderer.h ../test/testunidirectrenderer.h ../test/testbidirectrenderer.h ../test/testbidirectmisrenderer.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp ../test/testresource.cpp ../test/testcamera.cpp ../test/testframe.cpp ../test/testscene.cpp ../test/testdirectrenderer.cpp ../test/testunidirectrenderer.cpp ../test/testbidirectrenderer.cpp ../test/testbidirectmisrenderer.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../src/mainwindow.ui $(DISTDIR)/
 
 
@@ -442,7 +446,7 @@ compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) moc_predefs.h
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
-	g++ -pipe -O2 -std=gnu++1y -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
+	g++ -pipe -Ofast -flto -std=gnu++1y -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
 compiler_moc_header_make_all: moc_app.cpp
 compiler_moc_header_clean:
@@ -714,6 +718,22 @@ testbidirectrenderer.o: ../test/testbidirectrenderer.cpp ../src/pathtracer.h \
 		../test/testbidirectrenderer.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testbidirectrenderer.o ../test/testbidirectrenderer.cpp
+
+testbidirectmisrenderer.o: ../test/testbidirectmisrenderer.cpp ../src/pathtracer.h \
+		../src/tensor.h \
+		../src/scene.h \
+		../src/geometry.h \
+		../src/material.h \
+		../src/resource.h \
+		../src/light.h \
+		../src/camera.h \
+		../src/renderer.h \
+		../src/thread.h \
+		../src/compositor.h \
+		../src/frame.h \
+		../test/testbidirectrenderer.h \
+		../test/test.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testbidirectmisrenderer.o ../test/testbidirectmisrenderer.cpp
 
 moc_app.o: moc_app.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_app.o moc_app.cpp
