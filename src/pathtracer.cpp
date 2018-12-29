@@ -144,19 +144,19 @@ e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                 unsigned multi_light_samps,
                                                 unsigned multi_indirect_samps) const
 {
-        // direct.
-        e8util::vec3 const& direct = sample_direct_illum(rng, o, info, scene, multi_light_samps);
-
         static const int mutate_depth = 3;
         float p_survive = 0.5f;
         if (depth >= mutate_depth) {
                 if (rng.draw() >= p_survive)
-                        return 0.0;
+                        return 0.0f;
         } else
                 p_survive = 1;
 
         if (depth >= 1)
                 multi_indirect_samps = 1;
+
+        // direct.
+        e8util::vec3 const& direct = sample_direct_illum(rng, o, info, scene, multi_light_samps);
 
         // indirect.
         float mat_pdf;
@@ -204,42 +204,6 @@ e8::bidirect_pathtracer::bidirect_pathtracer()
 
 e8::bidirect_pathtracer::~bidirect_pathtracer()
 {
-}
-
-e8util::vec3
-e8::bidirect_pathtracer::sample_light_illum(e8util::rng& rng,
-                                            e8util::vec3 const& rad,
-                                            e8util::vec3 const& i,
-                                            e8::intersect_info const& poi,
-                                            if_scene const* scene,
-                                            unsigned depth,
-                                            e8::intersect_info& terminate,
-                                            e8util::vec3& t) const
-{
-        static const unsigned mutate_depth = 0;
-        float p_survive = 0.5f;
-        if (depth >= mutate_depth) {
-                if (rng.draw() >= p_survive) {
-                        // stop.
-                        terminate = poi;
-                        t = i;
-                        return rad/(1 - p_survive);
-                }
-        } else
-                p_survive = 1;
-
-        float mat_pdf;
-        e8util::vec3 const& o = poi.mat->sample(rng, poi.normal, i, mat_pdf);
-        e8util::ray l(poi.vertex, o);
-        e8::intersect_info const& linfo = scene->intersect(l);
-        if (linfo.valid) {
-                e8util::vec3 const& brdf = poi.mat->eval(poi.normal, o, i);
-                float cos_w = poi.normal.inner(i);
-                e8util::vec3 const& r = rad*brdf*cos_w/mat_pdf/p_survive;
-                return sample_light_illum(rng, r, -o, linfo, scene, depth + 1, terminate, t);
-        } else {
-                return 0.0f;
-        }
 }
 
 e8util::vec3
@@ -300,16 +264,15 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                 if_scene const* scene,
                                                 unsigned depth) const
 {
-        static const unsigned mutate_depth = 0;
+        static const unsigned mutate_depth = 2;
         float p_survive = 0.5f;
         if (depth >= mutate_depth) {
-                if (rng.draw() >= p_survive) {
-                        // Mutate and trace from the other direction.
-                        return join_with_light_paths(rng, o, info, scene, depth)/(1 - p_survive);
-                        //return sample_direct_illum(rng, o, info, scene, 1)/(1 - p_survive);
-                }
+                if (rng.draw() >= p_survive)
+                        return 0.0f;
         } else
                 p_survive = 1;
+
+        e8util::vec3 const& bidirect = join_with_light_paths(rng, o, info, scene, depth);
 
         // indirect.
         float mat_pdf;
@@ -322,9 +285,9 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                 if (cos_w < 0.0f)
                         return 0.0f;
                 e8util::vec3 r = indirect*brdf*cos_w/mat_pdf/p_survive;
-                return r;
+                return bidirect + r;
         } else
-                return 0.0f;
+                return bidirect;
 }
 
 std::vector<e8util::vec3>
