@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <QFileDialog>
 #include "app.h"
 #include "ui_mainwindow.h"
@@ -26,6 +27,7 @@ rendering_task::main(void*)
                 m_renderer->render(m_scene, m_cam, m_com);
                 m_com->commit(m_frame);
                 m_frame->commit();
+                m_num_commits ++;
                 e8util::unlock(m_mutex);
         }
 }
@@ -48,6 +50,8 @@ rendering_task::update()
                                 m_renderer = new e8::ol_image_renderer(new e8::unidirect_pathtracer());
                         } else if (m_current.renderer == "bidirectional tracing") {
                                 m_renderer = new e8::ol_image_renderer(new e8::bidirect_pathtracer());
+                        } else if (m_current.renderer == "bidirectional tracing (MIS)") {
+                                m_renderer = new e8::ol_image_renderer(new e8::bidirect_mis_pathtracer());
                         }
                 }
                 if (m_current.layout != m_old.layout) {
@@ -67,6 +71,8 @@ rendering_task::update()
                         }
                 }
                 m_old = m_current;
+                m_num_commits = 0;
+                m_task_started = std::clock();
         }
         e8util::unlock(m_mutex);
 }
@@ -83,6 +89,17 @@ rendering_task::enable(bool state)
         m_is_running = state;
 }
 
+uint32_t
+rendering_task::num_commits() const
+{
+        return m_num_commits;
+}
+
+float
+rendering_task::time_elapsed() const
+{
+        return static_cast<float>(std::clock() - m_task_started)/CLOCKS_PER_SEC;
+}
 
 
 App::App(QWidget *parent) :
@@ -94,6 +111,7 @@ App::App(QWidget *parent) :
         m_ui->combo_tracer->addItem("direct tracing");
         m_ui->combo_tracer->addItem("unidirectional tracing");
         m_ui->combo_tracer->addItem("bidirectional tracing");
+        m_ui->combo_tracer->addItem("bidirectional tracing (MIS)");
         m_ui->combo_tracer->addItem("position tracing");
         m_ui->combo_tracer->addItem("normal tracing");
 
@@ -175,6 +193,9 @@ App::on_update_stats()
 {
         //std::cout << "Updating stats" << std::endl;
         m_frame->repaint();
+        m_ui->label_time->setText(QString::fromStdString(std::to_string(m_task.time_elapsed()) + " s"));
+        m_ui->label_samp_count1->setText(QString::fromStdString(std::to_string(m_task.num_commits())));
+        m_ui->label_samp_count2->setText(QString::fromStdString(std::to_string(m_task.num_commits())));
 }
 
 void

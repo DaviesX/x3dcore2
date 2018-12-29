@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <ctime>
 #include "resource.h"
 #include "scene.h"
 #include "compositor.h"
@@ -11,7 +12,8 @@
 #include "renderer.h"
 #include "thread.h"
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
@@ -22,12 +24,15 @@ public:
         rendering_task();
         ~rendering_task();
 
-        void    main(void* storage) override;
-        void    update();
-        bool    is_running() const;
-        void    enable(bool state);
+        void            main(void* storage) override;
+        void            update();
+        bool            is_running() const;
+        void            enable(bool state);
+        uint32_t        num_commits() const;
+        float           time_elapsed() const;
 
-        struct settings {
+        struct settings
+        {
                 std::string     scene;
                 std::string     renderer;
                 std::string     layout;
@@ -60,6 +65,8 @@ public:
         settings                m_current;
         e8util::mutex_t         m_mutex;
         bool                    m_is_running = false;
+        std::clock_t            m_task_started = 0;
+        uint32_t                m_num_commits = 0;
 };
 
 class App : public QMainWindow

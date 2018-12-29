@@ -42,15 +42,15 @@ public:
     QLabel *label_5;
     QLabel *label_6;
     QLabel *label_8;
-    QLabel *label_12;
+    QLabel *label_time;
     QComboBox *combo_tracer;
     QComboBox *combo_structure;
-    QLabel *label_11;
+    QLabel *label_samp_count2;
     QCheckBox *check_autoexposure;
     QLabel *label_2;
     QLabel *label_4;
     QLabel *label_3;
-    QLabel *label_10;
+    QLabel *label_samp_count1;
     QDoubleSpinBox *spin_manualexposure;
     QPushButton *button_render;
     QLabel *label;
@@ -101,10 +101,10 @@ public:
 
         gridLayout->addWidget(label_8, 5, 3, 1, 1);
 
-        label_12 = new QLabel(centralwidget);
-        label_12->setObjectName(QStringLiteral("label_12"));
+        label_time = new QLabel(centralwidget);
+        label_time->setObjectName(QStringLiteral("label_time"));
 
-        gridLayout->addWidget(label_12, 7, 3, 1, 1);
+        gridLayout->addWidget(label_time, 7, 3, 1, 1);
 
         combo_tracer = new QComboBox(centralwidget);
         combo_tracer->setObjectName(QStringLiteral("combo_tracer"));
@@ -116,10 +116,10 @@ public:
 
         gridLayout->addWidget(combo_structure, 1, 3, 1, 2);
 
-        label_11 = new QLabel(centralwidget);
-        label_11->setObjectName(QStringLiteral("label_11"));
+        label_samp_count2 = new QLabel(centralwidget);
+        label_samp_count2->setObjectName(QStringLiteral("label_samp_count2"));
 
-        gridLayout->addWidget(label_11, 6, 4, 1, 1);
+        gridLayout->addWidget(label_samp_count2, 6, 4, 1, 1);
 
         check_autoexposure = new QCheckBox(centralwidget);
         check_autoexposure->setObjectName(QStringLiteral("check_autoexposure"));
@@ -142,10 +142,10 @@ public:
 
         gridLayout->addWidget(label_3, 6, 2, 1, 1);
 
-        label_10 = new QLabel(centralwidget);
-        label_10->setObjectName(QStringLiteral("label_10"));
+        label_samp_count1 = new QLabel(centralwidget);
+        label_samp_count1->setObjectName(QStringLiteral("label_samp_count1"));
 
-        gridLayout->addWidget(label_10, 5, 4, 1, 1);
+        gridLayout->addWidget(label_samp_count1, 5, 4, 1, 1);
 
         spin_manualexposure = new QDoubleSpinBox(centralwidget);
         spin_manualexposure->setObjectName(QStringLiteral("spin_manualexposure"));
@@ -216,14 +216,14 @@ public:
         label_5->setText(QApplication::translate("MainWindow", "structure", Q_NULLPTR));
         label_6->setText(QApplication::translate("MainWindow", "exposure", Q_NULLPTR));
         label_8->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
-        label_12->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
+        label_time->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
         combo_tracer->setCurrentText(QString());
-        label_11->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
+        label_samp_count2->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
         check_autoexposure->setText(QApplication::translate("MainWindow", "auto exposure", Q_NULLPTR));
         label_2->setText(QApplication::translate("MainWindow", "sample deviation", Q_NULLPTR));
         label_4->setText(QApplication::translate("MainWindow", "time", Q_NULLPTR));
         label_3->setText(QApplication::translate("MainWindow", "scaled deviation", Q_NULLPTR));
-        label_10->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
+        label_samp_count1->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
         button_render->setText(QApplication::translate("MainWindow", "start", Q_NULLPTR));
         label->setText(QApplication::translate("MainWindow", "tracer", Q_NULLPTR));
         label_9->setText(QApplication::translate("MainWindow", "N/A", Q_NULLPTR));
