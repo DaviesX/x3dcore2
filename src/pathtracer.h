@@ -102,8 +102,11 @@ protected:
                                                            unsigned depth,
                                                            e8::intersect_info& terminate,
                                                            e8util::vec3& t) const;
-        e8util::vec3                    join_with_light_paths(e8util::rng& rng, e8util::vec3 const& o, e8::intersect_info const& info,
-                                                              if_scene const* scene) const;
+        e8util::vec3                    join_with_light_paths(e8util::rng& rng,
+                                                              e8util::vec3 const& o,
+                                                              e8::intersect_info const& info,
+                                                              if_scene const* scene,
+                                                              unsigned prev_depth) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& info,
