@@ -311,3 +311,53 @@ e8::bidirect_pathtracer::sample(e8util::rng& rng,
         }
         return rad;
 }
+
+
+e8::bidirect_mis_pathtracer::bidirect_mis_pathtracer()
+{
+}
+
+e8::bidirect_mis_pathtracer::~bidirect_mis_pathtracer()
+{
+}
+
+e8util::vec3
+e8::bidirect_mis_pathtracer::join_with_light_paths(e8util::rng& rng,
+                                               e8util::vec3 const& o,
+                                               e8::intersect_info const& poi,
+                                               if_scene const* scene) const
+{
+        return 0.0f;
+}
+
+e8util::vec3
+e8::bidirect_mis_pathtracer::sample_indirect_illum(e8util::rng& rng,
+                                                e8util::vec3 const& o,
+                                                e8::intersect_info const& info,
+                                                if_scene const* scene,
+                                                unsigned depth) const
+{
+        return 0.0f;
+}
+
+std::vector<e8util::vec3>
+e8::bidirect_mis_pathtracer::sample(e8util::rng& rng,
+                                std::vector<e8util::ray> const& rays,
+                                if_scene const* scene,
+                                unsigned) const
+{
+        std::vector<e8util::vec3> rad(rays.size());
+        for (unsigned i = 0; i < rays.size(); i ++) {
+                e8util::ray const& ray = rays[i];
+                e8::intersect_info const& info = scene->intersect(ray);
+                if (info.valid) {
+                        // compute radiance.
+                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), info, scene, 0);
+                        if (info.light)
+                                rad[i] = p2_inf + info.light->emission(-ray.v(), info.normal);
+                        else
+                                rad[i] = p2_inf;
+                }
+        }
+        return rad;
+}

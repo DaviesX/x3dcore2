@@ -106,6 +106,28 @@ protected:
                                                               unsigned depth) const;
 };
 
+class bidirect_mis_pathtracer: public direct_pathtracer
+{
+public:
+        bidirect_mis_pathtracer();
+        ~bidirect_mis_pathtracer() override;
+
+        std::vector<e8util::vec3>       sample(e8util::rng& rng,
+                                               std::vector<e8util::ray> const& rays,
+                                               if_scene const* scene,
+                                               unsigned n) const override;
+protected:
+        e8util::vec3                    join_with_light_paths(e8util::rng& rng,
+                                                              e8util::vec3 const& o,
+                                                              e8::intersect_info const& info,
+                                                              if_scene const* scene) const;
+        e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
+                                                              e8util::vec3 const& o,
+                                                              e8::intersect_info const& info,
+                                                              if_scene const* scene,
+                                                              unsigned depth) const;
+};
+
 }
 
 
