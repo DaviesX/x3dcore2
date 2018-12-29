@@ -11,6 +11,7 @@
 #include "testdirectrenderer.h"
 #include "testunidirectrenderer.h"
 #include "testbidirectrenderer.h"
+#include "testbidirectmisrenderer.h"
 
 
 test::test_runner::test_runner()
@@ -73,7 +74,7 @@ test::load(int argc, char** argv)
         runner.add("test_direct_renderer", new test_direct_renderer(), false);
         runner.add("test_unidirect_renderer", new test_unidirect_renderer(), false);
         runner.add("test_bidirect_renderer", new test_bidirect_renderer(), false);
-        runner.add("test_bidirect_mis_renderer", new test_bidirect_renderer(), false);
+        runner.add("test_bidirect_mis_renderer", new test_bidirect_mis_renderer(), false);
         runner.add("test_frame", new test_frame(), false);
 
         for (int i = 1; i < argc; i ++) {
