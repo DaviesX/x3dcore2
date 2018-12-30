@@ -98,7 +98,7 @@ protected:
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& info,
                                                               if_scene const* scene,
-                                                              unsigned prev_depth) const;
+                                                              unsigned cam_path_len) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& info,

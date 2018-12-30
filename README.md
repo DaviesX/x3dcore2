@@ -1,9 +1,13 @@
 # e8yescg
 A simple 3D renderer for visualizing other simulation projects.
+![Alt text](gallery/image.png?raw=true "Unidirectional tracer (direct lighting)")
+
+## Ray-cast tracer
+### 1 path-space integration
+![Alt text](gallery/image1.png?raw=true "Ray-cast tracer")
 
 ## Unidirectional tracer 
 ### with k light samples
-![Alt text](gallery/image.png?raw=true "Unidirectional tracer (direct lighting)")
 ![Alt text](gallery/image2.png?raw=true "Unidirectional tracer (direct lighting)")
 
 ## Bidirectional tracer

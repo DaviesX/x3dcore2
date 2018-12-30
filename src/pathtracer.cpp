@@ -144,7 +144,7 @@ e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                 unsigned multi_light_samps,
                                                 unsigned multi_indirect_samps) const
 {
-        static const int mutate_depth = 3;
+        static const int mutate_depth = 2;
         float p_survive = 0.5f;
         if (depth >= mutate_depth) {
                 if (rng.draw() >= p_survive)
@@ -176,7 +176,7 @@ e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                 }
         }
 
-        return direct + multi_indirect/multi_indirect_samps/p_survive;
+        return (direct + multi_indirect/multi_indirect_samps)/p_survive;
 }
 
 std::vector<e8util::vec3>
@@ -211,50 +211,50 @@ e8::bidirect_pathtracer::join_with_light_paths(e8util::rng& rng,
                                                e8util::vec3 const& o,
                                                e8::intersect_info const& poi,
                                                if_scene const* scene,
-                                               unsigned prev_depth) const
+                                               unsigned cam_path_len) const
 {
-        float p_survive = 0.5f;
-        if (rng.draw() >= p_survive) {
-                // special case, stop.
-                return prev_depth == 0 ? sample_direct_illum(rng, o, poi, scene, 1)/(1 - p_survive) : 0.5f*sample_direct_illum(rng, o, poi, scene, 1)/(1 - p_survive);
-        } else {
-                // sample light.
-                float light_pdf, source_pdf;
-                if_light const* light = scene->sample_light(rng, light_pdf);
-                e8util::vec3 p, n, w;
-                light->sample(rng, source_pdf, p, n, w);
-                e8util::ray light_path(p, w);
-                e8::intersect_info const& light_info = scene->intersect(light_path);
-                if (!light_info.valid)
-                        return 0.0f;
+        e8util::vec3 const& p1_direct = sample_direct_illum(rng, o, poi, scene, 1);
 
-                // construct light path.
-                e8util::vec3 const& l = light_info.vertex - p;
-                e8util::vec3 const& illum = light->eval(l, n)/(light_pdf*source_pdf);
+        // sample light.
+        float light_pdf, source_pdf;
+        if_light const* light = scene->sample_light(rng, light_pdf);
+        e8util::vec3 p, n, w;
+        light->sample(rng, source_pdf, p, n, w);
+        e8util::ray light_path(p, w);
+        e8::intersect_info const& light_info = scene->intersect(light_path);
+        if (!light_info.valid)
+                return 0.0f;
 
-                e8::intersect_info terminate = light_info;
-                e8util::vec3 tray = -w;
-                e8util::vec3 const& light_illum = illum;
+        // construct light path.
+        e8util::vec3 const& l = light_info.vertex - p;
+        e8util::vec3 const& illum = light->emission(w, n)/(light_pdf*source_pdf);
 
-                // evaluate the area integral.
-                e8util::vec3 join_path = poi.vertex - terminate.vertex;
-                float distance = join_path.norm();
-                join_path = join_path/distance;
-                e8util::ray join_ray(terminate.vertex, join_path);
-                float cos_w2 = terminate.normal.inner(tray);
-                float cos_wo = terminate.normal.inner(join_path);
-                float cos_wi = poi.normal.inner(-join_path);
-                float t;
-                if (cos_wo >= 0.0f &&
-                                cos_wi >= 0.0f &&
-                                cos_w2 >= 0.0f &&
-                                !scene->has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
-                        e8util::vec3 f2 = light_illum*terminate.mat->eval(terminate.normal, join_path, tray)*cos_w2;
-                        e8util::vec3 f1 = f2*cos_wo/(distance*distance)*poi.mat->eval(poi.normal, o, -join_path)*cos_wi;
-                        return 0.5f*f1/p_survive;
-                } else
-                        return 0.0f;
+        e8::intersect_info terminate = light_info;
+        e8util::vec3 tray = -w;
+        e8util::vec3 const& light_illum = illum;
+
+        // evaluate the area integral.
+        e8util::vec3 join_path = poi.vertex - terminate.vertex;
+        float distance = join_path.norm();
+        join_path = join_path/distance;
+        e8util::ray join_ray(terminate.vertex, join_path);
+        float cos_w2 = terminate.normal.inner(tray);
+        float cos_wo = terminate.normal.inner(join_path);
+        float cos_wi = poi.normal.inner(-join_path);
+        float t;
+        e8util::vec3 p2_direct;
+        if (cos_wo >= 0.0f &&
+                        cos_wi >= 0.0f &&
+                        cos_w2 >= 0.0f &&
+                        !scene->has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
+                e8util::vec3 f2 = light_illum*terminate.mat->eval(terminate.normal, join_path, tray)*cos_w2;
+                p2_direct = f2*cos_wo/(distance*distance)*poi.mat->eval(poi.normal, o, -join_path)*cos_wi;
+                if (cam_path_len == 0)
+                        return p1_direct + 0.5f*p2_direct;
+                else
+                        return 0.5f*(p1_direct + p2_direct);
         }
+        return p1_direct;
 }
 
 e8util::vec3
@@ -264,7 +264,7 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                 if_scene const* scene,
                                                 unsigned depth) const
 {
-        static const unsigned mutate_depth = 2;
+        static const unsigned mutate_depth = 1;
         float p_survive = 0.5f;
         if (depth >= mutate_depth) {
                 if (rng.draw() >= p_survive)
@@ -278,16 +278,16 @@ e8::bidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
         float mat_pdf;
         e8util::vec3 const& i = info.mat->sample(rng, info.normal, o, mat_pdf);
         e8::intersect_info const& indirect_info = scene->intersect(e8util::ray(info.vertex, i));
+        e8util::vec3 r;
         if (indirect_info.valid) {
                 e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_info, scene, depth + 1);
                 e8util::vec3 const& brdf = info.mat->eval(info.normal, o, i);
                 float cos_w = info.normal.inner(i);
                 if (cos_w < 0.0f)
                         return 0.0f;
-                e8util::vec3 r = indirect*brdf*cos_w/mat_pdf/p_survive;
-                return bidirect + r;
-        } else
-                return bidirect;
+                r = indirect*brdf*cos_w/mat_pdf;
+        }
+        return (bidirect + r)/p_survive;
 }
 
 std::vector<e8util::vec3>
