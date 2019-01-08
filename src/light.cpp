@@ -17,11 +17,12 @@ e8::area_light::area_light(if_geometry const* geo, e8util::vec3 const& rad):
 }
 
 void
-e8::area_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
+e8::area_light::sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
+                       e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
 {
-        m_geo->sample(rng, p, n, pdf);
+        m_geo->sample(rng, p, n, p_pdf);
         w = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
-        pdf *= n.inner(w)/static_cast<float>(M_PI);
+        w_pdf = n.inner(w)/static_cast<float>(M_PI);
 }
 
 void

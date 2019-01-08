@@ -6,11 +6,11 @@
 namespace test
 {
 
-class test_bidirect_renderer: public if_test
+class test_bidirect_lt2_renderer: public if_test
 {
 public:
-        test_bidirect_renderer();
-        ~test_bidirect_renderer() override;
+        test_bidirect_lt2_renderer();
+        ~test_bidirect_lt2_renderer() override;
 
         void    run() const override;
 };

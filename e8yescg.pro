@@ -36,8 +36,8 @@ SOURCES += src/main.cpp \
     test/testscene.cpp \
     test/testdirectrenderer.cpp \
     test/testunidirectrenderer.cpp \
-    test/testbidirectrenderer.cpp \
-    test/testbidirectmisrenderer.cpp
+    test/testbidirectmisrenderer.cpp \
+    test/testbidirectlt2renderer.cpp
 
 HEADERS += \
     src/scene.h \
@@ -64,8 +64,8 @@ HEADERS += \
     test/testscene.h \
     test/testdirectrenderer.h \
     test/testunidirectrenderer.h \
-    test/testbidirectrenderer.h \
-    test/testbidirectmisrenderer.h
+    test/testbidirectmisrenderer.h \
+    test/testbidirectlt2renderer.h
 
 #LIBS += -lGLEW
 #LIBS += -lglfw

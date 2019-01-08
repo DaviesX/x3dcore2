@@ -75,8 +75,8 @@ SOURCES       = ../src/main.cpp \
 		../test/testscene.cpp \
 		../test/testdirectrenderer.cpp \
 		../test/testunidirectrenderer.cpp \
-		../test/testbidirectrenderer.cpp \
-		../test/testbidirectmisrenderer.cpp moc_app.cpp
+		../test/testbidirectmisrenderer.cpp \
+		../test/testbidirectlt2renderer.cpp moc_app.cpp
 OBJECTS       = main.o \
 		camera.o \
 		tensor.o \
@@ -102,8 +102,8 @@ OBJECTS       = main.o \
 		testscene.o \
 		testdirectrenderer.o \
 		testunidirectrenderer.o \
-		testbidirectrenderer.o \
 		testbidirectmisrenderer.o \
+		testbidirectlt2renderer.o \
 		moc_app.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -203,8 +203,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../test/testscene.h \
 		../test/testdirectrenderer.h \
 		../test/testunidirectrenderer.h \
-		../test/testbidirectrenderer.h \
-		../test/testbidirectmisrenderer.h ../src/main.cpp \
+		../test/testbidirectmisrenderer.h \
+		../test/testbidirectlt2renderer.h ../src/main.cpp \
 		../src/camera.cpp \
 		../src/tensor.cpp \
 		../src/geometry.cpp \
@@ -229,8 +229,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../test/testscene.cpp \
 		../test/testdirectrenderer.cpp \
 		../test/testunidirectrenderer.cpp \
-		../test/testbidirectrenderer.cpp \
-		../test/testbidirectmisrenderer.cpp
+		../test/testbidirectmisrenderer.cpp \
+		../test/testbidirectlt2renderer.cpp
 QMAKE_TARGET  = e8yescg
 DESTDIR       = 
 TARGET        = e8yescg
@@ -414,8 +414,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h ../test/testresource.h ../test/testcamera.h ../test/testframe.h ../test/testscene.h ../test/testdirectrenderer.h ../test/testunidirectrenderer.h ../test/testbidirectrenderer.h ../test/testbidirectmisrenderer.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp ../test/testresource.cpp ../test/testcamera.cpp ../test/testframe.cpp ../test/testscene.cpp ../test/testdirectrenderer.cpp ../test/testunidirectrenderer.cpp ../test/testbidirectrenderer.cpp ../test/testbidirectmisrenderer.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/scene.h ../src/camera.h ../src/tensor.h ../src/geometry.h ../src/light.h ../src/renderer.h ../test/test.h ../src/material.h ../test/testrunner.h ../test/testtensor.h ../src/resource.h ../src/pathtracer.h ../src/raster.h ../src/frame.h ../test/testgeometry.h ../src/thread.h ../src/app.h ../src/compositor.h ../test/testresource.h ../test/testcamera.h ../test/testframe.h ../test/testscene.h ../test/testdirectrenderer.h ../test/testunidirectrenderer.h ../test/testbidirectmisrenderer.h ../test/testbidirectlt2renderer.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../src/main.cpp ../src/camera.cpp ../src/tensor.cpp ../src/geometry.cpp ../src/light.cpp ../src/scene.cpp ../src/renderer.cpp ../src/material.cpp ../test/test.cpp ../test/testrunner.cpp ../test/testtensor.cpp ../src/resource.cpp ../src/pathtracer.cpp ../src/raster.cpp ../src/frame.cpp ../test/testgeometry.cpp ../src/thread.cpp ../src/app.cpp ../src/compositor.cpp ../test/testresource.cpp ../test/testcamera.cpp ../test/testframe.cpp ../test/testscene.cpp ../test/testdirectrenderer.cpp ../test/testunidirectrenderer.cpp ../test/testbidirectmisrenderer.cpp ../test/testbidirectlt2renderer.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../src/mainwindow.ui $(DISTDIR)/
 
 
@@ -562,7 +562,7 @@ testrunner.o: ../test/testrunner.cpp ../test/testrunner.h \
 		../test/testscene.h \
 		../test/testdirectrenderer.h \
 		../test/testunidirectrenderer.h \
-		../test/testbidirectrenderer.h \
+		../test/testbidirectlt2renderer.h \
 		../test/testbidirectmisrenderer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testrunner.o ../test/testrunner.cpp
 
@@ -704,22 +704,6 @@ testunidirectrenderer.o: ../test/testunidirectrenderer.cpp ../src/pathtracer.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testunidirectrenderer.o ../test/testunidirectrenderer.cpp
 
-testbidirectrenderer.o: ../test/testbidirectrenderer.cpp ../src/pathtracer.h \
-		../src/tensor.h \
-		../src/scene.h \
-		../src/geometry.h \
-		../src/material.h \
-		../src/resource.h \
-		../src/light.h \
-		../src/camera.h \
-		../src/renderer.h \
-		../src/thread.h \
-		../src/compositor.h \
-		../src/frame.h \
-		../test/testbidirectrenderer.h \
-		../test/test.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testbidirectrenderer.o ../test/testbidirectrenderer.cpp
-
 testbidirectmisrenderer.o: ../test/testbidirectmisrenderer.cpp ../src/pathtracer.h \
 		../src/tensor.h \
 		../src/scene.h \
@@ -735,6 +719,22 @@ testbidirectmisrenderer.o: ../test/testbidirectmisrenderer.cpp ../src/pathtracer
 		../test/testbidirectmisrenderer.h \
 		../test/test.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testbidirectmisrenderer.o ../test/testbidirectmisrenderer.cpp
+
+testbidirectlt2renderer.o: ../test/testbidirectlt2renderer.cpp ../src/pathtracer.h \
+		../src/tensor.h \
+		../src/scene.h \
+		../src/geometry.h \
+		../src/material.h \
+		../src/resource.h \
+		../src/light.h \
+		../src/camera.h \
+		../src/renderer.h \
+		../src/thread.h \
+		../src/compositor.h \
+		../src/frame.h \
+		../test/testbidirectlt2renderer.h \
+		../test/test.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o testbidirectlt2renderer.o ../test/testbidirectlt2renderer.cpp
 
 moc_app.o: moc_app.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_app.o moc_app.cpp

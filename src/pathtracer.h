@@ -7,6 +7,9 @@
 
 namespace e8 {
 
+/**
+ * @brief The if_pathtracer class
+ */
 class if_pathtracer
 {
 public:
@@ -19,7 +22,9 @@ public:
                                                        unsigned n) const = 0;
 };
 
-
+/**
+ * @brief The position_pathtracer class
+ */
 class position_pathtracer: public if_pathtracer
 {
 public:
@@ -32,6 +37,9 @@ public:
                                                unsigned n) const override;
 };
 
+/**
+ * @brief The normal_pathtracer class
+ */
 class normal_pathtracer: public if_pathtracer
 {
 public:
@@ -44,6 +52,10 @@ public:
                                                unsigned n) const override;
 };
 
+/**
+ * @brief The direct_pathtracer class
+ * unidirectional tracer with throughput limited to 2.
+ */
 class direct_pathtracer: public if_pathtracer
 {
 public:
@@ -55,14 +67,17 @@ public:
                                                        if_scene const* scene,
                                                        unsigned n) const override;
 protected:
-        e8util::vec3                    sample_direct_illum(e8util::rng& rng,
-                                                            e8util::vec3 const& o,
-                                                            e8::intersect_info const& inf,
-                                                            if_scene const* scene,
-                                                            unsigned n) const;
+        e8util::vec3                            sample_direct_illum(e8util::rng& rng,
+                                                                    e8util::vec3 const& o,
+                                                                    e8::intersect_info const& inf,
+                                                                    if_scene const* scene,
+                                                                    unsigned n) const;
 };
 
-
+/**
+ * @brief The unidirect_pathtracer class
+ * unidirectional tracer with unlimited throughput and direct light sampling.
+ */
 class unidirect_pathtracer: public direct_pathtracer
 {
 public:
@@ -74,6 +89,13 @@ public:
                                                if_scene const* scene,
                                                unsigned n) const override;
 protected:
+        unsigned                        sample_subpath(e8util::rng& rng,
+                                                       e8util::vec3* o,
+                                                       e8::intersect_info* vertices,
+                                                       float* dens,
+                                                       if_scene const* scene,
+                                                       unsigned depth,
+                                                       unsigned max_depth) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& info,
@@ -81,13 +103,22 @@ protected:
                                                               unsigned depth,
                                                               unsigned n,
                                                               unsigned m) const;
+
+        unsigned const                  m_max_mem = 20;
+        e8util::vec3* const             m_ray_mem;
+        e8::intersect_info* const       m_vertex_mem;
+        float* const                    m_solid_angle_dens_mem;
 };
 
-class bidirect_pathtracer: public direct_pathtracer
+/**
+ * @brief The bidirect_lt2_pathtracer class
+ * bidirectional tracer with light throughput limited to 2.
+ */
+class bidirect_lt2_pathtracer: public unidirect_pathtracer
 {
 public:
-        bidirect_pathtracer();
-        ~bidirect_pathtracer() override;
+        bidirect_lt2_pathtracer();
+        ~bidirect_lt2_pathtracer() override;
 
         std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                std::vector<e8util::ray> const& rays,
@@ -106,7 +137,11 @@ protected:
                                                               unsigned depth) const;
 };
 
-class bidirect_mis_pathtracer: public direct_pathtracer
+/**
+ * @brief The bidirect_mis_pathtracer class
+ * bidirectional tracer with unlimited throughput and multiple importance sampling over the path space.
+ */
+class bidirect_mis_pathtracer: public unidirect_pathtracer
 {
 public:
         bidirect_mis_pathtracer();
@@ -117,15 +152,20 @@ public:
                                                if_scene const* scene,
                                                unsigned n) const override;
 protected:
-        e8util::vec3                    join_with_light_paths(e8util::rng& rng,
-                                                              e8util::vec3 const& o,
-                                                              e8::intersect_info const& info,
-                                                              if_scene const* scene) const;
-        e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
-                                                              e8util::vec3 const& o,
-                                                              e8::intersect_info const& info,
-                                                              if_scene const* scene,
-                                                              unsigned depth) const;
+        e8util::vec3                    join_subpaths(e8util::rng& rng,
+                                                      e8util::vec3 const* cam_o_rays,
+                                                      e8::intersect_info const* cam_vertices,
+                                                      float* cam_dens,
+                                                      unsigned cam_path_len,
+                                                      e8util::vec3 const* light_o_rays,
+                                                      e8::intersect_info const* light_vertices,
+                                                      float* light_dens,
+                                                      unsigned light_path_len,
+                                                      e8util::vec3 const& light_p,
+                                                      e8util::vec3 const& light_n,
+                                                      float pdf_light_p,
+                                                      if_light const* light,
+                                                      if_scene const* scene) const;
 };
 
 }

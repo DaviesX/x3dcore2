@@ -10,7 +10,7 @@
 #include "testscene.h"
 #include "testdirectrenderer.h"
 #include "testunidirectrenderer.h"
-#include "testbidirectrenderer.h"
+#include "testbidirectlt2renderer.h"
 #include "testbidirectmisrenderer.h"
 
 
@@ -73,7 +73,7 @@ test::load(int argc, char** argv)
         runner.add("test_scene", new test_scene(), false);
         runner.add("test_direct_renderer", new test_direct_renderer(), false);
         runner.add("test_unidirect_renderer", new test_unidirect_renderer(), false);
-        runner.add("test_bidirect_renderer", new test_bidirect_renderer(), false);
+        runner.add("test_bidirect_lt2_renderer", new test_bidirect_lt2_renderer(), false);
         runner.add("test_bidirect_mis_renderer", new test_bidirect_mis_renderer(), false);
         runner.add("test_frame", new test_frame(), false);
 
