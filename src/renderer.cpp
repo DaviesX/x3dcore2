@@ -38,7 +38,7 @@ public:
         {
         }
 
-        void main(void*) override
+        void run(void*) override
         {
                 m_estimate = m_pt->sample(m_rng, m_rays, m_scene, 1);
         }

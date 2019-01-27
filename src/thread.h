@@ -23,7 +23,7 @@ public:
         {
         }
 
-        virtual void    main(void* storage) = 0;
+        virtual void    run(void* storage) = 0;
 };
 
 
@@ -40,7 +40,7 @@ public:
         }
 
         task_info():
-                task_info(-1, -1, nullptr)
+                task_info(0, 0, nullptr)
         {
         }
 

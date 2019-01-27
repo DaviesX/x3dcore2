@@ -1,11 +1,11 @@
-#include <sys/sysinfo.h>
+#include <thread>
 #include "thread.h"
 
 
 unsigned
 e8util::cpu_core_count()
 {
-        return get_nprocs();
+        return std::thread::hardware_concurrency();
 }
 
 e8util::mutex_t
@@ -38,8 +38,9 @@ static void*
 worker(void* p)
 {
         e8util::if_task* task = static_cast<e8util::if_task*>(p);
-        task->main(nullptr);
+        task->run(nullptr);
         pthread_exit(nullptr);
+        return nullptr;
 }
 
 e8util::task_info
@@ -47,7 +48,7 @@ e8util::run(if_task* task)
 {
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        task_info info(0, -1, task);
+        task_info info(0, 0, task);
         pthread_create(&info.m_thread, &attr, worker, task);
         return info;
 }
@@ -91,7 +92,7 @@ e8util::thread_pool_worker(void* p)
 
                                 pthread_mutex_unlock(&this_->m_global_mutex);
 
-                                info.m_task->main(this_->m_worker_storage[worker_id]);
+                                info.m_task->run(this_->m_worker_storage[worker_id]);
                         } else {
                                 pthread_mutex_unlock(&this_->m_global_mutex);
                                 break;
@@ -140,7 +141,7 @@ e8util::thread_pool::run(if_task* t)
 {
         pthread_mutex_lock(&m_global_mutex);
 
-        task_info info(m_uuid ++, -1, t);
+        task_info info(m_uuid ++, 0, t);
         m_tasks.push(info);
 
         pthread_mutex_unlock(&m_global_mutex);
