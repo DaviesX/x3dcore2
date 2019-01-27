@@ -24,7 +24,7 @@ public:
         rendering_task();
         ~rendering_task();
 
-        void            main(void* storage) override;
+        void            run(void* storage) override;
         void            update();
         bool            is_running() const;
         void            enable(bool state);

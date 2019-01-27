@@ -29,7 +29,7 @@ test::test_camera::run() const
 
         float s;
         e8util::ray const& r = cam.sample(rng, (resx - 1)/2, (resy - 1)/2, resx, resy, s);
-        assert(r.v() == e8util::vec3({-1.0f/std::sqrt(2), 0.0f, -1.0f/std::sqrt(2)}));
+        assert(r.v() == e8util::vec3({-1.0f/std::sqrt(2.0f), 0.0f, -1.0f/std::sqrt(2.0f)}));
 
         for (unsigned j = 0; j < resy; j ++) {
                 for (unsigned i = 0; i < resx; i ++) {

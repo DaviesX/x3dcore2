@@ -1,5 +1,4 @@
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
+#include <QImage>
 #include "frame.h"
 
 
@@ -146,7 +145,9 @@ e8::ram_ogl_frame::paintGL()
                                                                  internal_pixel(3);
                         }
                 }
-                glDrawPixels(front().w, front().h, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, gl_pixels);
+                glDrawPixels(static_cast<GLsizei>(front().w),
+                             static_cast<GLsizei>(front().h),
+                             GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, gl_pixels);
         }
         e8util::unlock(m_mutex);
 }
@@ -166,14 +167,17 @@ e8::img_file_frame::~img_file_frame()
 void
 e8::img_file_frame::commit()
 {
-        cv::Mat4b pixels(height(), width());
-        pixels.forEach([this](cv::Vec4b& v, int const* p) {
-                e8::pixel const& pixel = (*this)(p[1], p[0]);
-                v[0] = pixel(2);
-                v[1] = pixel(1);
-                v[2] = pixel(0);
-                v[3] = pixel(3);
-        });
-        cv::imwrite(m_file_name, pixels);
+        QImage qim(static_cast<int>(width()),
+                   static_cast<int>(height()),
+                   QImage::Format_RGB32);
+        for (unsigned j = 0; j < height(); j ++) {
+                for (unsigned i = 0; i < width(); i ++) {
+                        e8::pixel const& pixel = (*this)(i, j);
+                        qim.setPixelColor(static_cast<int>(i),
+                                          static_cast<int>(j),
+                                          QColor(pixel(0), pixel(1), pixel(2), pixel(3)));
+                }
+        }
+        qim.save(QString::fromStdString(m_file_name));
         swap();
 }

@@ -57,7 +57,7 @@ class ram_ogl_frame: public if_frame, public QOpenGLWidget
 {
 public:
         ram_ogl_frame(QWidget* parent);
-        ~ram_ogl_frame();
+        ~ram_ogl_frame() override;
 
         void            commit() override;
 
@@ -71,7 +71,7 @@ class img_file_frame: public if_frame
 {
 public:
         img_file_frame(std::string const& file_name, unsigned width, unsigned height);
-        ~img_file_frame();
+        ~img_file_frame() override;
 
         void    commit() override;
 private:

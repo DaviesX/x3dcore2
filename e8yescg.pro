@@ -1,13 +1,13 @@
-QT       += core gui
+QT       += core gui opengl
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = e8yescg
 
 TEMPLATE = app
 
 QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE += -Ofast -flto
+QMAKE_CXXFLAGS_RELEASE += -Ofast
 
-QMAKE_LFLAGS_RELEASE += -Ofast -flto -march=native
+QMAKE_LFLAGS_RELEASE += -Ofast -march=native
 
 CONFIG += c++14
 
@@ -67,13 +67,10 @@ HEADERS += \
     test/testbidirectmisrenderer.h \
     test/testbidirectlt2renderer.h
 
-#LIBS += -lGLEW
-#LIBS += -lglfw
-#LIBS += -lglut
-#LIBS += -lGL
-#LIBS += -lGLU
-CONFIG += link_pkgconfig
-PKGCONFIG += opencv
+
+win32 {
+LIBS += -lOpengl32
+}
 
 FORMS += \
     src/mainwindow.ui
