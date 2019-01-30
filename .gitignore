@@ -33,3 +33,6 @@ research/rtr/meshes/*
 *~
 
 build/*
+
+# Qt local machine settings.
+e8yescg.pro.user*
