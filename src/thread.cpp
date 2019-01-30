@@ -70,6 +70,7 @@ struct thread_pool_worker_data
 
         thread_pool*    this_;
         unsigned        worker_id;
+        uint32_t        reserved0;
 };
 
 void*   thread_pool_worker(void* p);
@@ -102,6 +103,7 @@ e8util::thread_pool_worker(void* p)
 
         delete static_cast<e8util::thread_pool_worker_data*>(p);
         pthread_exit(nullptr);
+        return nullptr;
 }
 
 e8util::thread_pool::thread_pool(unsigned num_thrs, std::vector<void*> worker_storage):
