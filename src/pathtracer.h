@@ -200,6 +200,8 @@ protected:
                                                       float pdf_light_w,
                                                       if_light const* light,
                                                       if_scene const* scene) const;
+private:
+        unsigned const                  m_max_path_len = 3;
 };
 
 }

@@ -36,7 +36,7 @@ test::test_bidirect_mis_renderer::run() const
         e8::img_file_frame img("test_bidirect_mis.png", width, height);
         e8::clamp_compositor com(width, height);
 
-        for (unsigned i = 0; i < 40; i ++)
+        for (unsigned i = 0; i < 1; i ++)
                 r.render(&scene, cam, &com);
 
         com.commit(&img);
