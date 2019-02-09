@@ -1,5 +1,5 @@
 # e8yescg
-A simple 3D renderer for visualizing other simulation projects.
+A basic 3D renderer for simple scenes.
 ![Alt text](gallery/image.png?raw=true "Unidirectional tracer (direct lighting)")
 
 ## Ray-cast tracer
