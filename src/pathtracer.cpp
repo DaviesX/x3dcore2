@@ -217,6 +217,7 @@ e8::unidirect_pathtracer::sample_path(e8util::rng& rng,
 e8util::vec3
 e8::unidirect_pathtracer::transport_subpath(e8util::vec3 const& src_rad,
                                             e8util::vec3 const& appending_ray,
+                                            float appending_ray_dens,
                                             e8util::vec3 const* o,
                                             e8::intersect_info const* vertices,
                                             float const* dens,
@@ -230,25 +231,25 @@ e8::unidirect_pathtracer::transport_subpath(e8util::vec3 const& src_rad,
                 for (unsigned k = 0; k < sub_path_len - 1; k ++) {
                         transport *= vertices[k].mat->eval(vertices[k].normal, o[k + 1], -o[k])*
                                         vertices[k].normal.inner(-o[k])/
-                                        dens[k];
+                                        dens[k + 1];
                 }
                 return transport*vertices[sub_path_len - 1].
                                 mat->eval(vertices[sub_path_len - 1].normal,
                                           appending_ray,
                                           -o[sub_path_len - 1])*
                                 vertices[sub_path_len - 1].normal.inner(-o[sub_path_len - 1])/
-                                dens[sub_path_len - 1];
+                                appending_ray_dens;
         } else {
                 e8util::vec3 transport = src_rad*vertices[sub_path_len - 1].
                                 mat->eval(vertices[sub_path_len - 1].normal,
                                           -o[sub_path_len - 1],
                                           appending_ray)*
                                 vertices[sub_path_len - 1].normal.inner(appending_ray)/
-                                dens[sub_path_len - 1];
+                                appending_ray_dens;
                 for (int k = static_cast<int>(sub_path_len) - 2; k >= 0; k --) {
                         transport *= vertices[k].mat->eval(vertices[k].normal, -o[k], o[k + 1])*
                                         vertices[k].normal.inner(o[k + 1])/
-                                        dens[k];
+                                        dens[k + 1];
                 }
                 return transport;
         }
@@ -475,9 +476,20 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(e8util::vec3 const* cam_o_rays,
                                                  if_light const* light,
                                                  if_scene const* scene) const
 {
+        float weights[m_max_path_len*2 + 1];
+        for (unsigned i = 0; i < cam_path_len; i ++) {
+                for (unsigned j = 0; j <= light_path_len; j ++) {
+                        if (j == 0) {
+                                weights[i + 2] += 1;
+                        } else {
+                                weights[i + j + 2] += 1;
+                        }
+                }
+        }
+
         e8util::vec3 rad;
         for (unsigned i = 0; i < cam_path_len; i ++) {
-                for (unsigned j = 0; j < 1/* light_path_len */; j ++) {
+                for (unsigned j = 0; j <= light_path_len; j ++) {
                         e8util::vec3 path_rad;
                         if (j == 0) {
                                 // direct light sampling.
@@ -488,17 +500,19 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(e8util::vec3 const* cam_o_rays,
                                                                                               cam_vertices[i],
                                                                                               -cam_o_rays[i],
                                                                                               scene)/dens;
+
                                 // compute light transportation for camera subpath.
-                                // e8util::vec3 join_path = (cam_vertices[i].vertex - light_p).normalize();
                                 path_rad = transport_subpath(transported_light_illum,
                                                              cam_o_rays[i],
+                                                             cam_dens[i],
                                                              cam_o_rays,
                                                              cam_vertices,
                                                              cam_dens,
                                                              i,
-                                                             false);
+                                                             false)/cam_dens[0];
+                                rad += path_rad/weights[i + 2];
                         } else {
-                                e8util::vec3 join_path = cam_vertices[i].vertex - light_vertices[j].vertex;
+                                e8util::vec3 join_path = cam_vertices[i].vertex - light_vertices[j - 1].vertex;
                                 float distance = join_path.norm();
                                 join_path = join_path/distance;
                                 e8util::ray join_ray(cam_vertices[i].vertex, join_path);
@@ -514,13 +528,14 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(e8util::vec3 const* cam_o_rays,
                                         continue;
                                 } else {
                                         // compute light transportation for light subpath.
-                                        e8util::vec3 light_illum = light->emission(-light_o_rays[0], light_n)/(light_dens[0]*pdf_light_w);
+                                        e8util::vec3 light_illum = light->emission(light_o_rays[0], light_n)/(light_dens[0]*pdf_light_w);
                                         e8util::vec3 light_subpath_rad = transport_subpath(light_illum,
-                                                                                           -join_path,
+                                                                                           join_path,
+                                                                                           1.0f,
                                                                                            light_o_rays,
                                                                                            light_vertices,
                                                                                            light_dens,
-                                                                                           j + 1,
+                                                                                           j,
                                                                                            true);
 
                                         // transport light for the join path.
@@ -528,15 +543,16 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(e8util::vec3 const* cam_o_rays,
 
                                         // compute light transportation for camera subpath.
                                         path_rad = transport_subpath(transported_light_illum,
-                                                                     join_path,
+                                                                     -join_path,
+                                                                     1.0f,
                                                                      cam_o_rays,
                                                                      cam_vertices,
                                                                      cam_dens,
                                                                      i + 1,
-                                                                     false);
+                                                                     false)/cam_dens[0];
                                 }
+                                rad += path_rad/weights[i + j + 2];
                         }
-                        rad += path_rad; ///(i + j + 1);
                 }
         }
         return rad;
@@ -583,8 +599,6 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng& rng,
                                                       light_dens,
                                                       scene,
                                                       m_max_path_len);
-                if (cam_path_len != 0)
-                        int a = 0;
 
                 // compute radiance for different strategies.
                 rad[i] = sample_all_subpaths(&m_ray_mem[0],
@@ -600,6 +614,10 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng& rng,
                                              light_w_dens,
                                              light,
                                              scene);
+                if (cam_path_len > 0 && m_vertex_mem[0].light != nullptr) {
+                        rad[i] += m_vertex_mem[0].light->emission(-m_ray_mem[0],
+                                                                  m_vertex_mem[0].normal);
+                }
         }
         return rad;
 }

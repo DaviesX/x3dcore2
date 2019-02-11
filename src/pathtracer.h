@@ -111,6 +111,7 @@ protected:
                                                     unsigned max_depth) const;
         e8util::vec3                    transport_subpath(e8util::vec3 const& src_rad,
                                                           e8util::vec3 const& appending_ray,
+                                                          float appending_ray_dens,
                                                           e8util::vec3 const* o,
                                                           e8::intersect_info const* vertices,
                                                           float const* dens,
@@ -188,20 +189,20 @@ protected:
                                                             float& w_density,
                                                             if_scene const* scene) const;
         e8util::vec3                    sample_all_subpaths(e8util::vec3 const* cam_o_rays,
-                                                      e8::intersect_info const* cam_vertices,
-                                                      float* cam_dens,
-                                                      unsigned cam_path_len,
-                                                      e8util::vec3 const* light_o_rays,
-                                                      e8::intersect_info const* light_vertices,
-                                                      float* light_dens,
-                                                      unsigned light_path_len,
-                                                      e8util::vec3 const& light_p,
-                                                      e8util::vec3 const& light_n,
-                                                      float pdf_light_w,
-                                                      if_light const* light,
-                                                      if_scene const* scene) const;
+                                                            e8::intersect_info const* cam_vertices,
+                                                            float* cam_dens,
+                                                            unsigned cam_path_len,
+                                                            e8util::vec3 const* light_o_rays,
+                                                            e8::intersect_info const* light_vertices,
+                                                            float* light_dens,
+                                                            unsigned light_path_len,
+                                                            e8util::vec3 const& light_p,
+                                                            e8util::vec3 const& light_n,
+                                                            float pdf_light_w,
+                                                            if_light const* light,
+                                                            if_scene const* scene) const;
 private:
-        unsigned const                  m_max_path_len = 3;
+        static unsigned const           m_max_path_len = 4;
 };
 
 }

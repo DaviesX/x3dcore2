@@ -9,7 +9,7 @@ QMAKE_CXXFLAGS_RELEASE += -Ofast
 
 QMAKE_LFLAGS_RELEASE += -Ofast -march=native
 
-CONFIG += c++14
+CONFIG += c++17
 
 SOURCES += src/main.cpp \
     src/camera.cpp \
