@@ -101,10 +101,28 @@ public:
                                                if_scene const* scene,
                                                unsigned n) const override;
 protected:
+        struct sampled_pathlet
+        {
+                e8util::vec3 o;
+                e8::intersect_info vert;
+                float dens;
+
+                sampled_pathlet()
+                {
+                }
+
+                sampled_pathlet(e8util::vec3 o,
+                                e8::intersect_info vert,
+                                float dens):
+                        o(o),
+                        vert(vert),
+                        dens(dens)
+                {
+                }
+        };
+
         unsigned                        sample_path(e8util::rng& rng,
-                                                    e8util::vec3* o,
-                                                    e8::intersect_info* vertices,
-                                                    float* dens,
+                                                    sampled_pathlet* sampled_path,
                                                     e8util::ray const& r0,
                                                     float dens0,
                                                     if_scene const* scene,
@@ -112,9 +130,7 @@ protected:
         e8util::vec3                    transport_subpath(e8util::vec3 const& src_rad,
                                                           e8util::vec3 const& appending_ray,
                                                           float appending_ray_dens,
-                                                          e8util::vec3 const* o,
-                                                          e8::intersect_info const* vertices,
-                                                          float const* dens,
+                                                          sampled_pathlet const* sampled_path,
                                                           unsigned sub_path_len,
                                                           bool is_forward) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
@@ -124,19 +140,14 @@ protected:
                                                               unsigned depth,
                                                               unsigned n,
                                                               unsigned m) const;
-
-        unsigned const                  m_max_mem = 20;
-        e8util::vec3* const             m_ray_mem;
-        e8::intersect_info* const       m_vertex_mem;
-        float* const                    m_solid_angle_dens_mem;
 private:
         unsigned                        sample_path(e8util::rng& rng,
-                                                    e8util::vec3* o,
-                                                    e8::intersect_info* vertices,
-                                                    float* dens,
+                                                    sampled_pathlet* sampled_path,
                                                     if_scene const* scene,
                                                     unsigned depth,
                                                     unsigned max_depth) const;
+
+        static unsigned const           m_max_path_len = 4;
 };
 
 /**
@@ -188,13 +199,9 @@ protected:
                                                             float& density,
                                                             float& w_density,
                                                             if_scene const* scene) const;
-        e8util::vec3                    sample_all_subpaths(e8util::vec3 const* cam_o_rays,
-                                                            e8::intersect_info const* cam_vertices,
-                                                            float* cam_dens,
+        e8util::vec3                    sample_all_subpaths(sampled_pathlet const* cam_path,
                                                             unsigned cam_path_len,
-                                                            e8util::vec3 const* light_o_rays,
-                                                            e8::intersect_info const* light_vertices,
-                                                            float* light_dens,
+                                                            sampled_pathlet const* light_path,
                                                             unsigned light_path_len,
                                                             e8util::vec3 const& light_p,
                                                             e8util::vec3 const& light_n,
