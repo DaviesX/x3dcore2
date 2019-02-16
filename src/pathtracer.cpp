@@ -464,20 +464,12 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                  if_light const* light,
                                                  if_scene const* scene) const
 {
-        float weights[m_max_path_len*2 + 1];
+        float weights[m_max_path_len*2 + 2] = {0};
+        e8util::vec3 subpath_rads[m_max_path_len*2 + 2];
         for (unsigned i = 0; i < cam_path_len; i ++) {
                 for (unsigned j = 0; j <= light_path_len; j ++) {
-                        if (j == 0) {
-                                weights[i + 2] += 1;
-                        } else {
-                                weights[i + j + 2] += 1;
-                        }
-                }
-        }
+                        weights[i + j + 2] += 1;
 
-        e8util::vec3 rad;
-        for (unsigned i = 0; i < cam_path_len; i ++) {
-                for (unsigned j = 0; j <= light_path_len; j ++) {
                         e8util::vec3 path_rad;
                         if (j == 0) {
                                 // direct light sampling.
@@ -496,7 +488,6 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                              cam_path,
                                                              i,
                                                              false)/cam_path[0].dens;
-                                rad += path_rad/weights[i + 2];
                         } else {
                                 e8util::vec3 join_path = cam_path[i].vert.vertex - light_path[j - 1].vert.vertex;
                                 float distance = join_path.norm();
@@ -533,8 +524,16 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                                      i + 1,
                                                                      false)/cam_path[0].dens;
                                 }
-                                rad += path_rad/weights[i + j + 2];
                         }
+                        subpath_rads[i + j + 2] += path_rad;
+                }
+        }
+
+        e8util::vec3 rad;
+        for (unsigned i = 0; i < cam_path_len; i ++) {
+                for (unsigned j = 0; j <= light_path_len; j ++) {
+                        if (weights[i + j + 2] > 0)
+                                rad += subpath_rads[i + j + 2]/weights[i + j + 2];
                 }
         }
         return rad;
