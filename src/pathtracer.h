@@ -106,6 +106,7 @@ protected:
                 e8util::vec3 o;
                 e8::intersect_info vert;
                 float dens;
+                float o_dist;
 
                 sampled_pathlet()
                 {
@@ -113,10 +114,12 @@ protected:
 
                 sampled_pathlet(e8util::vec3 o,
                                 e8::intersect_info vert,
-                                float dens):
+                                float dens,
+                                float o_dist):
                         o(o),
                         vert(vert),
-                        dens(dens)
+                        dens(dens),
+                        o_dist(o_dist)
                 {
                 }
         };
