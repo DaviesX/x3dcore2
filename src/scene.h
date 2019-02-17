@@ -80,7 +80,7 @@ class linear_scene_layout: public if_scene
 {
 public:
         linear_scene_layout();
-        ~linear_scene_layout();
+        ~linear_scene_layout() override;
 
         virtual void                            update() override;
         virtual intersect_info                  intersect(e8util::ray const& r) const override;
@@ -99,7 +99,7 @@ class bvh_scene_layout: public linear_scene_layout
 {
 public:
         bvh_scene_layout();
-        ~bvh_scene_layout();
+        ~bvh_scene_layout() override;
 
         void                    update() override;
         intersect_info          intersect(e8util::ray const& r) const override;
