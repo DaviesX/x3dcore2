@@ -135,7 +135,7 @@ protected:
                                                           bool is_forward) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
-                                                              e8::intersect_info const& info,
+                                                              e8::intersect_info const& vert,
                                                               if_scene const* scene,
                                                               unsigned depth,
                                                               unsigned n,
@@ -167,12 +167,12 @@ public:
 protected:
         e8util::vec3                    join_with_light_paths(e8util::rng& rng,
                                                               e8util::vec3 const& o,
-                                                              e8::intersect_info const& info,
+                                                              e8::intersect_info const& vert,
                                                               if_scene const* scene,
                                                               unsigned cam_path_len) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
-                                                              e8::intersect_info const& info,
+                                                              e8::intersect_info const& vert,
                                                               if_scene const* scene,
                                                               unsigned depth) const;
 };

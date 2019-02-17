@@ -28,9 +28,9 @@ e8::position_pathtracer::sample(e8util::rng&, std::vector<e8util::ray> const& ra
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
                 e8util::ray const& ray = rays[i];
-                e8::intersect_info const& info = scene->intersect(ray);
-                if (info.valid) {
-                        e8util::vec3 const& p = (info.vertex - aabb.min())/range;
+                e8::intersect_info const& vert = scene->intersect(ray);
+                if (vert.valid) {
+                        e8util::vec3 const& p = (vert.vertex - aabb.min())/range;
                         rad[i] = e8util::vec3({p(0), p(1), p(2)});
                 } else
                         rad[i] = 0.0f;
@@ -53,9 +53,9 @@ e8::normal_pathtracer::sample(e8util::rng&, std::vector<e8util::ray> const& rays
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
                 e8util::ray const& ray = rays[i];
-                e8::intersect_info const& info = scene->intersect(ray);
-                if (info.valid) {
-                        e8util::vec3 const& p = (info.normal + 1.0f)/2.0f;
+                e8::intersect_info const& vert = scene->intersect(ray);
+                if (vert.valid) {
+                        e8util::vec3 const& p = (vert.normal + 1.0f)/2.0f;
                         rad[i] = e8util::vec3({p(0), p(1), p(2)});
                 } else
                         rad[i] = 0.0f;
@@ -144,12 +144,12 @@ e8::direct_pathtracer::sample(e8util::rng& rng,
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
                 e8util::ray const& ray = rays[i];
-                e8::intersect_info const& info = scene->intersect(ray);
-                if (info.valid) {
+                e8::intersect_info const& vert = scene->intersect(ray);
+                if (vert.valid) {
                         // compute radiance.
-                        rad[i] = sample_direct_illum(rng, -ray.v(), info, scene, multi_light_samps);
-                        if (info.light)
-                                rad[i] += info.light->emission(-ray.v(), info.normal);
+                        rad[i] = sample_direct_illum(rng, -ray.v(), vert, scene, multi_light_samps);
+                        if (vert.light)
+                                rad[i] += vert.light->emission(-ray.v(), vert.normal);
                 }
         }
         return rad;
@@ -250,7 +250,7 @@ e8::unidirect_pathtracer::transport_subpath(e8util::vec3 const& src_rad,
 e8util::vec3
 e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                 e8util::vec3 const& o,
-                                                e8::intersect_info const& info,
+                                                e8::intersect_info const& vert,
                                                 if_scene const* scene,
                                                 unsigned depth,
                                                 unsigned multi_light_samps,
@@ -268,22 +268,22 @@ e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                 multi_indirect_samps = 1;
 
         // direct.
-        e8util::vec3 const& direct = sample_direct_illum(rng, o, info, scene, multi_light_samps);
+        e8util::vec3 const& direct = sample_direct_illum(rng, o, vert, scene, multi_light_samps);
 
         // indirect.
         float mat_pdf;
         e8util::vec3 multi_indirect;
         for (unsigned k = 0; k < multi_indirect_samps; k ++) {
-                e8util::vec3 const& i = info.mat->sample(rng, info.normal, o, mat_pdf);
-                e8::intersect_info const& indirect_info = scene->intersect(e8util::ray(info.vertex, i));
-                if (indirect_info.valid) {
-                        e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_info,
+                e8util::vec3 const& i = vert.mat->sample(rng, vert.normal, o, mat_pdf);
+                e8::intersect_info const& indirect_vert = scene->intersect(e8util::ray(vert.vertex, i));
+                if (indirect_vert.valid) {
+                        e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_vert,
                                                                              scene,
                                                                              depth + 1,
                                                                              multi_light_samps,
                                                                              multi_indirect_samps);
-                        e8util::vec3 const& brdf = info.mat->eval(info.normal, o, i);
-                        float cos_w = info.normal.inner(i);
+                        e8util::vec3 const& brdf = vert.mat->eval(vert.normal, o, i);
+                        float cos_w = vert.normal.inner(i);
                         multi_indirect += indirect*brdf*cos_w/mat_pdf;
                 }
         }
@@ -297,12 +297,12 @@ e8::unidirect_pathtracer::sample(e8util::rng& rng, std::vector<e8util::ray> cons
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
                 e8util::ray const& ray = rays[i];
-                e8::intersect_info const& info = scene->intersect(ray);
-                if (info.valid) {
+                e8::intersect_info const& vert = scene->intersect(ray);
+                if (vert.valid) {
                         // compute radiance.
-                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), info, scene, 0, 1, 1);
-                        if (info.light)
-                                rad[i] = p2_inf + info.light->emission(-ray.v(), info.normal);
+                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), vert, scene, 0, 1, 1);
+                        if (vert.light)
+                                rad[i] = p2_inf + vert.light->emission(-ray.v(), vert.normal);
                         else
                                 rad[i] = p2_inf;
                 }
@@ -371,7 +371,7 @@ e8::bidirect_lt2_pathtracer::join_with_light_paths(e8util::rng& rng,
 e8util::vec3
 e8::bidirect_lt2_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                    e8util::vec3 const& o,
-                                                   e8::intersect_info const& info,
+                                                   e8::intersect_info const& vert,
                                                    if_scene const* scene,
                                                    unsigned depth) const
 {
@@ -383,17 +383,17 @@ e8::bidirect_lt2_pathtracer::sample_indirect_illum(e8util::rng& rng,
         } else
                 p_survive = 1;
 
-        e8util::vec3 const& bidirect = join_with_light_paths(rng, o, info, scene, depth);
+        e8util::vec3 const& bidirect = join_with_light_paths(rng, o, vert, scene, depth);
 
         // indirect.
         float mat_pdf;
-        e8util::vec3 const& i = info.mat->sample(rng, info.normal, o, mat_pdf);
-        e8::intersect_info const& indirect_info = scene->intersect(e8util::ray(info.vertex, i));
+        e8util::vec3 const& i = vert.mat->sample(rng, vert.normal, o, mat_pdf);
+        e8::intersect_info const& indirect_info = scene->intersect(e8util::ray(vert.vertex, i));
         e8util::vec3 r;
         if (indirect_info.valid) {
                 e8util::vec3 const& indirect = sample_indirect_illum(rng, -i, indirect_info, scene, depth + 1);
-                e8util::vec3 const& brdf = info.mat->eval(info.normal, o, i);
-                float cos_w = info.normal.inner(i);
+                e8util::vec3 const& brdf = vert.mat->eval(vert.normal, o, i);
+                float cos_w = vert.normal.inner(i);
                 if (cos_w < 0.0f)
                         return 0.0f;
                 r = indirect*brdf*cos_w/mat_pdf;
@@ -410,12 +410,12 @@ e8::bidirect_lt2_pathtracer::sample(e8util::rng& rng,
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
                 e8util::ray const& ray = rays[i];
-                e8::intersect_info const& info = scene->intersect(ray);
-                if (info.valid) {
+                e8::intersect_info const& vert = scene->intersect(ray);
+                if (vert.valid) {
                         // compute radiance.
-                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), info, scene, 0);
-                        if (info.light)
-                                rad[i] = p2_inf + info.light->emission(-ray.v(), info.normal);
+                        e8util::vec3 const& p2_inf = sample_indirect_illum(rng, -ray.v(), vert, scene, 0);
+                        if (vert.light)
+                                rad[i] = p2_inf + vert.light->emission(-ray.v(), vert.normal);
                         else
                                 rad[i] = p2_inf;
                 }
