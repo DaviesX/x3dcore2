@@ -179,8 +179,7 @@ e8::unidirect_pathtracer::sample_path(e8util::rng& rng,
                                                                          w_dens);
         e8::intersect_info const& next_vert = scene->intersect(e8util::ray(sampled_path[depth - 1].vert.vertex, i));
         if (next_vert.valid) {
-                e8util::vec3 o_path = sampled_path[depth - 1].vert.vertex - next_vert.vertex;
-                sampled_path[depth] = sampled_pathlet(i, next_vert, w_dens, o_path.norm());
+                sampled_path[depth] = sampled_pathlet(i, next_vert, w_dens);
                 return sample_path(rng, sampled_path, scene, depth + 1, max_depth);
         } else {
                 return depth;
@@ -199,8 +198,7 @@ e8::unidirect_pathtracer::sample_path(e8util::rng& rng,
         if (!vert0.valid) {
                 return 0;
         } else {
-                e8util::vec3 o_path = vert0.vertex - r0.o();
-                sampled_path[0] = sampled_pathlet(r0.v(), vert0, dens0, o_path.norm());
+                sampled_path[0] = sampled_pathlet(r0.v(), vert0, dens0);
                 return sample_path(rng, sampled_path, scene, 1, max_depth);
         }
 }
