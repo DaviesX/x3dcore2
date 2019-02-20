@@ -133,6 +133,9 @@ protected:
                                                           sampled_pathlet const* sampled_path,
                                                           unsigned sub_path_len,
                                                           bool is_forward) const;
+        float                           subpath_density(e8util::vec3 const& src_normal,
+                                                        sampled_pathlet const* sampled_path,
+                                                        unsigned sub_path_len) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& vert,
