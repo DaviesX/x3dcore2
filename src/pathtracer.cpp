@@ -508,12 +508,16 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                              i,
                                                              false)/cam_path[0].dens;
 
-                                e8util::vec3 join_path = light_p - cam_path[i].vert.vertex;
-                                float join_path_dist = join_path.norm();
-                                join_path = join_path/join_path_dist;
-                                weight = subpath_density(cam_path[0].o, cam_path, i + 1)*
-                                                cam_path[i].vert.normal.inner(join_path)*
-                                                light_n.inner(-join_path)/(join_path_dist*join_path_dist);
+                                if (path_rad != 0.0f) {
+                                        e8util::vec3 join_path = light_p - cam_path[i].vert.vertex;
+                                        float join_path_dist = join_path.norm();
+                                        join_path = join_path/join_path_dist;
+                                        weight = subpath_density(cam_path[0].o, cam_path, i + 1)*
+                                                        cam_path[i].vert.normal.inner(join_path)*
+                                                        light_n.inner(-join_path)/(join_path_dist*join_path_dist);
+                                } else {
+                                        weight = 0.0f;
+                                }
                         } else {
                                 e8util::vec3 join_path = cam_path[i].vert.vertex - light_path[j - 1].vert.vertex;
                                 float distance = join_path.norm();
@@ -546,10 +550,12 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                                      cam_path,
                                                                      i + 1,
                                                                      false)/cam_path[0].dens;
+                                        float cam_weight = subpath_density(cam_path[0].o, cam_path, i + 1);
+                                        float light_weight = subpath_density(light_n, light_path, j);
+                                        weight = cam_weight*light_weight*cos_wi*cos_wo/(distance*distance);
+                                } else {
+                                        weight = 0.0f;
                                 }
-                                float cam_weight = subpath_density(cam_path[0].o, cam_path, i + 1);
-                                float light_weight = subpath_density(light_n, cam_path, j);
-                                weight = cam_weight*light_weight*cos_wi*cos_wo/(distance*distance);
                         }
                         weights[i + j + 2] += weight;
                         subpath_rads[i + j + 2] += path_rad*weight;
