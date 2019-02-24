@@ -2,6 +2,14 @@
 #include "thread.h"
 
 
+e8util::if_task::if_task()
+{
+}
+
+e8util::if_task::~if_task()
+{
+}
+
 unsigned
 e8util::cpu_core_count()
 {

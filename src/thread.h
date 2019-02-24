@@ -15,13 +15,8 @@ typedef unsigned int            tid_t;
 class if_task
 {
 public:
-        if_task()
-        {
-        }
-
-        virtual ~if_task()
-        {
-        }
+        if_task();
+        virtual ~if_task();
 
         virtual void    run(void* storage) = 0;
 };
