@@ -41,17 +41,17 @@ rendering_task::update()
                 if (m_current.renderer != m_old.renderer) {
                         delete m_renderer;
                         if (m_current.renderer == "normal tracing") {
-                                m_renderer = new e8::ol_image_renderer(new e8::normal_pathtracer());
+                                m_renderer = new e8::pt_image_renderer(new e8::normal_pathtracer());
                         } else if (m_current.renderer == "position tracing") {
-                                m_renderer = new e8::ol_image_renderer(new e8::position_pathtracer());
+                                m_renderer = new e8::pt_image_renderer(new e8::position_pathtracer());
                         } else if (m_current.renderer == "direct tracing") {
-                                m_renderer = new e8::ol_image_renderer(new e8::direct_pathtracer());
+                                m_renderer = new e8::pt_image_renderer(new e8::direct_pathtracer());
                         } else if (m_current.renderer == "unidirectional tracing") {
-                                m_renderer = new e8::ol_image_renderer(new e8::unidirect_pathtracer());
+                                m_renderer = new e8::pt_image_renderer(new e8::unidirect_pathtracer());
                         } else if (m_current.renderer == "bidirectional tracing (LT2)") {
-                                m_renderer = new e8::ol_image_renderer(new e8::bidirect_lt2_pathtracer());
+                                m_renderer = new e8::pt_image_renderer(new e8::bidirect_lt2_pathtracer());
                         } else if (m_current.renderer == "bidirectional tracing (MIS)") {
-                                m_renderer = new e8::ol_image_renderer(new e8::bidirect_mis_pathtracer());
+                                m_renderer = new e8::pt_image_renderer(new e8::bidirect_mis_pathtracer());
                         }
                 }
                 if (m_current.layout != m_old.layout) {

@@ -32,11 +32,11 @@ public:
 };
 
 
-class ol_image_renderer: public if_im_renderer
+class pt_image_renderer: public if_im_renderer
 {
 public:
-        ol_image_renderer(if_pathtracer* pt);
-        ~ol_image_renderer();
+        pt_image_renderer(if_pathtracer* pt);
+        ~pt_image_renderer() override;
 
         void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) override;
         rendering_stats         get_stats() const override;

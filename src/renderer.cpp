@@ -12,7 +12,7 @@ e8::if_im_renderer::~if_im_renderer()
 
 
 
-e8::ol_image_renderer::ol_image_renderer(if_pathtracer* pt):
+e8::pt_image_renderer::pt_image_renderer(if_pathtracer* pt):
         m_pt(pt), m_rng(100), m_thrpool(e8util::cpu_core_count())
 {
         m_ncores = e8util::cpu_core_count();
@@ -22,7 +22,7 @@ e8::ol_image_renderer::ol_image_renderer(if_pathtracer* pt):
         }
 }
 
-e8::ol_image_renderer::~ol_image_renderer()
+e8::pt_image_renderer::~pt_image_renderer()
 {
         delete m_pt;
         delete [] m_ray_parts;
@@ -51,7 +51,7 @@ private:
 };
 
 void
-e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_compositor* compositor)
+e8::pt_image_renderer::render(if_scene const* scene, if_camera const* cam, if_compositor* compositor)
 {
         // generate camera seed ray.
         e8util::mat44 const& proj = cam->projection();
@@ -88,7 +88,7 @@ e8::ol_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
 }
 
 e8::rendering_stats
-e8::ol_image_renderer::get_stats() const
+e8::pt_image_renderer::get_stats() const
 {
         throw std::string("Not implemented yet");
 }
