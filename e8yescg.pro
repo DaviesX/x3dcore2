@@ -37,7 +37,8 @@ SOURCES += src/main.cpp \
     test/testdirectrenderer.cpp \
     test/testunidirectrenderer.cpp \
     test/testbidirectmisrenderer.cpp \
-    test/testbidirectlt2renderer.cpp
+    test/testbidirectlt2renderer.cpp \
+    src/pathtracerfact.cpp
 
 HEADERS += \
     src/scene.h \
@@ -65,7 +66,8 @@ HEADERS += \
     test/testdirectrenderer.h \
     test/testunidirectrenderer.h \
     test/testbidirectmisrenderer.h \
-    test/testbidirectlt2renderer.h
+    test/testbidirectlt2renderer.h \
+    src/pathtracerfact.h
 
 
 win32 {
