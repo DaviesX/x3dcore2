@@ -29,6 +29,11 @@ public:
 
         virtual void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) = 0;
         virtual rendering_stats         get_stats() const = 0;
+        bool                            update_image_view(if_camera const* cam, if_compositor* compositor);
+protected:
+        unsigned                        m_w;
+        unsigned                        m_h;
+        e8util::mat44                   m_t;
 };
 
 
@@ -47,10 +52,6 @@ private:
         std::vector<e8util::ray>*       m_ray_parts;
         std::vector<e8util::vec3>       m_rad;
         unsigned                        m_samps;
-        e8util::mat44                   m_t;
-
-        unsigned                        m_w;
-        unsigned                        m_h;
 
         e8util::rng                     m_rng;
         e8util::thread_pool             m_thrpool;

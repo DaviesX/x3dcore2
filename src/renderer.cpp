@@ -10,6 +10,19 @@ e8::if_im_renderer::~if_im_renderer()
 {
 }
 
+bool
+e8::if_im_renderer::update_image_view(if_camera const* cam, if_compositor* compositor)
+{
+        e8util::mat44 const& proj = cam->projection();
+        if (proj != m_t || compositor->width() != m_w || compositor->height() != m_h) {
+                m_t = proj;
+                m_w = compositor->width();
+                m_h = compositor->height();
+                return true;
+        } else {
+                return false;
+        }
+}
 
 
 e8::pt_image_renderer::pt_image_renderer(if_pathtracer* pt):
@@ -38,10 +51,8 @@ public:
         {
         }
 
-        void run(void*) override
-        {
-                m_estimate = m_pt->sample(m_rng, m_rays, m_scene, 1);
-        }
+        void    run(void*) override;
+
 private:
         e8util::rng                             m_rng;
         e8::if_pathtracer const*                m_pt;
@@ -51,14 +62,16 @@ private:
 };
 
 void
+sampling_task::run(void*)
+{
+        m_estimate = m_pt->sample(m_rng, m_rays, m_scene, 1);
+}
+
+void
 e8::pt_image_renderer::render(if_scene const* scene, if_camera const* cam, if_compositor* compositor)
 {
         // generate camera seed ray.
-        e8util::mat44 const& proj = cam->projection();
-        if (proj != m_t || compositor->width() != m_w || compositor->height() != m_h) {
-                m_t = proj;
-                m_w = compositor->width();
-                m_h = compositor->height();
+        if (update_image_view(cam, compositor)) {
                 m_rad.resize(m_w*m_h);
                 m_rays.resize(m_w*m_h);
                 m_samps = 0;
