@@ -17,7 +17,7 @@ e8util::if_task::assign_worker_id(int worker_id)
 }
 
 int
-e8util::if_task::worked_by() const
+e8util::if_task::worker_id() const
 {
         return m_worker_id;
 }
