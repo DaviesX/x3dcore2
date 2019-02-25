@@ -19,6 +19,10 @@ public:
         virtual ~if_task();
 
         virtual void    run(void* storage) = 0;
+        void            assign_worker_id(int worker_id);
+        int             worked_by() const;
+private:
+        int        m_worker_id;
 };
 
 

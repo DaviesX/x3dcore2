@@ -10,6 +10,18 @@ e8util::if_task::~if_task()
 {
 }
 
+void
+e8util::if_task::assign_worker_id(int worker_id)
+{
+        m_worker_id = worker_id;
+}
+
+int
+e8util::if_task::worked_by() const
+{
+        return m_worker_id;
+}
+
 unsigned
 e8util::cpu_core_count()
 {
@@ -57,6 +69,7 @@ e8util::run(if_task* task)
         pthread_attr_t attr;
         pthread_attr_init(&attr);
         task_info info(0, 0, task);
+        task->assign_worker_id(-1);
         pthread_create(&info.m_thread, &attr, worker, task);
         return info;
 }
@@ -101,6 +114,7 @@ e8util::thread_pool_worker(void* p)
 
                                 pthread_mutex_unlock(&this_->m_global_mutex);
 
+                                info.m_task->assign_worker_id(static_cast<int>(worker_id));
                                 info.m_task->run(this_->m_worker_storage[worker_id]);
                         } else {
                                 pthread_mutex_unlock(&this_->m_global_mutex);
