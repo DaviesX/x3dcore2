@@ -63,9 +63,11 @@ private:
         {
         public:
                 sampling_task();
+                sampling_task(sampling_task&& rhs);
                 sampling_task(e8::if_pathtracer* pt);
                 ~sampling_task() override;
 
+                sampling_task&                  operator=(sampling_task rhs);
                 void                            run(e8util::if_task_storage*) override;
                 std::vector<e8util::vec3>       get_estimates() const;
         private:

@@ -32,35 +32,6 @@ e8::if_im_renderer::update_image_view(if_camera const* cam, if_compositor* compo
 }
 
 
-e8::pt_image_renderer::pt_image_renderer(pathtracer_factory* fact):
-        m_num_tiles_per_dim(static_cast<unsigned>(std::ceil(std::sqrt(e8util::cpu_core_count())))),
-        m_num_tasks(m_num_tiles_per_dim*m_num_tiles_per_dim),
-        m_tasks(new sampling_task[m_num_tasks]),
-        m_task_storages(new sampling_task_data[m_num_tasks]),
-        m_fact(fact),
-        m_rng(100),
-        m_samps(0)
-{
-        // create task storage vector.
-        std::vector<e8util::if_task_storage*> storage(m_num_tasks);
-        for (unsigned i = 0; i < m_num_tasks; i ++) {
-                storage[i] = &m_task_storages[i];
-        }
-        m_thrpool = new e8util::thread_pool(m_num_tasks, storage);
-
-        // create task constructs.
-        for (unsigned i = 0; i < m_num_tasks; i ++) {
-                m_tasks[i] = sampling_task(m_fact->create());
-        }
-}
-
-e8::pt_image_renderer::~pt_image_renderer()
-{
-        delete [] m_tasks;
-        delete [] m_task_storages;
-        delete m_thrpool;
-        delete m_fact;
-}
 
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data():
@@ -92,9 +63,26 @@ e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer* pt):
 {
 }
 
+e8::pt_image_renderer::sampling_task::sampling_task(sampling_task&& rhs)
+{
+        m_estimate = rhs.m_estimate;
+        m_rng = rhs.m_rng;
+        m_pt = rhs.m_pt;
+        rhs.m_pt = nullptr;
+}
+
 e8::pt_image_renderer::sampling_task::~sampling_task()
 {
         delete m_pt;
+}
+
+e8::pt_image_renderer::sampling_task&
+e8::pt_image_renderer::sampling_task::operator=(sampling_task rhs)
+{
+        m_estimate = rhs.m_estimate;
+        m_rng = rhs.m_rng;
+        std::swap(m_pt, rhs.m_pt);
+        return *this;
 }
 
 void
@@ -109,6 +97,37 @@ std::vector<e8util::vec3>
 e8::pt_image_renderer::sampling_task::get_estimates() const
 {
         return m_estimate;
+}
+
+
+e8::pt_image_renderer::pt_image_renderer(pathtracer_factory* fact):
+        m_num_tiles_per_dim(static_cast<unsigned>(std::ceil(std::sqrt(e8util::cpu_core_count())))),
+        m_num_tasks(m_num_tiles_per_dim*m_num_tiles_per_dim),
+        m_tasks(new sampling_task[m_num_tasks]),
+        m_task_storages(new sampling_task_data[m_num_tasks]),
+        m_fact(fact),
+        m_rng(100),
+        m_samps(0)
+{
+        // create task storage vector.
+        std::vector<e8util::if_task_storage*> storage(m_num_tasks);
+        for (unsigned i = 0; i < m_num_tasks; i ++) {
+                storage[i] = &m_task_storages[i];
+        }
+        m_thrpool = new e8util::thread_pool(m_num_tasks, storage);
+
+        // create task constructs.
+        for (unsigned i = 0; i < m_num_tasks; i ++) {
+                m_tasks[i] = sampling_task(m_fact->create());
+        }
+}
+
+e8::pt_image_renderer::~pt_image_renderer()
+{
+        delete [] m_tasks;
+        delete [] m_task_storages;
+        delete m_thrpool;
+        delete m_fact;
 }
 
 void
