@@ -7,6 +7,7 @@
 #include "compositor.h"
 #include "frame.h"
 #include "pathtracer.h"
+#include "pathtracerfact.h"
 
 
 namespace e8
@@ -40,21 +41,57 @@ protected:
 class pt_image_renderer: public if_im_renderer
 {
 public:
-        pt_image_renderer(if_pathtracer* pt);
+        pt_image_renderer(pathtracer_factory* fact);
         ~pt_image_renderer() override;
 
         void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) override;
         rendering_stats         get_stats() const override;
 private:
-        unsigned                        m_ncores;
-        if_pathtracer*                  m_pt;
-        std::vector<e8util::ray>        m_rays;
-        std::vector<e8util::ray>*       m_ray_parts;
-        std::vector<e8util::vec3>       m_rad;
-        unsigned                        m_samps;
+        struct sampling_task_data
+        {
+                sampling_task_data():
+                        scene(nullptr)
+                {}
+
+                sampling_task_data(if_scene const* scene,
+                                   std::vector<e8util::ray> const& rays):
+                        scene(scene),
+                        rays(rays)
+                {}
+
+                if_scene const*                 scene;
+                std::vector<e8util::ray>        rays;
+        };
+
+        class sampling_task: public e8util::if_task
+        {
+        public:
+                sampling_task():
+                        m_pt(nullptr)
+                {}
+
+                sampling_task(e8::if_pathtracer* pt);
+                ~sampling_task() override;
+
+                void                            run(void*) override;
+                std::vector<e8util::vec3>       get_estimates() const;
+        private:
+                std::vector<e8util::vec3>               m_estimate;
+                e8util::rng                             m_rng;
+                e8::if_pathtracer*                      m_pt;
+        };
+
+        unsigned                        m_num_tiles_per_dim;
+        unsigned                        m_num_tasks;
+        sampling_task*                  m_tasks;
+        sampling_task_data*             m_task_storages;
+        e8util::task_info*              m_task_infos;
+        e8util::thread_pool*            m_thrpool;
+        pathtracer_factory*             m_fact;
 
         e8util::rng                     m_rng;
-        e8util::thread_pool             m_thrpool;
+        std::vector<e8util::vec3>       m_rad;
+        unsigned                        m_samps;
 };
 
 }

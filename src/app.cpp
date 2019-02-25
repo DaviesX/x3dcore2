@@ -40,19 +40,23 @@ rendering_task::update()
                 // update.
                 if (m_current.renderer != m_old.renderer) {
                         delete m_renderer;
+
+                        e8::pathtracer_factory::pt_type pt_type = e8::pathtracer_factory::pt_type::normal;
                         if (m_current.renderer == "normal tracing") {
-                                m_renderer = new e8::pt_image_renderer(new e8::normal_pathtracer());
+                                pt_type = e8::pathtracer_factory::pt_type::normal;
                         } else if (m_current.renderer == "position tracing") {
-                                m_renderer = new e8::pt_image_renderer(new e8::position_pathtracer());
+                                pt_type = e8::pathtracer_factory::pt_type::position;
                         } else if (m_current.renderer == "direct tracing") {
-                                m_renderer = new e8::pt_image_renderer(new e8::direct_pathtracer());
+                                pt_type = e8::pathtracer_factory::pt_type::direct;
                         } else if (m_current.renderer == "unidirectional tracing") {
-                                m_renderer = new e8::pt_image_renderer(new e8::unidirect_pathtracer());
+                                pt_type = e8::pathtracer_factory::pt_type::unidirect;
                         } else if (m_current.renderer == "bidirectional tracing (LT2)") {
-                                m_renderer = new e8::pt_image_renderer(new e8::bidirect_lt2_pathtracer());
+                                pt_type = e8::pathtracer_factory::pt_type::bidirect_lt2;
                         } else if (m_current.renderer == "bidirectional tracing (MIS)") {
-                                m_renderer = new e8::pt_image_renderer(new e8::bidirect_mis_pathtracer());
+                                pt_type = e8::pathtracer_factory::pt_type::bidirect_mis;
                         }
+                        m_renderer = new e8::pt_image_renderer(new e8::pathtracer_factory(pt_type,
+                                                                                          e8::pathtracer_factory::options()));
                 }
                 if (m_current.layout != m_old.layout) {
                         delete m_scene;
