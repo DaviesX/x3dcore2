@@ -198,7 +198,9 @@ e8util::thread_pool::thread_pool(unsigned num_thrs,
         m_num_thrs(num_thrs)
 {
         sem_init(&m_enter_sem, 0, 0);
+        sem_init(&m_exit_sem, 0, 0);
         pthread_mutex_init(&m_enter_mutex, nullptr);
+        pthread_mutex_init(&m_exit_mutex, nullptr);
         pthread_mutex_init(&m_work_group_mutex, nullptr);
 
         m_workers = new pthread_t [num_thrs];
@@ -223,6 +225,7 @@ e8util::thread_pool::~thread_pool()
         m_num_thrs = 0;
 
         e8util::destroy(m_enter_mutex);
+        e8util::destroy(m_exit_mutex);
         e8util::destroy(m_work_group_mutex);
 }
 
