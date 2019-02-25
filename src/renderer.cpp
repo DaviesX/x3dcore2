@@ -58,6 +58,19 @@ e8::pt_image_renderer::~pt_image_renderer()
         delete m_fact;
 }
 
+
+e8::pt_image_renderer::sampling_task_data::sampling_task_data():
+        scene(nullptr)
+{
+}
+
+e8::pt_image_renderer::sampling_task_data::sampling_task_data(if_scene const* scene,
+                                                              std::vector<e8util::ray> const& rays):
+        scene(scene),
+        rays(rays)
+{
+}
+
 e8::pt_image_renderer::sampling_task_data::~sampling_task_data()
 {
 }

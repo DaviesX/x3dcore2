@@ -49,15 +49,9 @@ public:
 private:
         struct sampling_task_data: public e8util::if_task_storage
         {
-                sampling_task_data():
-                        scene(nullptr)
-                {}
-
+                sampling_task_data();
                 sampling_task_data(if_scene const* scene,
-                                   std::vector<e8util::ray> const& rays):
-                        scene(scene),
-                        rays(rays)
-                {}
+                                   std::vector<e8util::ray> const& rays);
 
                 virtual ~sampling_task_data();
 
