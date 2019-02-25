@@ -1,9 +1,13 @@
 #include <cmath>
 #include "thread.h"
+#include "tensor.h"
 #include "renderer.h"
 
 
-e8::if_im_renderer::if_im_renderer()
+e8::if_im_renderer::if_im_renderer():
+        m_w(0),
+        m_h(0),
+        m_t(e8util::mat44_scale(1.0f))
 {
 }
 
