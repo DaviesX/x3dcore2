@@ -22,9 +22,9 @@ class rendering_task: public e8util::if_task
 {
 public:
         rendering_task();
-        ~rendering_task();
+        virtual ~rendering_task();
 
-        void            run(void* storage) override;
+        void            run(e8util::if_task_storage* storage) override;
         void            update();
         bool            is_running() const;
         void            enable(bool state);

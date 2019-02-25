@@ -12,23 +12,30 @@ typedef pthread_mutex_t         mutex_t;
 typedef unsigned int            tid_t;
 
 
+class if_task_storage
+{
+public:
+        if_task_storage();
+        virtual ~if_task_storage();
+};
+
+
 class if_task
 {
 public:
         if_task();
         virtual ~if_task();
 
-        virtual void    run(void* storage) = 0;
+        virtual void    run(if_task_storage* storage) = 0;
         void            assign_worker_id(int worker_id);
         int             worker_id() const;
 private:
         int        m_worker_id;
 };
 
-
 class task_info
 {
-        friend task_info        run(if_task* task);
+        friend task_info        run(if_task* task, if_task_storage* task_data);
         friend void             sync(task_info& info);
 
         friend void*            thread_pool_worker(void* p);
@@ -54,22 +61,23 @@ class thread_pool
 {
         friend void*    thread_pool_worker(void* p);
 public:
-        thread_pool(unsigned num_thrs, std::vector<void*> worker_storage = std::vector<void*>());
+        thread_pool(unsigned num_thrs,
+                    std::vector<if_task_storage*> worker_storage = std::vector<if_task_storage*>());
         ~thread_pool();
 
         task_info               run(if_task* task);
 
 private:
-        sem_t                   m_global_sem;
-        pthread_mutex_t         m_global_mutex;
-        pthread_mutex_t         m_work_group_mutex;
-        pthread_t*              m_workers;
-        std::vector<void*>      m_worker_storage;
-        unsigned                m_num_thrs;
-        std::queue<task_info>   m_tasks;
-        bool                    m_is_running = true;
+        sem_t                           m_global_sem;
+        pthread_mutex_t                 m_global_mutex;
+        pthread_mutex_t                 m_work_group_mutex;
+        pthread_t*                      m_workers;
+        std::vector<if_task_storage*>   m_worker_storage;
+        unsigned                        m_num_thrs;
+        std::queue<task_info>           m_tasks;
+        bool                            m_is_running = true;
 
-        unsigned                m_uuid = 0;
+        unsigned                        m_uuid = 0;
 };
 
 unsigned        cpu_core_count();
@@ -77,7 +85,7 @@ mutex_t         mutex();
 void            destroy(mutex_t& mutex);
 void            lock(mutex_t& mutex);
 void            unlock(mutex_t& mutex);
-task_info       run(if_task* task);
+task_info       run(if_task* task, if_task_storage* task_data = nullptr);
 void            sync(task_info& info);
 
 }

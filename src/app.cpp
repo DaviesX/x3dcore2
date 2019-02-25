@@ -17,7 +17,7 @@ rendering_task::~rendering_task()
 }
 
 void
-rendering_task::run(void*)
+rendering_task::run(e8util::if_task_storage*)
 {
         while (m_is_running) {
                 e8util::lock(m_mutex);

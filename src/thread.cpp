@@ -2,6 +2,14 @@
 #include "thread.h"
 
 
+e8util::if_task_storage::if_task_storage()
+{
+}
+
+e8util::if_task_storage::~if_task_storage()
+{
+}
+
 e8util::if_task::if_task()
 {
 }
@@ -54,23 +62,46 @@ e8util::unlock(mutex_t& mutex)
         pthread_mutex_unlock(&mutex);
 }
 
+struct thread_worker_data
+{
+        thread_worker_data(e8util::if_task* task,
+                           e8util::if_task_storage* task_data):
+                task(task),
+                task_data(task_data)
+        {}
+
+        ~thread_worker_data()
+        {
+        }
+
+        e8util::if_task*                task;
+        e8util::if_task_storage*        task_data;
+};
+
 static void*
 worker(void* p)
 {
-        e8util::if_task* task = static_cast<e8util::if_task*>(p);
-        task->run(nullptr);
+        thread_worker_data* data = static_cast<thread_worker_data*>(p);
+
+        data->task->run(nullptr);
+        delete data;
+
         pthread_exit(nullptr);
         return nullptr;
 }
 
 e8util::task_info
-e8util::run(if_task* task)
+e8util::run(if_task* task, if_task_storage* task_data)
 {
         pthread_attr_t attr;
         pthread_attr_init(&attr);
+
         task_info info(0, 0, task);
+
         task->assign_worker_id(-1);
-        pthread_create(&info.m_thread, &attr, worker, task);
+
+        thread_worker_data* thrdata = new thread_worker_data(task, task_data);
+        pthread_create(&info.m_thread, &attr, worker, thrdata);
         return info;
 }
 
@@ -128,7 +159,8 @@ e8util::thread_pool_worker(void* p)
         return nullptr;
 }
 
-e8util::thread_pool::thread_pool(unsigned num_thrs, std::vector<void*> worker_storage):
+e8util::thread_pool::thread_pool(unsigned num_thrs,
+                                 std::vector<if_task_storage*> worker_storage):
         m_num_thrs(num_thrs)
 {
         sem_init(&m_global_sem, 0, 0);
