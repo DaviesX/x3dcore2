@@ -10,12 +10,19 @@ e8util::if_task_storage::~if_task_storage()
 {
 }
 
-e8util::if_task::if_task()
+e8util::if_task::if_task(bool drop_on_completion):
+        m_drop_on_completion(drop_on_completion)
 {
 }
 
 e8util::if_task::~if_task()
 {
+}
+
+bool
+e8util::if_task::is_drop_on_completion() const
+{
+        return m_drop_on_completion;
 }
 
 void
@@ -29,6 +36,24 @@ e8util::if_task::worker_id() const
 {
         return m_worker_id;
 }
+
+
+e8util::task_info::task_info(tid_t tid, pthread_t thread, if_task* task):
+        m_tid(tid), m_thread(thread), m_task(task)
+{
+}
+
+e8util::task_info::task_info():
+        task_info(0, 0, nullptr)
+{
+}
+
+e8util::if_task*
+e8util::task_info::task() const
+{
+        return m_task;
+}
+
 
 unsigned
 e8util::cpu_core_count()
@@ -135,20 +160,29 @@ e8util::thread_pool_worker(void* p)
         unsigned worker_id = static_cast<e8util::thread_pool_worker_data*>(p)->worker_id;
 
         do {
-                sem_wait(&this_->m_global_sem);
+                sem_wait(&this_->m_enter_sem);
                 while (true) {
-                        pthread_mutex_lock(&this_->m_global_mutex);
+                        pthread_mutex_lock(&this_->m_enter_mutex);
                         if (!this_->m_tasks.empty()) {
                                 // Retrieve task.
                                 e8util::task_info info = this_->m_tasks.front();
                                 this_->m_tasks.pop();
 
-                                pthread_mutex_unlock(&this_->m_global_mutex);
+                                pthread_mutex_unlock(&this_->m_enter_mutex);
 
                                 info.m_task->assign_worker_id(static_cast<int>(worker_id));
                                 info.m_task->run(this_->m_worker_storage[worker_id]);
+
+                                if (!info.m_task->is_drop_on_completion()) {
+                                        pthread_mutex_lock(&this_->m_exit_mutex);
+
+                                        this_->m_completed_tasks.push(info);
+
+                                        pthread_mutex_unlock(&this_->m_exit_mutex);
+                                        sem_post(&this_->m_exit_sem);
+                                }
                         } else {
-                                pthread_mutex_unlock(&this_->m_global_mutex);
+                                pthread_mutex_unlock(&this_->m_enter_mutex);
                                 break;
                         }
                 }
@@ -163,8 +197,8 @@ e8util::thread_pool::thread_pool(unsigned num_thrs,
                                  std::vector<if_task_storage*> worker_storage):
         m_num_thrs(num_thrs)
 {
-        sem_init(&m_global_sem, 0, 0);
-        pthread_mutex_init(&m_global_mutex, nullptr);
+        sem_init(&m_enter_sem, 0, 0);
+        pthread_mutex_init(&m_enter_mutex, nullptr);
         pthread_mutex_init(&m_work_group_mutex, nullptr);
 
         m_workers = new pthread_t [num_thrs];
@@ -180,7 +214,7 @@ e8util::thread_pool::~thread_pool()
 {
         m_is_running = false;
         for (unsigned i = 0; i < m_num_thrs; i ++)
-                sem_post(&m_global_sem);
+                sem_post(&m_enter_sem);
 
         for (unsigned i = 0; i < m_num_thrs; i ++)
                 pthread_join(m_workers[i], nullptr);
@@ -188,20 +222,36 @@ e8util::thread_pool::~thread_pool()
         delete [] m_workers;
         m_num_thrs = 0;
 
-        e8util::destroy(m_global_mutex);
+        e8util::destroy(m_enter_mutex);
         e8util::destroy(m_work_group_mutex);
 }
 
 e8util::task_info
 e8util::thread_pool::run(if_task* t)
 {
-        pthread_mutex_lock(&m_global_mutex);
+        pthread_mutex_lock(&m_enter_mutex);
 
         task_info info(m_uuid ++, 0, t);
         m_tasks.push(info);
 
-        pthread_mutex_unlock(&m_global_mutex);
-        sem_post(&m_global_sem);
+        pthread_mutex_unlock(&m_enter_mutex);
+        sem_post(&m_enter_sem);
+
+        return info;
+}
+
+e8util::task_info
+e8util::thread_pool::retrieve_next_completed()
+{
+        e8util::task_info info;
+
+        sem_wait(&m_exit_sem);
+        pthread_mutex_lock(&m_exit_mutex);
+
+        info = m_completed_tasks.front();
+        m_completed_tasks.pop();
+
+        pthread_mutex_unlock(&m_exit_mutex);
 
         return info;
 }
