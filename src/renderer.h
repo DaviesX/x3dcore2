@@ -47,7 +47,7 @@ public:
         void                    render(if_scene const* scene, if_camera const* cam, if_compositor* compositor) override;
         rendering_stats         get_stats() const override;
 private:
-        struct sampling_task_data
+        struct sampling_task_data: public e8util::if_task_storage
         {
                 sampling_task_data():
                         scene(nullptr)
@@ -59,6 +59,8 @@ private:
                         rays(rays)
                 {}
 
+                virtual ~sampling_task_data();
+
                 if_scene const*                 scene;
                 std::vector<e8util::ray>        rays;
         };
@@ -66,14 +68,11 @@ private:
         class sampling_task: public e8util::if_task
         {
         public:
-                sampling_task():
-                        m_pt(nullptr)
-                {}
-
+                sampling_task();
                 sampling_task(e8::if_pathtracer* pt);
                 ~sampling_task() override;
 
-                void                            run(void*) override;
+                void                            run(e8util::if_task_storage*) override;
                 std::vector<e8util::vec3>       get_estimates() const;
         private:
                 std::vector<e8util::vec3>               m_estimate;
@@ -85,7 +84,6 @@ private:
         unsigned                        m_num_tasks;
         sampling_task*                  m_tasks;
         sampling_task_data*             m_task_storages;
-        e8util::task_info*              m_task_infos;
         e8util::thread_pool*            m_thrpool;
         pathtracer_factory*             m_fact;
 
