@@ -91,7 +91,7 @@ e8::if_frame::height() const
 }
 
 void
-e8::if_frame::resize(unsigned w, unsigned h)
+e8::if_frame::rescale(unsigned w, unsigned h)
 {
         // Changes only the front buffer.
         e8util::lock(m_mutex);
@@ -125,7 +125,7 @@ e8::ram_ogl_frame::initializeGL()
 void
 e8::ram_ogl_frame::resizeGL(int w, int h)
 {
-        static_cast<if_frame*>(this)->resize(w, h);
+        static_cast<if_frame*>(this)->rescale(w, h);
 }
 
 void
@@ -156,7 +156,7 @@ e8::ram_ogl_frame::paintGL()
 e8::img_file_frame::img_file_frame(std::string const& file_name, unsigned width, unsigned height):
         m_file_name(file_name)
 {
-        resize(width, height);
+        rescale(width, height);
         swap();
 }
 

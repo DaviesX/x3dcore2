@@ -25,7 +25,7 @@ public:
         unsigned        width() const;
         unsigned        height() const;
 
-        void            resize(unsigned w, unsigned h);
+        void            rescale(unsigned w, unsigned h);
 
         virtual void    commit() = 0;
 
