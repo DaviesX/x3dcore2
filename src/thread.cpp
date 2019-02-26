@@ -2,12 +2,30 @@
 #include "thread.h"
 
 
-e8util::if_task_storage::if_task_storage()
+e8util::if_task_storage::if_task_storage():
+        m_data_id(-1)
+{
+}
+
+e8util::if_task_storage::if_task_storage(data_id_t data_id):
+        m_data_id(data_id)
 {
 }
 
 e8util::if_task_storage::~if_task_storage()
 {
+}
+
+void
+e8util::if_task_storage::set_data_id(data_id_t id)
+{
+        m_data_id = id;
+}
+
+e8util::data_id_t
+e8util::if_task_storage::data_id() const
+{
+        return m_data_id;
 }
 
 e8util::if_task::if_task(bool drop_on_completion):
@@ -38,13 +56,19 @@ e8util::if_task::worker_id() const
 }
 
 
-e8util::task_info::task_info(tid_t tid, pthread_t thread, if_task* task):
-        m_tid(tid), m_thread(thread), m_task(task)
+e8util::task_info::task_info(tid_t tid,
+                             pthread_t thread,
+                             if_task* task,
+                             if_task_storage* storage):
+        m_tid(tid),
+        m_thread(thread),
+        m_task(task),
+        m_task_storage(storage)
 {
 }
 
 e8util::task_info::task_info():
-        task_info(0, 0, nullptr)
+        task_info(0, 0, nullptr, nullptr)
 {
 }
 
@@ -52,6 +76,12 @@ e8util::if_task*
 e8util::task_info::task() const
 {
         return m_task;
+}
+
+e8util::if_task_storage*
+e8util::task_info::task_storage() const
+{
+        return m_task_storage;
 }
 
 
@@ -121,7 +151,7 @@ e8util::run(if_task* task, if_task_storage* task_data)
         pthread_attr_t attr;
         pthread_attr_init(&attr);
 
-        task_info info(0, 0, task);
+        task_info info(0, 0, task, task_data);
 
         task->assign_worker_id(-1);
 
@@ -171,7 +201,7 @@ e8util::thread_pool_worker(void* p)
                                 pthread_mutex_unlock(&this_->m_enter_mutex);
 
                                 info.m_task->assign_worker_id(static_cast<int>(worker_id));
-                                info.m_task->run(this_->m_worker_storage[worker_id]);
+                                info.m_task->run(info.m_task_storage);
 
                                 if (!info.m_task->is_drop_on_completion()) {
                                         pthread_mutex_lock(&this_->m_exit_mutex);
@@ -193,8 +223,7 @@ e8util::thread_pool_worker(void* p)
         return nullptr;
 }
 
-e8util::thread_pool::thread_pool(unsigned num_thrs,
-                                 std::vector<if_task_storage*> worker_storage):
+e8util::thread_pool::thread_pool(unsigned num_thrs):
         m_num_thrs(num_thrs)
 {
         sem_init(&m_enter_sem, 0, 0);
@@ -204,7 +233,6 @@ e8util::thread_pool::thread_pool(unsigned num_thrs,
         pthread_mutex_init(&m_work_group_mutex, nullptr);
 
         m_workers = new pthread_t [num_thrs];
-        m_worker_storage = worker_storage;
 
         pthread_attr_t attr;
         pthread_attr_init(&attr);
@@ -230,11 +258,11 @@ e8util::thread_pool::~thread_pool()
 }
 
 e8util::task_info
-e8util::thread_pool::run(if_task* t)
+e8util::thread_pool::run(if_task* t, if_task_storage* task_data)
 {
         pthread_mutex_lock(&m_enter_mutex);
 
-        task_info info(m_uuid ++, 0, t);
+        task_info info(m_uuid ++, 0, t, task_data);
         m_tasks.push(info);
 
         pthread_mutex_unlock(&m_enter_mutex);
@@ -242,6 +270,8 @@ e8util::thread_pool::run(if_task* t)
 
         return info;
 }
+
+#include <iostream>
 
 e8util::task_info
 e8util::thread_pool::retrieve_next_completed()

@@ -39,8 +39,10 @@ e8::pt_image_renderer::sampling_task_data::sampling_task_data():
 {
 }
 
-e8::pt_image_renderer::sampling_task_data::sampling_task_data(if_scene const* scene,
+e8::pt_image_renderer::sampling_task_data::sampling_task_data(e8util::data_id_t id,
+                                                              if_scene const* scene,
                                                               std::vector<e8util::ray> const& rays):
+        e8util::if_task_storage(id),
         scene(scene),
         rays(rays)
 {
@@ -109,12 +111,7 @@ e8::pt_image_renderer::pt_image_renderer(pathtracer_factory* fact):
         m_rng(100),
         m_samps(0)
 {
-        // create task storage vector.
-        std::vector<e8util::if_task_storage*> storage(m_num_tasks);
-        for (unsigned i = 0; i < m_num_tasks; i ++) {
-                storage[i] = &m_task_storages[i];
-        }
-        m_thrpool = new e8util::thread_pool(m_num_tasks, storage);
+        m_thrpool = new e8util::thread_pool(m_num_tasks);
 
         // create task constructs.
         for (unsigned i = 0; i < m_num_tasks; i ++) {
@@ -141,6 +138,7 @@ e8::pt_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
                                 unsigned tile_h = j == m_num_tiles_per_dim - 1 ? m_h - m_h/m_num_tiles_per_dim*j : m_h/m_num_tiles_per_dim;
                                 m_task_storages[i + j*m_num_tiles_per_dim].rays.resize(tile_w*tile_h);
                                 m_task_storages[i + j*m_num_tiles_per_dim].scene = scene;
+                                m_task_storages[i + j*m_num_tiles_per_dim].set_data_id(static_cast<e8util::data_id_t>(i + j*m_num_tiles_per_dim));
 
                                 unsigned top_left_i = m_w/m_num_tiles_per_dim*i;
                                 unsigned top_left_j = m_h/m_num_tiles_per_dim*j;
@@ -164,16 +162,16 @@ e8::pt_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
 
         // launch tasks.
         for (unsigned i = 0; i < m_num_tasks; i ++) {
-                m_thrpool->run(&m_tasks[i]);
+                m_thrpool->run(&m_tasks[i], &m_task_storages[i]);
         }
 
         // retrieve and accumulate estimated values.
         m_samps += 1;
         float pr = 1.0f/m_samps;
         for (unsigned k = 0; k < m_num_tasks; k ++) {
-                e8util::if_task* task = m_thrpool->retrieve_next_completed().task();
-                unsigned i = static_cast<unsigned>(task->worker_id())%m_num_tiles_per_dim;
-                unsigned j = static_cast<unsigned>(task->worker_id())/m_num_tiles_per_dim;
+                e8util::task_info task_info = m_thrpool->retrieve_next_completed();
+                unsigned i = static_cast<unsigned>(task_info.task_storage()->data_id())%m_num_tiles_per_dim;
+                unsigned j = static_cast<unsigned>(task_info.task_storage()->data_id())/m_num_tiles_per_dim;
 
                 unsigned tile_w = i == m_num_tiles_per_dim - 1 ? m_w - m_w/m_num_tiles_per_dim*i : m_w/m_num_tiles_per_dim;
                 unsigned tile_h = j == m_num_tiles_per_dim - 1 ? m_h - m_h/m_num_tiles_per_dim*j : m_h/m_num_tiles_per_dim;
@@ -188,7 +186,7 @@ e8::pt_image_renderer::render(if_scene const* scene, if_camera const* cam, if_co
                                 unsigned p = (top_left_i + ti) + (top_left_j + tj)*m_w;
                                 m_rad[p] = m_rad[p] + estimates[ti + tj*tile_w];
                                 e8util::vec3 const& r = pr*m_rad[p];
-                                (*compositor)(i, j) = r.homo(1.0f);
+                                (*compositor)(top_left_i + ti, top_left_j + tj) = r.homo(1.0f);
                         }
                 }
         }

@@ -12,13 +12,20 @@ namespace e8util
 
 typedef pthread_mutex_t         mutex_t;
 typedef unsigned int            tid_t;
+typedef int                     data_id_t;
 
 
 class if_task_storage
 {
 public:
         if_task_storage();
+        if_task_storage(data_id_t data_id);
         virtual ~if_task_storage();
+
+        void            set_data_id(data_id_t id);
+        data_id_t       data_id() const;
+private:
+        data_id_t       m_data_id;
 };
 
 
@@ -45,14 +52,19 @@ class task_info
 
         friend void*            thread_pool_worker(void* p);
 public:
-        task_info(tid_t tid, pthread_t thread, if_task* task);
+        task_info(tid_t tid,
+                  pthread_t thread,
+                  if_task* task,
+                  if_task_storage* storage);
         task_info();
 
-        if_task*        task() const;
+        if_task*                task() const;
+        if_task_storage*        task_storage() const;
 private:
-        tid_t           m_tid;
-        pthread_t       m_thread;
-        if_task*        m_task;
+        tid_t                   m_tid;
+        pthread_t               m_thread;
+        if_task*                m_task;
+        if_task_storage*        m_task_storage;
 };
 
 
@@ -60,11 +72,10 @@ class thread_pool
 {
         friend void*    thread_pool_worker(void* p);
 public:
-        thread_pool(unsigned num_thrs,
-                    std::vector<if_task_storage*> worker_storage = std::vector<if_task_storage*>());
+        thread_pool(unsigned num_thrs);
         ~thread_pool();
 
-        task_info               run(if_task* task);
+        task_info               run(if_task* task, if_task_storage* task_data = nullptr);
         task_info               retrieve_next_completed();
 private:
         sem_t                           m_enter_sem;
@@ -73,7 +84,6 @@ private:
         pthread_mutex_t                 m_exit_mutex;
         pthread_mutex_t                 m_work_group_mutex;
         pthread_t*                      m_workers;
-        std::vector<if_task_storage*>   m_worker_storage;
         unsigned                        m_num_thrs;
         std::queue<task_info>           m_tasks;
         std::queue<task_info>           m_completed_tasks;
