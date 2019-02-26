@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QSurfaceFormat>
 
-#include "test/testrunner.h"
+#include "../corelib/test/testrunner.h"
 #include "app.h"
 
 int

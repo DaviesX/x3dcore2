@@ -1,9 +1,6 @@
-#ifndef APP_H
-#define APP_H
+#ifndef PIPELINE_H
+#define PIPELINE_H
 
-#include <QMainWindow>
-#include <QTimer>
-#include <ctime>
 #include "resource.h"
 #include "scene.h"
 #include "compositor.h"
@@ -12,17 +9,14 @@
 #include "renderer.h"
 #include "thread.h"
 
-namespace Ui
+namespace e8
 {
-class MainWindow;
-}
 
-
-class rendering_task: public e8util::if_task
+class pt_rendering_pipeline: public e8util::if_task
 {
 public:
-        rendering_task();
-        virtual ~rendering_task();
+        pt_rendering_pipeline();
+        virtual ~pt_rendering_pipeline() override;
 
         void            run(e8util::if_task_storage* storage) override;
         void            update();
@@ -69,37 +63,6 @@ public:
         uint32_t                m_num_commits = 0;
 };
 
-class App : public QMainWindow
-{
-        Q_OBJECT
+}
 
-public:
-        explicit App(QWidget *parent = 0);
-        ~App();
-
-private slots:
-        void on_check_autoexposure_stateChanged(int arg1);
-
-        void on_button_save_clicked();
-
-        void on_button_render_clicked();
-
-        void on_MainWindow_destroyed();
-
-        void on_action_openfile_triggered();
-
-        void on_actionCornellball_triggered();
-
-        void on_update_stats();
-private:
-        Ui::MainWindow*         m_ui;
-
-        QTimer                  m_stats_update_timer;
-
-        e8::ram_ogl_frame*      m_frame;
-
-        rendering_task          m_task;
-        e8util::task_info       m_info;
-};
-
-#endif // APP_H
+#endif // PIPELINE_H

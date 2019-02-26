@@ -1,17 +1,22 @@
-QT       += core gui opengl
+#-------------------------------------------------
+#
+# e8yescg corelib
+#
+#-------------------------------------------------
+
+QT       += core opengl
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = e8yescg
 
-TEMPLATE = app
+TEMPLATE = lib
 
 QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE += -Ofast
-
+QMAKE_CXXFLAGS_RELEASE += -Ofast -march=native
 QMAKE_LFLAGS_RELEASE += -Ofast -march=native
 
 CONFIG += c++17
 
-SOURCES += src/main.cpp \
+SOURCES += \
     src/camera.cpp \
     src/tensor.cpp \
     src/geometry.cpp \
@@ -26,10 +31,11 @@ SOURCES += src/main.cpp \
     src/pathtracer.cpp \
     src/raster.cpp \
     src/frame.cpp \
-    test/testgeometry.cpp \
+    src/pathtracerfact.cpp \
+    src/pipeline.cpp \
     src/thread.cpp \
-    src/app.cpp \
     src/compositor.cpp \
+    test/testgeometry.cpp \
     test/testresource.cpp \
     test/testcamera.cpp \
     test/testframe.cpp \
@@ -37,8 +43,8 @@ SOURCES += src/main.cpp \
     test/testdirectrenderer.cpp \
     test/testunidirectrenderer.cpp \
     test/testbidirectmisrenderer.cpp \
-    test/testbidirectlt2renderer.cpp \
-    src/pathtracerfact.cpp
+    test/testbidirectlt2renderer.cpp
+
 
 HEADERS += \
     src/scene.h \
@@ -55,10 +61,11 @@ HEADERS += \
     src/pathtracer.h \
     src/raster.h \
     src/frame.h \
-    test/testgeometry.h \
     src/thread.h \
-    src/app.h \
     src/compositor.h \
+    src/pathtracerfact.h \
+    src/pipeline.h \
+    test/testgeometry.h \
     test/testresource.h \
     test/testcamera.h \
     test/testframe.h \
@@ -66,13 +73,9 @@ HEADERS += \
     test/testdirectrenderer.h \
     test/testunidirectrenderer.h \
     test/testbidirectmisrenderer.h \
-    test/testbidirectlt2renderer.h \
-    src/pathtracerfact.h
+    test/testbidirectlt2renderer.h
 
 
 win32 {
 LIBS += -lOpengl32
 }
-
-FORMS += \
-    src/mainwindow.ui
