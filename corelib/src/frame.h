@@ -64,7 +64,8 @@ public:
         void            initializeGL() override;
         void            resizeGL(int w, int h) override;
         void            paintGL() override;
-
+private:
+        unsigned*       m_gl_pixels;
 };
 
 class img_file_frame: public if_frame

@@ -102,12 +102,14 @@ e8::if_frame::rescale(unsigned w, unsigned h)
 
 
 e8::ram_ogl_frame::ram_ogl_frame(QWidget* parent):
-        QOpenGLWidget(parent)
+        QOpenGLWidget(parent),
+        m_gl_pixels(nullptr)
 {
 }
 
 e8::ram_ogl_frame::~ram_ogl_frame()
 {
+        delete [] m_gl_pixels;
 }
 
 void
@@ -125,7 +127,14 @@ e8::ram_ogl_frame::initializeGL()
 void
 e8::ram_ogl_frame::resizeGL(int w, int h)
 {
-        static_cast<if_frame*>(this)->rescale(w, h);
+        static_cast<if_frame*>(this)->rescale(static_cast<unsigned>(w),
+                                              static_cast<unsigned>(h));
+        if (w > 0 && h > 0) {
+                e8util::lock(m_mutex);
+                delete [] m_gl_pixels;
+                m_gl_pixels = new unsigned [static_cast<unsigned>(w*h)];
+                e8util::unlock(m_mutex);
+        }
 }
 
 void
@@ -134,20 +143,19 @@ e8::ram_ogl_frame::paintGL()
         e8util::lock(m_mutex);
         glClear(GL_COLOR_BUFFER_BIT);
         if (front().w != 0 && front().h != 0) {
-                unsigned* gl_pixels = new unsigned[front().w * front().h];
                 for (unsigned j = 0; j < front().h; j ++) {
                         for (unsigned i = 0; i < front().w; i ++) {
-                                unsigned* gl_pixel = &gl_pixels[i + (front().h - 1- j)*front().w];
+                                unsigned* gl_pixel = &m_gl_pixels[i + (front().h - 1- j)*front().w];
                                 pixel const& internal_pixel = front().pixels[i + j*front().w];
-                                *gl_pixel = internal_pixel(0) << 24 |
-                                                                 internal_pixel(1) << 16 |
-                                                                 internal_pixel(2) << 8 |
-                                                                 internal_pixel(3);
+                                *gl_pixel = static_cast<unsigned>(internal_pixel(0)) << 24 |
+                                            static_cast<unsigned>(internal_pixel(1)) << 16 |
+                                            static_cast<unsigned>(internal_pixel(2)) << 8 |
+                                            static_cast<unsigned>(internal_pixel(3));
                         }
                 }
                 glDrawPixels(static_cast<GLsizei>(front().w),
                              static_cast<GLsizei>(front().h),
-                             GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, gl_pixels);
+                             GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_gl_pixels);
         }
         e8util::unlock(m_mutex);
 }
