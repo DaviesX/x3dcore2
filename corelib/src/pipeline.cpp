@@ -38,17 +38,17 @@ e8::pt_rendering_pipeline::update()
                         delete m_renderer;
 
                         e8::pathtracer_factory::pt_type pt_type = e8::pathtracer_factory::pt_type::normal;
-                        if (m_current.renderer == "normal tracing") {
+                        if (m_current.renderer == "normal") {
                                 pt_type = e8::pathtracer_factory::pt_type::normal;
-                        } else if (m_current.renderer == "position tracing") {
+                        } else if (m_current.renderer == "position") {
                                 pt_type = e8::pathtracer_factory::pt_type::position;
-                        } else if (m_current.renderer == "direct tracing") {
+                        } else if (m_current.renderer == "direct") {
                                 pt_type = e8::pathtracer_factory::pt_type::direct;
-                        } else if (m_current.renderer == "unidirectional tracing") {
+                        } else if (m_current.renderer == "unidirectional") {
                                 pt_type = e8::pathtracer_factory::pt_type::unidirect;
-                        } else if (m_current.renderer == "bidirectional tracing (LT2)") {
+                        } else if (m_current.renderer == "bidirectional (LT2)") {
                                 pt_type = e8::pathtracer_factory::pt_type::bidirect_lt2;
-                        } else if (m_current.renderer == "bidirectional tracing (MIS)") {
+                        } else if (m_current.renderer == "bidirectional (MIS)") {
                                 pt_type = e8::pathtracer_factory::pt_type::bidirect_mis;
                         }
                         m_renderer = new e8::pt_image_renderer(new e8::pathtracer_factory(pt_type,

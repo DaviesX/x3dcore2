@@ -12,12 +12,14 @@ App::App(QWidget *parent) :
 {
         m_ui->setupUi(this);
 
-        m_ui->combo_tracer->addItem("direct tracing");
-        m_ui->combo_tracer->addItem("unidirectional tracing");
-        m_ui->combo_tracer->addItem("bidirectional tracing");
-        m_ui->combo_tracer->addItem("bidirectional tracing (MIS)");
-        m_ui->combo_tracer->addItem("position tracing");
-        m_ui->combo_tracer->addItem("normal tracing");
+        m_ui->combo_renderer->addItem("MCPT renderer");
+
+        m_ui->combo_tracer->addItem("bidirectional (MIS)");
+        m_ui->combo_tracer->addItem("bidirectional");
+        m_ui->combo_tracer->addItem("unidirectional");
+        m_ui->combo_tracer->addItem("direct");
+        m_ui->combo_tracer->addItem("normal");
+        m_ui->combo_tracer->addItem("position");
 
         m_ui->combo_structure->addItem("static bvh");
         m_ui->combo_structure->addItem("linear");
@@ -76,10 +78,10 @@ App::on_button_render_clicked()
                 m_stats_update_timer.stop();
         } else {
                 m_task.m_frame = m_frame;
-                m_task.m_current.exposure = m_ui->spin_manualexposure->value();
+                m_task.m_current.exposure = static_cast<float>(m_ui->spin_manualexposure->value());
                 m_task.m_current.layout = m_ui->combo_structure->currentText().toStdString();
                 m_task.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
-                m_task.m_current.num_samps = m_ui->spin_sample->value();
+                m_task.m_current.num_samps = static_cast<unsigned>(m_ui->spin_sample->value());
                 m_task.m_current.scene = "cornellball";
                 m_task.update();
 
@@ -99,7 +101,6 @@ App::on_update_stats()
         m_frame->repaint();
         m_ui->label_time->setText(QString::fromStdString(std::to_string(m_task.time_elapsed()) + " s"));
         m_ui->label_samp_count1->setText(QString::fromStdString(std::to_string(m_task.num_commits())));
-        m_ui->label_samp_count2->setText(QString::fromStdString(std::to_string(m_task.num_commits())));
 }
 
 void
@@ -112,7 +113,7 @@ App::on_MainWindow_destroyed()
 void App::on_action_openfile_triggered()
 {
         QString file_name = QFileDialog::getOpenFileName(this,
-            tr("Open scene"), ".", tr("Scene File (*.e8yescg)"));
+            tr("Open scene"), "./res", tr("glTF Scene File (*.gltf)"));
         if (file_name.length() > 0) {
                 m_ui->statusbar->showMessage("Using scene " + file_name + ".");
         }
