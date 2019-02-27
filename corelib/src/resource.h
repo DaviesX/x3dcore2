@@ -35,11 +35,11 @@ public:
         e8::if_camera*                  load_camera() const override;
 };
 
-class wavefront_obj: if_resource
+class wavefront_obj: public if_resource
 {
 public:
         wavefront_obj(std::string const& location);
-        ~wavefront_obj();
+        ~wavefront_obj() override;
 
         std::vector<e8::if_geometry*>   load_geometries() const override;
         bool                            save_geometries(std::vector<e8::if_geometry*> const& geometries) override;

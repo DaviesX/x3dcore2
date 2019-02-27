@@ -28,7 +28,7 @@ class trimesh: public if_geometry
 {
 public:
         trimesh();
-        virtual ~trimesh();
+        virtual ~trimesh() override;
 
         std::vector<e8util::vec3> const&        vertices() const override;
         std::vector<e8util::vec3> const&        normals() const override;

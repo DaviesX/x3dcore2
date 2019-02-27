@@ -83,7 +83,7 @@ e8util::cornell_scene::load_lights() const
 {
         return std::vector<e8::if_light*>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
                                                   new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometries()[0],
-                                                              e8util::vec3({0.911, 0.660f, 0.345f})*15.0f)});
+                                                              e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)});
 }
 
 e8::if_camera*
@@ -174,7 +174,7 @@ e8util::wavefront_obj::load_geometries() const
                                                 throw "Malformed data at line " + std::to_string(i + 1)
                                                                 + " where vertex index is missing.";
                                         else {
-                                                unsigned iattri = std::stoi(s_index[0]) - 1;
+                                                unsigned iattri = std::stoul(s_index[0]) - 1;
                                                 if (iattri >= vertices.size())
                                                         throw "At line " + std::to_string(i + 1)
                                                                         + ", attribute " + std::to_string(v + 1)
@@ -184,7 +184,7 @@ e8util::wavefront_obj::load_geometries() const
                                         }
 
                                         if (!s_index[1].empty()) {
-                                                unsigned iattri = std::stoi(s_index[1]) - 1;
+                                                unsigned iattri = std::stoul(s_index[1]) - 1;
                                                 if (iattri >= texcoords.size())
                                                         throw "At line " + std::to_string(i + 1)
                                                                         + ", attribute " + std::to_string(v + 1)
@@ -194,7 +194,7 @@ e8util::wavefront_obj::load_geometries() const
                                         }
 
                                         if (!s_index[2].empty()) {
-                                                unsigned iattri = std::stoi(s_index[2]) - 1;
+                                                unsigned iattri = std::stoul(s_index[2]) - 1;
                                                 if (iattri >= normals.size())
                                                         throw "At line " + std::to_string(i + 1)
                                                                         + ", attribute " + std::to_string(v + 1)
