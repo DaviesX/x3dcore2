@@ -47,6 +47,22 @@ private:
         std::string     m_location;
 };
 
+class gltf_scene_internal;
+
+class gltf_scene: public if_resource
+{
+public:
+        gltf_scene(std::string const& location);
+        ~gltf_scene() override;
+
+        std::vector<e8::if_geometry*>   load_geometries() const override;
+        std::vector<e8::if_material*>   load_materials() const override;
+        std::vector<e8::if_light*>      load_lights() const override;
+        e8::if_camera*                  load_camera() const override;
+private:
+        gltf_scene_internal*    m_pimpl;
+};
+
 
 }
 

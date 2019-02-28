@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include "../thirdparty/tinygltf/tiny_gltf.h"
 #include "geometry.h"
 #include "material.h"
 #include "resource.h"
@@ -286,4 +287,62 @@ e8util::wavefront_obj::save_geometries(std::vector<e8::if_geometry*> const& geom
         }
 
         return true;
+}
+
+class e8util::gltf_scene_internal
+{
+public:
+        gltf_scene_internal(std::string const& location);
+        ~gltf_scene_internal();
+
+        tinygltf::Scene*        load_scene();
+
+private:
+        std::string             m_location;
+        tinygltf::Scene*        m_scene;
+};
+
+e8util::gltf_scene_internal::gltf_scene_internal(std::string const& location):
+        m_location(location),
+        m_scene(nullptr)
+{
+}
+
+e8util::gltf_scene_internal::~gltf_scene_internal()
+{
+}
+
+tinygltf::Scene*
+e8util::gltf_scene_internal::load_scene()
+{
+}
+
+e8util::gltf_scene::gltf_scene(std::string const& location):
+        m_pimpl(new gltf_scene_internal(location))
+{
+}
+
+e8util::gltf_scene::~gltf_scene()
+{
+        delete m_pimpl;
+}
+
+std::vector<e8::if_geometry*>
+e8util::gltf_scene::load_geometries() const
+{
+}
+
+std::vector<e8::if_material*>
+e8util::gltf_scene::load_materials() const
+{
+}
+
+std::vector<e8::if_light*>
+e8util::gltf_scene::load_lights() const
+{
+}
+
+e8::if_camera*
+e8util::gltf_scene::load_camera() const
+{
 }
