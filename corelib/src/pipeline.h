@@ -1,6 +1,7 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
+#include <ctime>
 #include "resource.h"
 #include "scene.h"
 #include "compositor.h"
