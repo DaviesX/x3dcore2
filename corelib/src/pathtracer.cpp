@@ -250,19 +250,16 @@ e8::unidirect_pathtracer::transport_subpath(e8util::vec3 const& src_rad,
 float
 e8::unidirect_pathtracer::subpath_density(float src_dens,
                                           sampled_pathlet const* sampled_path,
-                                          unsigned sub_path_len) const
+                                          unsigned path_start,
+                                          unsigned path_end) const
 {
-        if (sub_path_len == 0)
+        if (path_end == 0)
                 return 0.0f;
-        float dens = sampled_path[0].dens*
-                        src_dens*
-                        sampled_path[0].vert.normal.inner(-sampled_path[0].o)/
-                        (sampled_path[0].vert.t*sampled_path[0].vert.t);
-        for (unsigned k = 0; k < sub_path_len - 1; k ++) {
+        float dens = src_dens;
+        for (unsigned k = path_start; k < path_end; k ++) {
                 dens *= sampled_path[k].dens*
-                                //sampled_path[k].vert.normal.inner(sampled_path[k].o)*
-                                sampled_path[k + 1].vert.normal.inner(-sampled_path[k + 1].o)/
-                                (sampled_path[k + 1].vert.t*sampled_path[k + 1].vert.t);
+                                sampled_path[k].vert.normal.inner(-sampled_path[k].o)/
+                                (sampled_path[k].vert.t*sampled_path[k].vert.t);
         }
         return dens;
 }
@@ -480,7 +477,7 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                  unsigned light_path_len,
                                                  e8util::vec3 const& light_p,
                                                  e8util::vec3 const& light_n,
-                                                 float pdf_light_w,
+                                                 float pdf_light_p_dens,
                                                  if_light const* light,
                                                  if_scene const* scene) const
 {
@@ -495,7 +492,7 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                         float weight;
                         if (j == 0) {
                                 // direct light sampling.
-                                float dens = light_path[0].dens;         // direction was not chosen by random process.
+                                float dens = pdf_light_p_dens;          // direction was not chosen by random process.
                                 e8util::vec3 transported_light_illum = transport_illum_source(light,
                                                                                               light_p,
                                                                                               light_n,
@@ -511,10 +508,7 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                              i - 1,
                                                              false)/cam_path[0].dens;
 
-                                e8util::vec3 join_path = light_p - cam_path[i - 1].vert.vertex;
-                                float join_path_dist = join_path.norm();
-                                join_path = join_path/join_path_dist;
-                                weight = subpath_density(1.0f, cam_path, i)*dens;
+                                weight = subpath_density(1.0f, cam_path, 1, i)*dens;
                         } else {
                                 e8util::vec3 join_path = cam_path[i - 1].vert.vertex - light_path[j - 1].vert.vertex;
                                 float distance = join_path.norm();
@@ -529,7 +523,7 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                 cos_w2 > 0.0f &&
                                                 !scene->has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
                                         // compute light transportation for light subpath.
-                                        e8util::vec3 light_illum = light->emission(light_path[0].o, light_n)/(light_path[0].dens*pdf_light_w);
+                                        e8util::vec3 light_illum = light->emission(light_path[0].o, light_n)/(light_path[0].dens*pdf_light_p_dens);
                                         e8util::vec3 light_subpath_rad = transport_subpath(light_illum,
                                                                                            join_path,
                                                                                            1.0f,
@@ -549,9 +543,9 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                                      false)/cam_path[0].dens;
                                 }
 
-                                float cam_weight = subpath_density(1.0f, cam_path, i);
-                                float light_weight = subpath_density(pdf_light_w, light_path, j);
-                                weight = cam_weight*light_weight*pdf_light_w;
+                                float cam_weight = subpath_density(1.0f, cam_path, 1, i);
+                                float light_weight = subpath_density(pdf_light_p_dens, light_path, 0, j);
+                                weight = cam_weight*light_weight;
                         }
 
                         weights[i + j + 1] += weight;
@@ -606,7 +600,7 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng& rng,
                 unsigned light_path_len = sample_path(rng,
                                                       light_path,
                                                       light_path0,
-                                                      light_dens,
+                                                      light_w_dens,
                                                       scene,
                                                       m_max_path_len);
 
@@ -617,7 +611,7 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng& rng,
                                              light_path_len,
                                              light_p,
                                              light_n,
-                                             light_w_dens,
+                                             light_dens,
                                              light,
                                              scene);
                 if (cam_path_len > 0 && cam_path[0].vert.light != nullptr) {

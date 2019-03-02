@@ -135,7 +135,8 @@ protected:
                                                           bool is_forward) const;
         float                           subpath_density(float src_dens,
                                                         sampled_pathlet const* sampled_path,
-                                                        unsigned sub_path_len) const;
+                                                        unsigned path_start,
+                                                        unsigned path_end) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& vert,
@@ -208,7 +209,7 @@ protected:
                                                             unsigned light_path_len,
                                                             e8util::vec3 const& light_p,
                                                             e8util::vec3 const& light_n,
-                                                            float pdf_light_w,
+                                                            float pdf_light_p_dens,
                                                             if_light const* light,
                                                             if_scene const* scene) const;
 private:
