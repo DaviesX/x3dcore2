@@ -9,6 +9,17 @@
 #include "resource.h"
 
 
+e8util::res_io_exception::res_io_exception(std::string const& cause):
+        m_cause(cause)
+{
+}
+
+char const*
+e8util::res_io_exception::what() const noexcept
+{
+        return m_cause.c_str();
+}
+
 e8util::if_resource::if_resource()
 {
 }
@@ -292,29 +303,78 @@ e8util::wavefront_obj::save_geometries(std::vector<e8::if_geometry*> const& geom
 class e8util::gltf_scene_internal
 {
 public:
+        enum file_type
+        {
+                ascii,
+                bin
+        };
+
         gltf_scene_internal(std::string const& location);
         ~gltf_scene_internal();
 
-        tinygltf::Scene*        load_scene();
+        tinygltf::Model const&  get_model() const;
 
 private:
-        std::string             m_location;
-        tinygltf::Scene*        m_scene;
+        tinygltf::Model         m_model;
 };
 
-e8util::gltf_scene_internal::gltf_scene_internal(std::string const& location):
-        m_location(location),
-        m_scene(nullptr)
+e8util::gltf_scene_internal::file_type
+gtlf_file_type(std::string const& loc)
 {
+        auto dot_pos = loc.find_last_of(".");
+        if (dot_pos == std::string::npos) {
+                throw e8util::res_io_exception("Unknown file type of " + loc);
+        }
+        std::string ext = loc.substr(dot_pos + 1);
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext == "glb") {
+                return e8util::gltf_scene_internal::file_type::bin;
+        } else if (ext == "gltf") {
+                return e8util::gltf_scene_internal::file_type::ascii;
+        } else {
+                throw e8util::res_io_exception("Unknown file type of " + loc);
+        }
+}
+
+e8util::gltf_scene_internal::gltf_scene_internal(std::string const& location)
+{
+        tinygltf::TinyGLTF loader;
+
+        std::string err;
+        std::string warn;
+        bool res;
+        switch (gtlf_file_type(location)) {
+        case ascii: {
+                res = loader.LoadASCIIFromFile(&m_model, &err, &warn, location.c_str());
+                break;
+        }
+        case bin: {
+                res = loader.LoadBinaryFromFile(&m_model, &err, &warn, location.c_str());
+                break;
+        }
+        }
+
+        if (!warn.empty()) {
+                std::cerr << typeid(*this).name()
+                          << " - Warning while parsing " << location << std::endl
+                          << "\t" << warn << std::endl;
+        }
+
+        if (!res) {
+                throw e8util::res_io_exception("Failed to load " + location + "\n"
+                                               "\tError: " + err + "\n"
+                                               "\tWarning: " + warn);
+        }
 }
 
 e8util::gltf_scene_internal::~gltf_scene_internal()
 {
 }
 
-tinygltf::Scene*
-e8util::gltf_scene_internal::load_scene()
+tinygltf::Model const&
+e8util::gltf_scene_internal::get_model() const
 {
+        return m_model;
 }
 
 e8util::gltf_scene::gltf_scene(std::string const& location):

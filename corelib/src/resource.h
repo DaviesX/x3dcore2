@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <exception>
 #include "geometry.h"
 #include "material.h"
 #include "light.h"
@@ -11,6 +12,15 @@
 
 namespace e8util
 {
+
+class res_io_exception: public std::exception
+{
+public:
+        res_io_exception(std::string const& cause);
+        char const*     what() const noexcept override;
+private:
+        std::string     m_cause;
+};
 
 class if_resource
 {
