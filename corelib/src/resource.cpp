@@ -3,6 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../thirdparty/tinygltf/tiny_gltf.h"
 #include "geometry.h"
 #include "material.h"

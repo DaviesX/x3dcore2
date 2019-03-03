@@ -75,7 +75,6 @@ HEADERS += \
     test/testbidirectmisrenderer.h \
     test/testbidirectlt2renderer.h
 
-
 win32 {
 LIBS += -lOpengl32
 }
