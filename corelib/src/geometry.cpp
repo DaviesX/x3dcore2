@@ -2,18 +2,34 @@
 #include "geometry.h"
 
 
-e8::if_geometry::if_geometry()
+e8::if_geometry::if_geometry():
+        m_name("Unknown_Geometry_Name")
 {
+}
 
+e8::if_geometry::if_geometry(std::string const& name):
+        m_name(name)
+{
 }
 
 e8::if_geometry::~if_geometry()
 {
 }
 
+std::string
+e8::if_geometry::name() const
+{
+        return m_name;
+}
+
 // trimesh
 e8::trimesh::trimesh():
         m_aabb(0.0f, 0.0f)
+{
+}
+
+e8::trimesh::trimesh(std::string const& name):
+        if_geometry(name)
 {
 }
 

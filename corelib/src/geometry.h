@@ -1,6 +1,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include <string>
 #include "tensor.h"
 #include "material.h"
 
@@ -13,7 +14,10 @@ class if_geometry
 {
 public:
         if_geometry();
+        if_geometry(std::string const& name);
         virtual ~if_geometry();
+
+        std::string                                     name() const;
 
         virtual std::vector<e8util::vec3> const&        vertices() const = 0;
         virtual std::vector<e8util::vec3> const&        normals() const = 0;
@@ -22,12 +26,15 @@ public:
         virtual void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const = 0;
         virtual float                                   surface_area() const = 0;
         virtual e8util::aabb                            aabb() const = 0;
+private:
+        std::string     m_name;
 };
 
 class trimesh: public if_geometry
 {
 public:
         trimesh();
+        trimesh(std::string const& name);
         virtual ~trimesh() override;
 
         std::vector<e8util::vec3> const&        vertices() const override;
