@@ -393,6 +393,20 @@ e8util::gltf_scene::~gltf_scene()
 std::vector<e8::if_geometry*>
 e8util::gltf_scene::load_geometries() const
 {
+        std::vector<e8::if_geometry*> geos;
+        tinygltf::Model const& model = m_pimpl->get_model();
+
+        for (size_t i = 0; i < model.meshes.size(); i++) {
+                tinygltf::Mesh const& mesh = model.meshes[i];
+                e8::if_geometry* geo = new e8::trimesh();
+
+                for (size_t k = 0; k < mesh.primitives.size(); k++) {
+                        mesh.primitives[k].indices;
+                }
+
+                geos.push_back(geo);
+        }
+        return geos;
 }
 
 std::vector<e8::if_material*>
