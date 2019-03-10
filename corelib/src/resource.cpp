@@ -390,19 +390,121 @@ e8util::gltf_scene::~gltf_scene()
         delete m_pimpl;
 }
 
+
+static unsigned
+gltf_idx_get(unsigned char const* idx_data, unsigned stride, unsigned i)
+{
+        switch (stride) {
+        case 1:
+                return reinterpret_cast<uint8_t const*>(idx_data)[i];
+        case 2:
+                return reinterpret_cast<uint16_t const*>(idx_data)[i];
+        case 4:
+                return reinterpret_cast<uint32_t const*>(idx_data)[i];
+        default:
+                assert(stride == 1 || stride == 2 || stride == 4);
+                return 0;
+        }
+}
+
+static e8util::vec3
+gltf_vec3_get(unsigned char const* idx_data, unsigned stride, unsigned i)
+{
+        switch (stride) {
+        case 4*3:
+                return e8util::vec3{reinterpret_cast<float const*>(idx_data)[3*i + 0],
+                                    reinterpret_cast<float const*>(idx_data)[3*i + 1],
+                                    reinterpret_cast<float const*>(idx_data)[3*i + 2]};
+        case 8*3:
+                return e8util::vec3{static_cast<float>(reinterpret_cast<double const*>(idx_data)[3*i + 0]),
+                                    static_cast<float>(reinterpret_cast<double const*>(idx_data)[3*i + 1]),
+                                    static_cast<float>(reinterpret_cast<double const*>(idx_data)[3*i + 2])};
+        default:
+                assert(stride == 4*3 || stride == 8*3);
+                return e8util::vec3();
+        }
+}
+
+static e8util::vec2
+gltf_vec2_get(unsigned char const* idx_data, unsigned stride, unsigned i)
+{
+        switch (stride) {
+        case 4*2:
+                return e8util::vec2{reinterpret_cast<float const*>(idx_data)[2*i + 0],
+                                    reinterpret_cast<float const*>(idx_data)[2*i + 1]};
+        case 8*2:
+                return e8util::vec2{static_cast<float>(reinterpret_cast<double const*>(idx_data)[2*i + 0]),
+                                    static_cast<float>(reinterpret_cast<double const*>(idx_data)[2*i + 1])};
+        default:
+                assert(stride == 4*2 || stride == 8*2);
+                return e8util::vec2();
+        }
+}
+
+
 std::vector<e8::if_geometry*>
 e8util::gltf_scene::load_geometries() const
 {
         std::vector<e8::if_geometry*> geos;
         tinygltf::Model const& model = m_pimpl->get_model();
 
-        for (size_t i = 0; i < model.meshes.size(); i++) {
+        for (size_t i = 0; i < model.meshes.size(); i ++) {
                 tinygltf::Mesh const& mesh = model.meshes[i];
-                e8::if_geometry* geo = new e8::trimesh();
+                e8::trimesh* geo = new e8::trimesh();
 
-                for (size_t k = 0; k < mesh.primitives.size(); k++) {
-                        mesh.primitives[k].indices;
+                std::vector<e8::triangle> tris;
+                std::vector<e8util::vec3> verts;
+                std::vector<e8util::vec3> normals;
+                std::vector<e8util::vec2> texcoords;
+
+                for (size_t k = 0; k < mesh.primitives.size(); k ++) {
+                        tinygltf::Primitive const& prim = mesh.primitives[k];
+                        tinygltf::Accessor const& idx_accessor = model.accessors[static_cast<unsigned>(prim.indices)];
+                        tinygltf::BufferView const& idx_buf_view = model.bufferViews[static_cast<unsigned>(idx_accessor.bufferView)];
+                        tinygltf::Buffer const& idx_buf = model.buffers[static_cast<unsigned>(idx_buf_view.buffer)];
+                        unsigned char const* idx_data = idx_buf.data.data() + idx_buf_view.byteOffset + idx_accessor.byteOffset;
+                        unsigned stride = static_cast<unsigned>(idx_accessor.ByteStride(idx_buf_view));
+                        unsigned count = static_cast<unsigned>(idx_accessor.count);
+
+                        assert(count % 3 == 0);
+
+                        for (unsigned i = 0; i < count; i += 3) {
+                                tris.push_back(e8::triangle({gltf_idx_get(idx_data, stride, i),
+                                                             gltf_idx_get(idx_data, stride, i + 1),
+                                                             gltf_idx_get(idx_data, stride, i + 2)}));
+                        }
+
+                        for (std::pair<std::string, int> const attri: prim.attributes) {
+                                tinygltf::Accessor const& attri_acs = model.accessors[static_cast<unsigned>(attri.second)];
+                                tinygltf::BufferView const& attri_buf_view = model.bufferViews[static_cast<unsigned>(attri_acs.bufferView)];
+                                tinygltf::Buffer const& attri_buf = model.buffers[static_cast<unsigned>(attri_buf_view.buffer)];
+                                unsigned char const* attri_data = attri_buf.data.data() +
+                                                                  attri_buf_view.byteOffset +
+                                                                  attri_acs.byteOffset;
+                                unsigned stride = static_cast<unsigned>(attri_acs.ByteStride(attri_buf_view));
+                                unsigned count = static_cast<unsigned>(attri_acs.count);
+
+                                if (attri.first == "POSITION") {
+                                        for (unsigned i = 0; i < count; i ++) {
+                                                verts.push_back(gltf_vec3_get(attri_data, stride, i));
+                                        }
+                                } else if (attri.first == "NORMAL") {
+                                        for (unsigned i = 0; i < count; i ++) {
+                                                normals.push_back(gltf_vec3_get(attri_data, stride, i));
+                                        }
+                                } else if (attri.first == "TEXCOORD_0") {
+                                        for (unsigned i = 0; i < count; i ++) {
+                                                texcoords.push_back(gltf_vec2_get(attri_data, stride, i));
+                                        }
+                                }
+                        }
                 }
+
+                geo->triangles(tris);
+                geo->vertices(verts);
+                geo->normals(normals);
+                geo->texcoords(texcoords);
+                geo->update();
 
                 geos.push_back(geo);
         }
@@ -412,14 +514,17 @@ e8util::gltf_scene::load_geometries() const
 std::vector<e8::if_material*>
 e8util::gltf_scene::load_materials() const
 {
+        return std::vector<e8::if_material*>();
 }
 
 std::vector<e8::if_light*>
 e8util::gltf_scene::load_lights() const
 {
+        return std::vector<e8::if_light*>();
 }
 
 e8::if_camera*
 e8util::gltf_scene::load_camera() const
 {
+        return nullptr;
 }
