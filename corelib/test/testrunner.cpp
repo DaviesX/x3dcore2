@@ -5,6 +5,7 @@
 #include "testtensor.h"
 #include "testgeometry.h"
 #include "testresource.h"
+#include "testgltfresource.h"
 #include "testcamera.h"
 #include "testframe.h"
 #include "testscene.h"
@@ -69,6 +70,7 @@ test::load(int argc, char** argv)
         runner.add("test_tensor", new test_tensor(), false);
         runner.add("test_geometry", new test_geometry(), false);
         runner.add("test_resource", new test_resource(), false);
+        runner.add("test_gltf_resource", new test_gltf_resource(), false);
         runner.add("test_camera", new test_camera(), false);
         runner.add("test_scene", new test_scene(), false);
         runner.add("test_direct_renderer", new test_direct_renderer(), false);
