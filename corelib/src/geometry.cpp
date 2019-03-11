@@ -29,7 +29,8 @@ e8::trimesh::trimesh():
 }
 
 e8::trimesh::trimesh(std::string const& name):
-        if_geometry(name)
+        if_geometry(name),
+        m_aabb(0.0f, 0.0f)
 {
 }
 
