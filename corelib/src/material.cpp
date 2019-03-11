@@ -4,10 +4,20 @@ e8::if_material::if_material()
 {
 }
 
+e8::if_material::if_material(std::string const& name):
+        m_name(name)
+{
+}
+
 e8::if_material::~if_material()
 {
 }
 
+std::string
+e8::if_material::name() const
+{
+        return m_name;
+}
 
 
 e8::oren_nayar::oren_nayar(e8util::vec3 const& albedo, float sigma):
