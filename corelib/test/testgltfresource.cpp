@@ -18,6 +18,7 @@ test::test_gltf_resource::run() const
         std::vector<e8::if_geometry*> const& geos = res.load_geometries();
         std::vector<e8::if_material*> const& mats = res.load_materials();
         std::vector<e8::if_light*> const& lights = res.load_lights();
+        e8::if_camera* cam = res.load_camera();
 
         std::set<e8::if_material*> unique_mats;
         for (e8::if_material* mat: mats)
@@ -32,4 +33,5 @@ test::test_gltf_resource::run() const
                 delete mat;
         for (e8::if_light* light: unique_lights)
                 delete light;
+        delete cam;
 }

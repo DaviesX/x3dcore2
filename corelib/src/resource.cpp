@@ -514,17 +514,51 @@ e8util::gltf_scene::load_geometries() const
 std::vector<e8::if_material*>
 e8util::gltf_scene::load_materials() const
 {
-        return std::vector<e8::if_material*>();
+        std::vector<e8::if_material*> mats;
+
+        // TODO: cannot implement material loading with current e8::materials.
+        e8::if_material* mat = new e8::oren_nayar(e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
+
+        tinygltf::Model const& model = m_pimpl->get_model();
+        for (size_t i = 0; i < model.materials.size(); i ++) {
+                tinygltf::Material const& gltf_mat = model.materials[i];
+
+                for (std::pair<std::string, tinygltf::Parameter> entry: gltf_mat.values) {
+                }
+        }
+
+        std::vector<e8::if_material*> geo_mats;
+        for (size_t i = 0; i < model.meshes.size(); i ++) {
+                geo_mats.push_back(mat);
+        }
+        return geo_mats;
 }
 
 std::vector<e8::if_light*>
 e8util::gltf_scene::load_lights() const
 {
+        // Lights are not handled by glTF 2.0 as of now.
+        // TODO: return as least one default light.
         return std::vector<e8::if_light*>();
 }
 
 e8::if_camera*
 e8util::gltf_scene::load_camera() const
 {
-        return nullptr;
+        // Always capture the first camera, if any.
+        tinygltf::Model const& model = m_pimpl->get_model();
+        if (!model.cameras.empty()) {
+                tinygltf::Camera const& gltfcam = model.cameras[0];
+                if (gltfcam.type == "perspective") {
+                        // gltfcam.perspective.
+                        // e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,);
+                } else if (gltfcam.type == "orthographic") {
+                        // TODO: need to support orthographic camera.
+                        return nullptr;
+                } else {
+                        return nullptr;
+                }
+        } else {
+                return nullptr;
+        }
 }
