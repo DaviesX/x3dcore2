@@ -2,7 +2,13 @@
 #include "camera.h"
 
 
-e8::if_camera::if_camera()
+e8::if_camera::if_camera():
+        m_name("Unknown_Camera_Name")
+{
+}
+
+e8::if_camera::if_camera(std::string const& name):
+        m_name(name)
 {
 }
 
@@ -12,8 +18,30 @@ e8::if_camera::~if_camera()
 
 
 
-e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t, e8util::mat44 const& r, float sensor_size, float f, float aspect):
-        m_znear(2*f), m_sensor_size(sensor_size), m_focal_len(f), m_aspect(aspect), m_t(t), m_r(r)
+e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t,
+                                   e8util::mat44 const& r,
+                                   float sensor_size,
+                                   float f,
+                                   float aspect):
+        e8::pinhole_camera("Unknown_PinholeCamera_Name", t, r, sensor_size, f, aspect)
+
+{
+
+}
+
+e8::pinhole_camera::pinhole_camera(std::string const& name,
+                                   e8util::vec3 const& t,
+                                   e8util::mat44 const& r,
+                                   float sensor_size,
+                                   float f,
+                                   float aspect):
+        e8::if_camera(name),
+        m_znear(2*f),
+        m_sensor_size(sensor_size),
+        m_focal_len(f),
+        m_aspect(aspect),
+        m_t(t),
+        m_r(r)
 {
         m_proj = e8util::frustum_perspective2(0.5f*sensor_size/f, aspect, 2.0f*f, 1000.0f).projective_transform();
 
@@ -26,6 +54,10 @@ e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t, e8util::mat44 const& r
                                              0,0,1,0,
                                              -t(0),-t(1),-t(2),1});
         m_forward = m_proj * (~m_r) * T_inv;
+}
+
+e8::pinhole_camera::~pinhole_camera()
+{
 }
 
 e8util::ray
