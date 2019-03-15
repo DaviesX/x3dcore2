@@ -550,6 +550,7 @@ e8util::gltf_scene::load_camera() const
         if (!model.cameras.empty()) {
                 tinygltf::Camera const& gltfcam = model.cameras[0];
                 if (gltfcam.type == "perspective") {
+                        std::cout << gltfcam.extras << std::endl;
                         // gltfcam.perspective.
                         // e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,);
                 } else if (gltfcam.type == "orthographic") {

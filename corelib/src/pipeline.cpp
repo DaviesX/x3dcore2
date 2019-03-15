@@ -68,6 +68,11 @@ e8::pt_rendering_pipeline::update()
                                 m_scene->load(&res);
                                 m_scene->update();
                                 m_cam = res.load_camera();
+                        } else {
+                                e8util::gltf_scene res(m_current.scene);
+                                m_scene->load(&res);
+                                m_scene->update();
+                                m_cam = res.load_camera();
                         }
                 }
                 m_old = m_current;
