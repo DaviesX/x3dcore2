@@ -274,7 +274,10 @@ e8::bvh_scene_layout::bound(std::vector<primitive_details> const& prims, unsigne
 e8::bvh_scene_layout::node*
 e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start, unsigned end, unsigned depth)
 {
-        if (end - start == 1) {
+        if (end - start == 0) {
+                // special (error) case: empty node.
+                return nullptr;
+        } else if (end - start == 1) {
                 // base case.
                 m_max_depth = std::max(m_max_depth, depth + 1);
                 m_sum_depth += depth + 1;
@@ -373,7 +376,10 @@ e8::bvh_scene_layout::delete_bvh(node* bvh, unsigned depth)
 void
 e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 {
-        if (bvh_node->num_prims > 0) {
+        if (bvh_node == nullptr) {
+                // special (error) case.
+                return ;
+        } else if (bvh_node->num_prims > 0) {
                 // exterior node.
                 bvh.push_back(flattened_node(bvh_node->bound, bvh_node->prim_start, bvh_node->num_prims));
         } else {
@@ -451,6 +457,10 @@ e8::bvh_scene_layout::update()
 e8::intersect_info
 e8::bvh_scene_layout::intersect(e8util::ray const& r) const
 {
+        if (m_bvh.empty()) {
+                return intersect_info();
+        }
+
         float const t_min = 1e-4f;
         float const t_max = 1000.0f;
 
