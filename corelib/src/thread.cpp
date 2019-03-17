@@ -271,8 +271,6 @@ e8util::thread_pool::run(if_task* t, if_task_storage* task_data)
         return info;
 }
 
-#include <iostream>
-
 e8util::task_info
 e8util::thread_pool::retrieve_next_completed()
 {

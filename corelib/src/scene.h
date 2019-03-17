@@ -148,15 +148,26 @@ private:
 
         struct node
         {
-                node(e8util::aabb const& bound, unsigned prim_start, unsigned char num_prims):
-                        bound(bound), split_axis(-1), prim_start(prim_start), num_prims(num_prims)
+                node(e8util::aabb const& bound,
+                     unsigned prim_start,
+                     unsigned char num_prims):
+                        bound(bound),
+                        split_axis(static_cast<uint8_t>(-1)),
+                        prim_start(prim_start),
+                        num_prims(num_prims)
                 {
                         children[0] = nullptr;
                         children[1] = nullptr;
                 }
 
-                node(e8util::aabb const& bound, unsigned char split_axis, node* left, node* right):
-                        bound(bound), split_axis(split_axis), prim_start(-1), num_prims(0)
+                node(e8util::aabb const& bound,
+                     unsigned char split_axis,
+                     node* left,
+                     node* right):
+                        bound(bound),
+                        split_axis(split_axis),
+                        prim_start(static_cast<uint8_t>(-1)),
+                        num_prims(0)
                 {
                         children[0] = left;
                         children[1] = right;
@@ -164,9 +175,9 @@ private:
 
                 e8util::aabb    bound;
                 node*           children[2];
-                unsigned char   split_axis;
-                unsigned        prim_start;
-                unsigned char   num_prims;
+                uint8_t         split_axis;
+                uint32_t        prim_start;
+                uint8_t         num_prims;
         };
 
         struct flattened_node

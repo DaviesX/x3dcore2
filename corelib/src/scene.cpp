@@ -9,7 +9,7 @@ e8::if_scene::if_scene()
 
 e8::if_scene::~if_scene()
 {
-        for (std::pair<if_geometry const*, binded_geometry> const& p: m_geometries)
+        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries)
                 delete p.first;
         for (if_material const* mat: m_mats)
                 delete mat;
@@ -117,7 +117,7 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
         triangle const*         hit_tri = nullptr;
         e8util::vec3            hit_b;
 
-        for (std::pair<if_geometry const*, binded_geometry> const& p: m_geometries) {
+        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries) {
                 if_geometry const* geo = p.first;
 
                 std::vector<e8util::vec3> const&        verts = geo->vertices();
@@ -162,7 +162,7 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
 bool
 e8::linear_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
 {
-        for (std::pair<if_geometry const*, binded_geometry> const& p: m_geometries) {
+        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries) {
                 if_geometry const* geo = p.first;
 
                 std::vector<e8util::vec3> const&        verts = geo->vertices();
@@ -199,7 +199,7 @@ e8::linear_scene_layout::sample_light(e8util::rng& rng, float& pdf) const
 {
         float e = rng.draw()*m_total_power;
         unsigned lo = 0;
-        unsigned hi = m_cum_power.size();
+        unsigned hi = static_cast<unsigned>(m_cum_power.size());
         while (lo < hi) {
                 unsigned mi = (lo + hi) >> 1;
                 if (m_cum_power[mi] < e)
@@ -318,7 +318,8 @@ e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start,
                         if (depth > std::log2(prims.size())) {
                                 // objects may be too large, sah won't work well. Use median heuristics instead.
                                 std::sort(prims.begin() + start, prims.begin() + end,
-                                          [split_axis](primitive_details const& a, primitive_details const& b) -> bool {
+                                          [split_axis](primitive_details const& a,
+                                                       primitive_details const& b) -> bool {
                                         return a.centroid(split_axis) < b.centroid(split_axis);
 
                                 });
@@ -326,11 +327,12 @@ e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start,
                         } else {
                                 // use sah heuristics.
                                 float split = b.min()(split_axis) + (split_antiaxis + 1)*range(split_axis)/BVH_BUCKET_COUNT;
-                                std::vector<primitive_details>::iterator it = std::partition(prims.begin() + start, prims.begin() + end,
-                                                                                             [split_axis, split](primitive_details const& a) -> bool {
+                                auto it = std::partition(prims.begin() + start,
+                                                         prims.begin() + end,
+                                                         [split_axis, split](primitive_details const& a) -> bool {
                                         return a.centroid(split_axis) < split;
                                 });
-                                mid = it - prims.begin();
+                                mid = static_cast<unsigned>(it - prims.begin());
 
                                 // ensure each node has at least 1 element.
                                 if (mid == start)
@@ -349,7 +351,7 @@ e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start,
                         m_sum_depth2 += (depth + 1)*(depth + 1);
                         m_num_paths ++;
                         m_num_nodes ++;
-                        return new node(b, start, end - start);
+                        return new node(b, start, static_cast<uint8_t>(end - start));
                 }
         }
 }
@@ -376,10 +378,13 @@ e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
                 bvh.push_back(flattened_node(bvh_node->bound, bvh_node->prim_start, bvh_node->num_prims));
         } else {
                 // interior node.
-                unsigned p = bvh.size();
+                unsigned p = static_cast<unsigned>(bvh.size());
                 bvh.push_back(flattened_node());
                 flatten(bvh, bvh_node->children[0]);
-                bvh[p] = flattened_node(bvh_node->bound, bvh_node->split_axis, bvh.size(), 0x0);
+                bvh[p] = flattened_node(bvh_node->bound,
+                                        bvh_node->split_axis,
+                                        static_cast<unsigned>(bvh.size()),
+                                        0x0);
                 flatten(bvh, bvh_node->children[1]);
         }
 }
@@ -400,25 +405,25 @@ e8::bvh_scene_layout::update()
         std::map<if_material const*, unsigned short> mat_map;
         std::map<if_light const*, unsigned short> light_map;
         for (std::pair<if_geometry const*, binded_geometry> geo: m_geometries) {
-                geo_map.insert(std::pair<if_geometry const*, unsigned int>(geo.first, m_geo_list.size()));
+                geo_map.insert(std::make_pair(geo.first, m_geo_list.size()));
                 m_geo_list.push_back(geo.first);
         }
 
         for (if_material const* mat: m_mats) {
-                mat_map.insert(std::pair<if_material const*, unsigned short>(mat, m_mat_list.size()));
+                mat_map.insert(std::make_pair(mat, m_mat_list.size()));
                 m_mat_list.push_back(mat);
         }
-        mat_map.insert(std::pair<if_material const*, unsigned short>(nullptr, 0xFFFF));
+        mat_map.insert(std::make_pair(nullptr, 0xFFFF));
 
         for (if_light const* light: m_lights) {
-                light_map.insert(std::pair<if_light const*, unsigned short>(light, m_light_list.size()));
+                light_map.insert(std::make_pair(light, m_light_list.size()));
                 m_light_list.push_back(light);
         }
-        light_map.insert(std::pair<if_light const*, unsigned short>(nullptr, 0xFFFF));
+        light_map.insert(std::make_pair(nullptr, 0xFFFF));
 
         // construct primitive list.
         std::vector<primitive_details> prims;
-        for (std::pair<if_geometry const*, binded_geometry> const& p: m_geometries) {
+        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries) {
                 for (triangle const& tri: p.first->triangles()) {
                         prims.push_back(primitive_details(tri, p.first,
                                                             geo_map[p.first],
@@ -432,7 +437,7 @@ e8::bvh_scene_layout::update()
         m_max_depth = 0;
         m_num_nodes = 0;
 
-        node* tmp_bvh = bvh(prims, 0, prims.size(), 0);
+        node* tmp_bvh = bvh(prims, 0, static_cast<unsigned>(prims.size()), 0);
         flatten(m_bvh, tmp_bvh);
         delete_bvh(tmp_bvh, 0);
 
