@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include <algorithm>
 #include "scene.h"
 
@@ -197,6 +198,7 @@ e8::linear_scene_layout::get_relevant_lights(e8util::frustum const&) const
 e8::if_light const*
 e8::linear_scene_layout::sample_light(e8util::rng& rng, float& pdf) const
 {
+        assert(!m_light_list.empty());
         float e = rng.draw()*m_total_power;
         unsigned lo = 0;
         unsigned hi = static_cast<unsigned>(m_cum_power.size());
