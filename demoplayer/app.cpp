@@ -56,7 +56,9 @@ App::on_button_save_clicked()
                 return;
         }
         QString file_name = QFileDialog::getSaveFileName(this,
-            tr("Save Image"), ".", tr("Image Files (*.png)"));
+                                                         tr("Save Image"),
+                                                         ".",
+                                                         tr("Image Files (*.png)"));
         if (file_name.length() > 0) {
                 QImage const& img = m_frame->grabFramebuffer();
                 if (img.save(file_name, "png"))
@@ -82,7 +84,8 @@ App::on_button_render_clicked()
                 m_task.m_current.layout = m_ui->combo_structure->currentText().toStdString();
                 m_task.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
                 m_task.m_current.num_samps = static_cast<unsigned>(m_ui->spin_sample->value());
-                m_task.m_current.scene = "cornellball";
+                if (m_task.m_current.scene.empty())
+                        m_task.m_current.scene = "cornellball";
                 m_task.update();
 
                 m_task.enable(true);
@@ -110,11 +113,17 @@ App::on_MainWindow_destroyed()
         e8util::sync(m_info);
 }
 
-void App::on_action_openfile_triggered()
+void
+App::on_action_openfile_triggered()
 {
-        QString file_name = QFileDialog::getOpenFileName(this,
-            tr("Open scene"), "./res", tr("glTF Scene File (*.gltf)"));
-        if (file_name.length() > 0) {
+        if (m_task.is_running()) {
+                m_ui->statusbar->showMessage("Renderer is running. Need to stop the rendering task first.");
+                return ;
+        } else {
+                QString file_name = QFileDialog::getOpenFileName(this,
+                    tr("Open scene"), "./res", tr("glTF Scene File (*.gltf)"));
+                m_task.m_current.scene = file_name.toStdString();
+                m_task.update();
                 m_ui->statusbar->showMessage("Using scene " + file_name + ".");
         }
 }

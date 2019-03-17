@@ -550,9 +550,14 @@ e8util::gltf_scene::load_camera() const
         if (!model.cameras.empty()) {
                 tinygltf::Camera const& gltfcam = model.cameras[0];
                 if (gltfcam.type == "perspective") {
-                        std::cout << gltfcam.extras << std::endl;
                         // gltfcam.perspective.
-                        // e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,);
+                         e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,
+                                                                          e8util::vec3(),
+                                                                          e8util::mat44_rotate(0, e8util::vec3({0, 0, 1})),
+                                                                          static_cast<float>(2*gltfcam.perspective.znear*std::tan(gltfcam.perspective.yfov)),
+                                                                          static_cast<float>(gltfcam.perspective.znear/std::tan(gltfcam.perspective.yfov)),
+                                                                          static_cast<float>(gltfcam.perspective.aspectRatio));
+                         return cam;
                 } else if (gltfcam.type == "orthographic") {
                         // TODO: need to support orthographic camera.
                         return nullptr;
