@@ -2,11 +2,6 @@
 #include "camera.h"
 
 
-e8::if_camera::if_camera():
-        m_name("Unknown_Camera_Name")
-{
-}
-
 e8::if_camera::if_camera(std::string const& name):
         m_name(name)
 {

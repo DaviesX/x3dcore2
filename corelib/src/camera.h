@@ -13,7 +13,6 @@ namespace e8
 class if_camera
 {
 public:
-        if_camera();
         if_camera(std::string const& name);
         virtual ~if_camera();
 

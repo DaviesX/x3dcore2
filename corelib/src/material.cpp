@@ -1,9 +1,5 @@
 #include "material.h"
 
-e8::if_material::if_material():
-        m_name("Unknown_Material_Name")
-{
-}
 
 e8::if_material::if_material(std::string const& name):
         m_name(name)
@@ -21,12 +17,24 @@ e8::if_material::name() const
 }
 
 
-e8::oren_nayar::oren_nayar(e8util::vec3 const& albedo, float sigma):
-        m_albedo(albedo), m_sigma(sigma)
+e8::oren_nayar::oren_nayar(std::string const& name,
+                           e8util::vec3 const& albedo,
+                           float roughness):
+        if_material(name),
+        m_albedo(albedo),
+        m_sigma(roughness)
 {
         float sigma2 = m_sigma*m_sigma;
         A = 1 - 0.5f * sigma2 / (sigma2 + 0.33f);
         B = 0.45f * sigma2 / (sigma2 + 0.09f);
+}
+
+e8::oren_nayar::oren_nayar(e8util::vec3 const& albedo,
+                           float roughness):
+        oren_nayar("Unknown_Oren_Nayar_Material_Name",
+                   albedo,
+                   roughness)
+{
 }
 
 e8util::vec3
@@ -65,8 +73,20 @@ e8::oren_nayar::sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 con
 
 
 
+e8::cook_torr::cook_torr(std::string const& name,
+                         e8util::vec3 const& albedo,
+                         float beta,
+                         float ior):
+        if_material(name),
+        m_albedo(albedo),
+        m_beta2(beta*beta),
+        m_ior2(ior*ior)
+{
+}
+
 e8::cook_torr::cook_torr(e8util::vec3 const& albedo, float beta, float ior):
-        m_albedo(albedo), m_beta2(beta*beta), m_ior2(ior*ior)
+        cook_torr("Unknown_Cook_Torr_Material_Name",
+                  albedo, beta, ior)
 {
 }
 

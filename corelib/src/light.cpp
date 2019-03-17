@@ -2,7 +2,8 @@
 #include "tensor.h"
 #include "light.h"
 
-e8::if_light::if_light()
+e8::if_light::if_light(std::string const& name):
+        m_name(name)
 {
 
 }
@@ -11,8 +12,26 @@ e8::if_light::~if_light()
 {
 }
 
+std::string
+e8::if_light::name() const
+{
+        return m_name;
+}
+
+
+e8::area_light::area_light(std::string const& name,
+                           if_geometry const* geo,
+                           e8util::vec3 const& rad):
+        if_light(name),
+        m_geo(geo),
+        m_rad(rad),
+        m_power(static_cast<float>(M_PI)*m_geo->surface_area()*rad)
+{
+}
+
 e8::area_light::area_light(if_geometry const* geo, e8util::vec3 const& rad):
-        m_geo(geo), m_rad(rad), m_power(static_cast<float>(M_PI)*m_geo->surface_area()*rad)
+        area_light("Unkown_Area_Light_Name",
+                   geo, rad)
 {
 }
 

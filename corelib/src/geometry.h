@@ -13,7 +13,6 @@ typedef e8util::vec<3, unsigned> triangle;
 class if_geometry
 {
 public:
-        if_geometry();
         if_geometry(std::string const& name);
         virtual ~if_geometry();
 
@@ -65,7 +64,13 @@ protected:
 class uv_sphere: public trimesh
 {
 public:
-        uv_sphere(e8util::vec3 const& o, float r, unsigned const res);
+        uv_sphere(std::string const& name,
+                  e8util::vec3 const& o,
+                  float r,
+                  unsigned const res);
+        uv_sphere(e8util::vec3 const& o,
+                  float r,
+                  unsigned const res);
         ~uv_sphere();
 };
 

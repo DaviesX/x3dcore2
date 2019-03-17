@@ -10,7 +10,7 @@ namespace e8
 class if_light
 {
 public:
-        if_light();
+        if_light(std::string const& name);
         virtual ~if_light();
 
         virtual void            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
@@ -19,12 +19,20 @@ public:
         virtual e8util::vec3    eval(e8util::vec3 const& i, e8util::vec3 const& n) const = 0;
         virtual e8util::vec3    emission(e8util::vec3 const& w, e8util::vec3 const& n) const = 0;
         virtual e8util::vec3    power() const = 0;
+
+        std::string             name() const;
+private:
+        std::string             m_name;
 };
 
 class area_light: public if_light
 {
 public:
-        area_light(if_geometry const* geo, e8util::vec3 const& rad);
+        area_light(std::string const& name,
+                   if_geometry const* geo,
+                   e8util::vec3 const& rad);
+        area_light(if_geometry const* geo,
+                   e8util::vec3 const& rad);
         void            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
                                e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
         void            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const override;

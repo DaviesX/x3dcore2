@@ -2,10 +2,6 @@
 #include "geometry.h"
 
 
-e8::if_geometry::if_geometry():
-        m_name("Unknown_Geometry_Name")
-{
-}
 
 e8::if_geometry::if_geometry(std::string const& name):
         m_name(name)
@@ -23,14 +19,14 @@ e8::if_geometry::name() const
 }
 
 // trimesh
-e8::trimesh::trimesh():
+e8::trimesh::trimesh(std::string const& name):
+        if_geometry(name),
         m_aabb(0.0f, 0.0f)
 {
 }
 
-e8::trimesh::trimesh(std::string const& name):
-        if_geometry(name),
-        m_aabb(0.0f, 0.0f)
+e8::trimesh::trimesh():
+        trimesh("Unknown_Trimesh_Geometry_Name")
 {
 }
 
@@ -150,7 +146,11 @@ e8::trimesh::update()
 
 
 // sphere
-e8::uv_sphere::uv_sphere(e8util::vec3 const& o, float r, unsigned const res)
+e8::uv_sphere::uv_sphere(std::string const& name,
+                         e8util::vec3 const& o,
+                         float r,
+                         unsigned const res):
+        trimesh(name)
 {
         // vertex generation.
         // south pole.
@@ -216,6 +216,14 @@ e8::uv_sphere::uv_sphere(e8util::vec3 const& o, float r, unsigned const res)
 
                 m_tris.push_back(triangle({v2, v1, v0}));
         }
+}
+
+e8::uv_sphere::uv_sphere(e8util::vec3 const& o,
+                         float r,
+                         unsigned const res):
+        uv_sphere("Unknown_Uv_Sphere_Trimesh_Geometry_Name",
+                  o, r, res)
+{
 }
 
 e8::uv_sphere::~uv_sphere()
