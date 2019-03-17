@@ -84,8 +84,6 @@ App::on_button_render_clicked()
                 m_task.m_current.layout = m_ui->combo_structure->currentText().toStdString();
                 m_task.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
                 m_task.m_current.num_samps = static_cast<unsigned>(m_ui->spin_sample->value());
-                if (m_task.m_current.scene.empty())
-                        m_task.m_current.scene = "cornellball";
                 m_task.update();
 
                 m_task.enable(true);
@@ -123,7 +121,6 @@ App::on_action_openfile_triggered()
                 QString file_name = QFileDialog::getOpenFileName(this,
                     tr("Open scene"), "./res", tr("glTF Scene File (*.gltf)"));
                 m_task.m_current.scene = file_name.toStdString();
-                m_task.update();
                 m_ui->statusbar->showMessage("Using scene " + file_name + ".");
         }
 }

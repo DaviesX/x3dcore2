@@ -28,26 +28,16 @@ public:
 
         struct settings
         {
+                settings();
+
+                bool    operator==(settings const& rhs) const;
+                bool    operator!=(settings const& rhs) const;
+
                 std::string     scene;
                 std::string     renderer;
                 std::string     layout;
                 float           exposure;
                 unsigned        num_samps;
-
-
-                bool operator==(settings const& rhs) const
-                {
-                        return scene == rhs.scene &&
-                                renderer == rhs.renderer &&
-                                        layout == rhs.layout &&
-                                        exposure == rhs.exposure &&
-                                        num_samps == rhs.num_samps;
-                }
-
-                bool operator!=(settings const& rhs) const
-                {
-                        return !((*this) == rhs);
-                }
         };
 
         e8::if_scene*           m_scene = nullptr;
