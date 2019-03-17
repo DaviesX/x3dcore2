@@ -18,10 +18,12 @@ test::test_gltf_resource::run() const
         e8util::gltf_scene res("res/polly/project_polly.gltf");
 
         e8::if_scene* linear_scene = new e8::linear_scene_layout();
+        linear_scene->load(&res);
         linear_scene->update();
         delete linear_scene;
 
         e8::if_scene* bvh_scene = new e8::bvh_scene_layout();
+        bvh_scene->load(&res);
         bvh_scene->update();
         delete bvh_scene;
 
