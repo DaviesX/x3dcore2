@@ -12,6 +12,11 @@ e8::if_light::~if_light()
 {
 }
 
+void
+e8::if_light::set_scene_boundary(e8util::aabb const& /* bbox */)
+{
+}
+
 std::string
 e8::if_light::name() const
 {
@@ -75,4 +80,68 @@ e8util::vec3
 e8::area_light::power() const
 {
         return m_power;
+}
+
+
+e8::sky_light::sky_light(std::string const& name,
+                         e8util::vec3 const& rad):
+        if_light(name),
+        m_rad(rad)
+{
+}
+
+e8::sky_light::sky_light(e8util::vec3 const& rad):
+        sky_light("Unkown_Sky_Light_Name", rad)
+{
+}
+
+void
+e8::sky_light::set_scene_boundary(e8util::aabb const& bbox)
+{
+        m_dia = 2*bbox.enclosing_radius();
+        m_ref_p = bbox.centroid();
+}
+
+void
+e8::sky_light::sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
+                      e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
+{
+        e8util::vec3 z({0, 0, 1});
+        e8util::vec3 const& u = e8util::vec3_cos_hemisphere_sample(z, rng.draw(), rng.draw());
+        w = -u;
+        n = -u;
+        p = (u + m_ref_p)*m_dia;
+
+        p_pdf = z.inner(u)/static_cast<float>(M_PI);
+        w_pdf = 1.0f;
+}
+
+void
+e8::sky_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const
+{
+        e8util::vec3 z({0, 0, 1});
+        e8util::vec3 const& u = e8util::vec3_cos_hemisphere_sample(z, rng.draw(), rng.draw());
+        n = -u;
+        p = (u + m_ref_p)*m_dia;
+
+        pdf = z.inner(u)/static_cast<float>(M_PI);
+}
+
+e8util::vec3
+e8::sky_light::eval(e8util::vec3 const& i, e8util::vec3 const& n) const
+{
+        return m_rad*e8util::equals(i.inner(n), 1.0f);
+}
+
+e8util::vec3
+e8::sky_light::emission(e8util::vec3 const& w, e8util::vec3 const& n) const
+{
+        return m_rad*e8util::equals(w.inner(n), 1.0f);
+}
+
+e8util::vec3
+e8::sky_light::power() const
+{
+        // requires infinte power to be seen.
+        return std::numeric_limits<float>::infinity();
 }

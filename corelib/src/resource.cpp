@@ -448,6 +448,8 @@ e8util::gltf_scene::load_geometries() const
         std::vector<e8::if_geometry*> geos;
         tinygltf::Model const& model = m_pimpl->get_model();
 
+        model.nodes;
+
         for (size_t i = 0; i < model.meshes.size(); i ++) {
                 tinygltf::Mesh const& mesh = model.meshes[i];
                 e8::trimesh* geo = new e8::trimesh();

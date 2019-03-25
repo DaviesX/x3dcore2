@@ -854,6 +854,8 @@ public:
 
         bool    is_empty() const;
         float   surf_area() const;
+        vec3    centroid() const;
+        float   enclosing_radius() const;
         bool    intersect(ray const& r, float t_min, float t_max, float& t0, float& t1) const;
 
         vec3    min() const;
@@ -948,6 +950,19 @@ aabb::surf_area() const
                 vec3 d = m_max - m_min;
                 return 2.0f*(d(0)*d(1) + d(0)*d(2) + d(1)*d(2));
         }
+}
+
+
+inline float
+aabb::enclosing_radius() const
+{
+        return (m_max - m_min).norm()/2;
+}
+
+inline vec3
+aabb::centroid() const
+{
+        return (m_max + m_min)/2;
 }
 
 inline bool

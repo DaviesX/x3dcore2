@@ -75,6 +75,7 @@ e8::if_scene::load(e8util::if_resource* res)
         }
         for (unsigned i = 0; i < lights.size(); i ++) {
                 if (lights[i]) {
+                        lights[i]->set_scene_boundary(m_bound);
                         add_light(lights[i]);
                         bind(geos[i], lights[i]);
                 }
