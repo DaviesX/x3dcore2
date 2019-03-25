@@ -31,6 +31,7 @@ public:
         virtual std::vector<e8::if_geometry*>           load_geometries() const;
         virtual std::vector<e8::if_material*>           load_materials() const;
         virtual std::vector<e8::if_light*>              load_lights() const;
+        virtual std::vector<e8::if_light*>              load_virtual_lights() const;
         virtual e8::if_camera*                          load_camera() const;
         virtual bool                                    save_geometries(std::vector<e8::if_geometry*> const& geometries);
 };
@@ -42,6 +43,7 @@ public:
         std::vector<e8::if_geometry*>   load_geometries() const override;
         std::vector<e8::if_material*>   load_materials() const override;
         std::vector<e8::if_light*>      load_lights() const override;
+        std::vector<e8::if_light*>      load_virtual_lights() const override;
         e8::if_camera*                  load_camera() const override;
 };
 
@@ -96,6 +98,7 @@ public:
         std::vector<e8::if_geometry*>   load_geometries() const override;
         std::vector<e8::if_material*>   load_materials() const override;
         std::vector<e8::if_light*>      load_lights() const override;
+        std::vector<e8::if_light*>      load_virtual_lights() const override;
         e8::if_camera*                  load_camera() const override;
 private:
         gltf_scene_internal*    m_pimpl;

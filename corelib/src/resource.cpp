@@ -49,6 +49,12 @@ e8util::if_resource::load_lights() const
         throw std::string("resource doesn't support load_lights");
 }
 
+std::vector<e8::if_light*>
+e8util::if_resource::load_virtual_lights() const
+{
+        throw std::string("resource doesn't support load_virtual_lights");
+}
+
 e8::if_camera*
 e8util::if_resource::load_camera() const
 {
@@ -99,6 +105,12 @@ e8util::cornell_scene::load_lights() const
         return std::vector<e8::if_light*>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
                                                   new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometries()[0],
                                                               e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)});
+}
+
+std::vector<e8::if_light*>
+e8util::cornell_scene::load_virtual_lights() const
+{
+        return std::vector<e8::if_light*>();
 }
 
 e8::if_camera*
@@ -448,8 +460,6 @@ e8util::gltf_scene::load_geometries() const
         std::vector<e8::if_geometry*> geos;
         tinygltf::Model const& model = m_pimpl->get_model();
 
-        model.nodes;
-
         for (size_t i = 0; i < model.meshes.size(); i ++) {
                 tinygltf::Mesh const& mesh = model.meshes[i];
                 e8::trimesh* geo = new e8::trimesh();
@@ -540,8 +550,14 @@ std::vector<e8::if_light*>
 e8util::gltf_scene::load_lights() const
 {
         // Lights are not handled by glTF 2.0 as of now.
-        // TODO: return as least one default light.
         return std::vector<e8::if_light*>();
+}
+
+std::vector<e8::if_light*>
+e8util::gltf_scene::load_virtual_lights() const {
+        // Lights are not handled by glTF 2.0 as of now.
+        // return as least one default light.
+        return std::vector<e8::if_light*>{new e8::sky_light(e8util::vec3{.529f, .808f, .922f})};
 }
 
 e8::if_camera*
