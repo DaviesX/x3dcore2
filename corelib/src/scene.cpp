@@ -64,6 +64,7 @@ e8::if_scene::load(e8util::if_resource* res)
         std::vector<if_geometry*> const& geos = res->load_geometries();
         std::vector<if_material*> const& mats = res->load_materials();
         std::vector<if_light*> const& lights = res->load_lights();
+        std::vector<if_light*> const& v_lights = res->load_virtual_lights();
 
         for (if_geometry* geo: geos)
                 add_geometry(geo);
@@ -78,6 +79,12 @@ e8::if_scene::load(e8util::if_resource* res)
                         lights[i]->set_scene_boundary(m_bound);
                         add_light(lights[i]);
                         bind(geos[i], lights[i]);
+                }
+        }
+        for (unsigned i = 0; i < v_lights.size(); i ++) {
+                if (v_lights[i]) {
+                        v_lights[i]->set_scene_boundary(m_bound);
+                        add_light(v_lights[i]);
                 }
         }
 }

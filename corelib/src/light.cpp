@@ -130,18 +130,18 @@ e8::sky_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec
 e8util::vec3
 e8::sky_light::eval(e8util::vec3 const& i, e8util::vec3 const& n) const
 {
-        return m_rad*e8util::equals(i.inner(n), 1.0f);
+        float cos = i.normalize().inner(n);
+        return m_rad*std::max(cos, 0.0f);
 }
 
 e8util::vec3
 e8::sky_light::emission(e8util::vec3 const& w, e8util::vec3 const& n) const
 {
-        return m_rad*e8util::equals(w.inner(n), 1.0f);
+        return m_rad*std::max(w.inner(n), 0.0f);
 }
 
 e8util::vec3
 e8::sky_light::power() const
 {
-        // requires infinte power to be seen.
-        return std::numeric_limits<float>::infinity();
+        return static_cast<float>(M_PI)*(m_dia*m_dia/2);
 }

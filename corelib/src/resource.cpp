@@ -110,7 +110,7 @@ e8util::cornell_scene::load_lights() const
 std::vector<e8::if_light*>
 e8util::cornell_scene::load_virtual_lights() const
 {
-        return std::vector<e8::if_light*>();
+        return std::vector<e8::if_light*>{new e8::sky_light(e8util::vec3{.529f, .808f, .922f})};
 }
 
 e8::if_camera*
@@ -554,7 +554,8 @@ e8util::gltf_scene::load_lights() const
 }
 
 std::vector<e8::if_light*>
-e8util::gltf_scene::load_virtual_lights() const {
+e8util::gltf_scene::load_virtual_lights() const
+{
         // Lights are not handled by glTF 2.0 as of now.
         // return as least one default light.
         return std::vector<e8::if_light*>{new e8::sky_light(e8util::vec3{.529f, .808f, .922f})};
