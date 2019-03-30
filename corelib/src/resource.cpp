@@ -110,7 +110,7 @@ e8util::cornell_scene::load_lights() const
 std::vector<e8::if_light*>
 e8util::cornell_scene::load_virtual_lights() const
 {
-        return std::vector<e8::if_light*>{new e8::sky_light(e8util::vec3{.529f, .808f, .922f})};
+        return std::vector<e8::if_light*>();
 }
 
 e8::if_camera*

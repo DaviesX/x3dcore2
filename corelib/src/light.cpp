@@ -100,6 +100,7 @@ e8::sky_light::set_scene_boundary(e8util::aabb const& bbox)
 {
         m_dia = 2*bbox.enclosing_radius();
         m_ref_p = bbox.centroid();
+        m_ref_p(2) = 0.0f;
 }
 
 void
