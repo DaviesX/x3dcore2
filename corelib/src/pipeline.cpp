@@ -99,12 +99,12 @@ e8::pt_rendering_pipeline::update()
                         if (m_current.scene == "cornellball") {
                                 e8util::cornell_scene res;
                                 m_scene->load(&res);
-                                m_scene->update();
+                                m_scene->commit();
                                 m_cam = res.load_camera();
                         } else {
                                 e8util::gltf_scene res(m_current.scene);
                                 m_scene->load(&res);
-                                m_scene->update();
+                                m_scene->commit();
                                 m_cam = res.load_camera();
                         }
                 }

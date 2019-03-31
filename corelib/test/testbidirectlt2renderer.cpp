@@ -32,7 +32,7 @@ test::test_bidirect_lt2_renderer::run() const
         e8::bvh_scene_layout scene;
         //e8::linear_scene_layout scene;
         scene.load(res);
-        scene.update();
+        scene.commit();
 
         e8::img_file_frame img("test_bidirect.png", width, height);
         e8::clamp_compositor com(width, height);

@@ -33,7 +33,7 @@ test::test_scene::run() const
         //e8::linear_scene_layout scene;
         e8::bvh_scene_layout scene;
         scene.load(res);
-        scene.update();
+        scene.commit();
 
         std::cout << "max_depth: " << scene.max_depth() << std::endl;
         std::cout << "avg_depth: " << scene.avg_depth() << std::endl;

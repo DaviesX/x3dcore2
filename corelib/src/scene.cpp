@@ -100,7 +100,7 @@ e8::linear_scene_layout::~linear_scene_layout()
 }
 
 void
-e8::linear_scene_layout::update()
+e8::linear_scene_layout::commit()
 {
         m_cum_power.resize(m_lights.size());
         m_light_list.resize(m_lights.size());
@@ -406,9 +406,9 @@ e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 }
 
 void
-e8::bvh_scene_layout::update()
+e8::bvh_scene_layout::commit()
 {
-        this->linear_scene_layout::update();
+        this->linear_scene_layout::commit();
 
         m_mat_list.clear();
         m_light_list.clear();

@@ -19,12 +19,12 @@ test::test_gltf_resource::run() const
 
         e8::if_scene* linear_scene = new e8::linear_scene_layout();
         linear_scene->load(&res);
-        linear_scene->update();
+        linear_scene->commit();
         delete linear_scene;
 
         e8::if_scene* bvh_scene = new e8::bvh_scene_layout();
         bvh_scene->load(&res);
-        bvh_scene->update();
+        bvh_scene->commit();
         delete bvh_scene;
 
 //        std::vector<e8::if_geometry*> const& geos = res.load_geometries();

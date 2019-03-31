@@ -40,7 +40,7 @@ public:
         if_scene();
         virtual ~if_scene();
 
-        virtual void                            update() = 0;
+        virtual void                            commit() = 0;
         virtual intersect_info                  intersect(e8util::ray const& r) const = 0;
         virtual bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const = 0;
         virtual batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const = 0;
@@ -82,7 +82,7 @@ public:
         linear_scene_layout();
         ~linear_scene_layout() override;
 
-        virtual void                            update() override;
+        virtual void                            commit() override;
         virtual intersect_info                  intersect(e8util::ray const& r) const override;
         virtual bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const override;
         virtual batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const override;
@@ -101,7 +101,7 @@ public:
         bvh_scene_layout();
         ~bvh_scene_layout() override;
 
-        void                    update() override;
+        void                    commit() override;
         intersect_info          intersect(e8util::ray const& r) const override;
         bool                    has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const override;
 
