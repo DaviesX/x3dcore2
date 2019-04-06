@@ -3,10 +3,24 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wshift-negative-value"
+
 #include "../thirdparty/tinygltf/tiny_gltf.h"
+
+#pragma GCC diagnostic pop
+
+#undef TINYGLTF_IMPLEMENTATION
+#undef STB_IMAGE_IMPLEMENTATION
+#undef STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "geometry.h"
 #include "material.h"
 #include "resource.h"
@@ -357,7 +371,7 @@ e8util::gltf_scene_internal::gltf_scene_internal(std::string const& location)
 
         std::string err;
         std::string warn;
-        bool res;
+        bool res = false;
         switch (gtlf_file_type(location)) {
         case ascii: {
                 res = loader.LoadASCIIFromFile(&m_model, &err, &warn, location.c_str());

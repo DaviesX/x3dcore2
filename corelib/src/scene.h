@@ -188,12 +188,12 @@ private:
                 }
 
                 flattened_node(e8util::aabb const& bound, unsigned char split_axis, unsigned next_child, unsigned):
-                        bound(bound), num_prims(0), split_axis(split_axis), next_child(next_child), prim_start(-1)
+                        bound(bound), num_prims(0), split_axis(split_axis), next_child(next_child), prim_start(0XFFFFFFFF)
                 {
                 }
 
                 flattened_node(e8util::aabb const& bound, unsigned prim_start, unsigned char num_prims):
-                        bound(bound), num_prims(num_prims), split_axis(-1), next_child(-1), prim_start(prim_start)
+                        bound(bound), num_prims(num_prims), split_axis(0XFF), next_child(0XFFFFFFFF), prim_start(prim_start)
                 {
                 }
 

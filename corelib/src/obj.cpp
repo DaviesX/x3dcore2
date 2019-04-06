@@ -3,6 +3,15 @@
 #include "obj.h"
 
 
+e8::if_obj_container::if_obj_container()
+{
+}
+
+e8::if_obj_container::~if_obj_container()
+{
+}
+
+
 static e8::obj_id_t             g_obj_id_counter = 101;
 static e8util::mutex_t          g_obj_id_counter_mutex = e8util::mutex();
 

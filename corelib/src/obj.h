@@ -16,7 +16,10 @@ class if_obj;
 class if_obj_container
 {
 public:
-        void    load(if_obj* obj);
+        if_obj_container();
+        virtual ~if_obj_container();
+
+        virtual void    load(if_obj* obj) = 0;
 };
 
 typedef uint32_t                                                obj_id_t;
