@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.8.2, 2019-03-31T09:03:28. -->
+<!-- Written by QtCreator 4.8.2, 2019-03-31T18:21:48. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -308,7 +308,7 @@
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
     <value type="QString" key="RunConfiguration.WorkingDirectory">C:/Users/davis/Documents/Qt Projects/e8yescg</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default"></value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">C:/Users/davis/Documents/Qt Projects/build-qtproject-Desktop_Qt_5_12_0_MinGW_64_bit-Release/demoplayer</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

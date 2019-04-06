@@ -8,6 +8,12 @@ e8::if_geometry::if_geometry(std::string const& name):
 {
 }
 
+e8::if_geometry::if_geometry(obj_id_t id, std::string const& name):
+        if_operable_obj<if_geometry>(id),
+        m_name(name)
+{
+}
+
 e8::if_geometry::~if_geometry()
 {
 }
@@ -28,6 +34,18 @@ e8::trimesh::trimesh(std::string const& name):
 e8::trimesh::trimesh():
         trimesh("Unknown_Trimesh_Geometry_Name")
 {
+}
+
+e8::trimesh::trimesh(trimesh const& mesh):
+        if_geometry(id(), name())
+{
+        m_verts = mesh.m_verts;
+        m_norms = mesh.m_norms;
+        m_texcoords = mesh.m_texcoords;
+        m_tris = mesh.m_tris;
+        m_aabb = mesh.m_aabb;
+        m_cum_area = mesh.m_cum_area;
+        m_area = mesh.m_area;
 }
 
 e8::trimesh::~trimesh()
@@ -94,6 +112,17 @@ e8::trimesh::aabb() const
         return m_aabb;
 }
 
+e8::trimesh*
+e8::trimesh::transform(e8util::mat44 const& trans) const
+{
+        trimesh* transformed = new trimesh(*this);
+        for (unsigned i = 0; i < transformed->m_verts.size(); i ++) {
+                transformed->m_verts[i] = (trans*transformed->m_verts[i].homo(1.0f)).cart();
+        }
+        transformed->update_aabb();
+        return transformed;
+}
+
 void
 e8::trimesh::vertices(std::vector<e8util::vec3> const& v)
 {
@@ -119,17 +148,18 @@ e8::trimesh::triangles(std::vector<triangle> const& t)
 }
 
 void
-e8::trimesh::update()
+e8::trimesh::update_aabb()
 {
-        if (m_verts.empty())
-                return;
-
         // compute aabb box.
         m_aabb = e8util::aabb(m_verts[0], m_verts[0]);
         for (unsigned i = 1; i < m_verts.size(); i ++) {
                 m_aabb = m_aabb + m_verts[i];
         }
+}
 
+void
+e8::trimesh::update_face_cdf()
+{
         // compute area distribution.
         m_cum_area.resize(m_tris.size());
         float cum = 0;
@@ -142,6 +172,15 @@ e8::trimesh::update()
                 m_cum_area[i] = cum;
         }
         m_area = cum;
+}
+
+void
+e8::trimesh::update()
+{
+        if (m_verts.empty())
+                return;
+        update_aabb();
+        update_face_cdf();
 }
 
 
@@ -161,11 +200,11 @@ e8::uv_sphere::uv_sphere(std::string const& name,
         // rings.
         for (unsigned j = 1; j < res - 1; j ++) {
                 float u = static_cast<float>(j)/res;
-                float phi = u * M_PI - M_PI/2;
+                float phi = u * static_cast<float>(M_PI) - static_cast<float>(M_PI/2);
 
                 for (unsigned i = 0; i < res; i ++) {
                         float v = static_cast<float>(i)/res;
-                        float theta = v * 2*M_PI;
+                        float theta = v * static_cast<float>(2*M_PI);
 
                         float x = std::cos(phi)*std::cos(theta);
                         float y = std::cos(phi)*std::sin(theta);

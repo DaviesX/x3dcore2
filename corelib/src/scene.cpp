@@ -10,8 +10,8 @@ e8::if_scene::if_scene()
 
 e8::if_scene::~if_scene()
 {
-        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries)
-                delete p.first;
+        for (std::pair<obj_id_t, binded_geometry> p: m_geometries)
+                delete p.second.geometry;
         for (if_material const* mat: m_mats)
                 delete mat;
         for (if_light const* light: m_lights)
@@ -21,11 +21,10 @@ e8::if_scene::~if_scene()
 void
 e8::if_scene::add_geometry(if_geometry const* geometry)
 {
-        if (m_geometries.find(geometry) == m_geometries.end())
+        if (m_geometries.find(geometry->id()) == m_geometries.end())
                 m_bound = m_bound + geometry->aabb();
-        m_geometries.insert(
-                std::pair<if_geometry const*, if_scene::binded_geometry>(geometry,
-                                                                         if_scene::binded_geometry(geometry, nullptr, nullptr)));
+        m_geometries.insert(std::make_pair(geometry->id(),
+                                           if_scene::binded_geometry(geometry, nullptr, nullptr)));
 }
 
 void
@@ -43,13 +42,13 @@ e8::if_scene::add_light(if_light const* light)
 void
 e8::if_scene::bind(if_geometry const* geometry, if_material const* mat)
 {
-        m_geometries.at(geometry).mat = mat;
+        m_geometries.at(geometry->id()).mat = mat;
 }
 
 void
 e8::if_scene::bind(if_geometry const* geometry, if_light const* light)
 {
-        m_geometries.at(geometry).light = light;
+        m_geometries.at(geometry->id()).light = light;
 }
 
 e8util::aabb
@@ -122,12 +121,12 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
         float const t_max = 1000.0f;
 
         float t = INFINITY;
-        if_geometry const*      hit_geo = nullptr;
+        binded_geometry const*  hit_geo = nullptr;
         triangle const*         hit_tri = nullptr;
         e8util::vec3            hit_b;
 
-        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries) {
-                if_geometry const* geo = p.first;
+        for (auto it = m_geometries.begin(); it != m_geometries.end(); ++it) {
+                if_geometry const* geo = it->second.geometry;
 
                 std::vector<e8util::vec3> const&        verts = geo->vertices();
                 std::vector<triangle> const&            tris = geo->triangles();
@@ -141,7 +140,7 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
                         e8util::vec3 b;
                         if (r.intersect(v0, v1, v2, t_min, t_max, b, t0) && t0 < t) {
                                 hit_b = b;
-                                hit_geo = geo;
+                                hit_geo = &it->second;
                                 hit_tri = &tri;
                                 t = t0;
                         }
@@ -149,20 +148,18 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
         }
 
         if (hit_geo != nullptr) {
-                binded_geometry const& hit_binded = m_geometries.at(hit_geo);
-
-                std::vector<e8util::vec3> const& verts = hit_geo->vertices();
+                std::vector<e8util::vec3> const& verts = hit_geo->geometry->vertices();
                 e8util::vec3 const& v0 = verts[(*hit_tri)(0)];
                 e8util::vec3 const& v1 = verts[(*hit_tri)(1)];
                 e8util::vec3 const& v2 = verts[(*hit_tri)(2)];
                 e8util::vec3 const& vertex = hit_b(0)*v0 + hit_b(1)*v1 + hit_b(2)*v2;
 
-                std::vector<e8util::vec3> const& normals = hit_geo->normals();
+                std::vector<e8util::vec3> const& normals = hit_geo->geometry->normals();
                 e8util::vec3 const& n0 = normals[(*hit_tri)(0)];
                 e8util::vec3 const& n1 = normals[(*hit_tri)(1)];
                 e8util::vec3 const& n2 = normals[(*hit_tri)(2)];
                 e8util::vec3 const& normal = (hit_b(0)*n0 + hit_b(1)*n1 + hit_b(2)*n2).normalize();
-                return intersect_info(t, vertex, normal, hit_binded.mat, hit_binded.light);
+                return intersect_info(t, vertex, normal, hit_geo->mat, hit_geo->light);
         } else {
                 return intersect_info();
         }
@@ -171,8 +168,8 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
 bool
 e8::linear_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
 {
-        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries) {
-                if_geometry const* geo = p.first;
+        for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
+                if_geometry const* geo = p.second.geometry;
 
                 std::vector<e8util::vec3> const&        verts = geo->vertices();
                 std::vector<triangle> const&            tris = geo->triangles();
@@ -420,9 +417,9 @@ e8::bvh_scene_layout::commit()
         std::map<if_geometry const*, unsigned int> geo_map;
         std::map<if_material const*, unsigned short> mat_map;
         std::map<if_light const*, unsigned short> light_map;
-        for (std::pair<if_geometry const*, binded_geometry> geo: m_geometries) {
-                geo_map.insert(std::make_pair(geo.first, m_geo_list.size()));
-                m_geo_list.push_back(geo.first);
+        for (std::pair<obj_id_t, binded_geometry> geo: m_geometries) {
+                geo_map.insert(std::make_pair(geo.second.geometry, m_geo_list.size()));
+                m_geo_list.push_back(geo.second.geometry);
         }
 
         for (if_material const* mat: m_mats) {
@@ -439,11 +436,11 @@ e8::bvh_scene_layout::commit()
 
         // construct primitive list.
         std::vector<primitive_details> prims;
-        for (std::pair<if_geometry const*, binded_geometry> p: m_geometries) {
-                for (triangle const& tri: p.first->triangles()) {
-                        prims.push_back(primitive_details(tri, p.first,
-                                                            geo_map[p.first],
-                                          mat_map[p.second.mat],
+        for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
+                for (triangle const& tri: p.second.geometry->triangles()) {
+                        prims.push_back(primitive_details(tri, p.second.geometry,
+                                                          geo_map[p.second.geometry],
+                                        mat_map[p.second.mat],
                                         light_map[p.second.light]));
                 }
         }

@@ -4,6 +4,7 @@
 #include <set>
 #include <map>
 #include "tensor.h"
+#include "obj.h"
 #include "geometry.h"
 #include "material.h"
 #include "resource.h"
@@ -68,7 +69,7 @@ protected:
                 if_light const*         light;
         };
 
-        std::map<if_geometry const*, binded_geometry>   m_geometries;
+        std::map<obj_id_t, binded_geometry>             m_geometries;
         std::set<if_material const*>                    m_mats;
         std::set<if_light const*>                       m_lights;
         e8util::aabb                                    m_bound;

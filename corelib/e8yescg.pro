@@ -45,7 +45,8 @@ SOURCES += \
     test/testbidirectmisrenderer.cpp \
     test/testbidirectlt2renderer.cpp \
     test/testgltfresource.cpp \
-    src/objdb.cpp
+    src/objdb.cpp \
+    src/obj.cpp
 
 
 HEADERS += \
@@ -77,7 +78,8 @@ HEADERS += \
     test/testbidirectmisrenderer.h \
     test/testbidirectlt2renderer.h \
     test/testgltfresource.h \
-    src/objdb.h
+    src/objdb.h \
+    src/obj.h
 
 win32 {
 LIBS += -lOpengl32

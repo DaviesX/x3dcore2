@@ -2,6 +2,7 @@
 #define GEOMETRY_H
 
 #include <string>
+#include "obj.h"
 #include "tensor.h"
 #include "material.h"
 
@@ -10,7 +11,7 @@ namespace e8
 
 typedef e8util::vec<3, unsigned> triangle;
 
-class if_geometry
+class if_geometry: public if_operable_obj<if_geometry>
 {
 public:
         if_geometry(std::string const& name);
@@ -25,6 +26,8 @@ public:
         virtual void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const = 0;
         virtual float                                   surface_area() const = 0;
         virtual e8util::aabb                            aabb() const = 0;
+protected:
+        if_geometry(obj_id_t id, std::string const& name);
 private:
         std::string     m_name;
 };
@@ -33,6 +36,7 @@ class trimesh: public if_geometry
 {
 public:
         trimesh();
+        trimesh(trimesh const& mesh);
         trimesh(std::string const& name);
         virtual ~trimesh() override;
 
@@ -43,6 +47,7 @@ public:
         void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const override;
         float                                   surface_area() const override;
         virtual e8util::aabb                    aabb() const override;
+        trimesh*                                transform(e8util::mat44 const& trans) const override;
 
         void                                    vertices(std::vector<e8util::vec3> const& v);
         void                                    normals(std::vector<e8util::vec3> const& n);
@@ -51,6 +56,9 @@ public:
 
         void                                    update();
 protected:
+        void                            update_aabb();
+        void                            update_face_cdf();
+
         std::vector<e8util::vec3>       m_verts;
         std::vector<e8util::vec3>       m_norms;
         std::vector<e8util::vec2>       m_texcoords;
