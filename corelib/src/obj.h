@@ -13,11 +13,11 @@ namespace e8
 
 class if_obj;
 
-class if_obj_container
+class if_obj_manager
 {
 public:
-        if_obj_container();
-        virtual ~if_obj_container();
+        if_obj_manager();
+        virtual ~if_obj_manager();
 
         virtual void    load(if_obj* obj) = 0;
 };
@@ -36,6 +36,8 @@ public:
         obj_id_t                id() const;
         std::type_info const&   type() const;
         bool                    dirty() const;
+        if_obj_manager*         manage_by() const;
+        void                    managed_by(if_obj_manager* mgr);
 
         void                    init_blueprint(std::vector<transofrm_stage_name_t> const& stages);
         bool                    update_stage(transform_stage_t const& stage);
@@ -51,6 +53,7 @@ protected:
 private:
         obj_id_t                        m_id;
         transform_blueprint_t           m_blueprint;
+        if_obj_manager*                 m_mgr;
         if_obj*                         m_parent;
         std::set<if_obj*>               m_children;
         bool                            m_dirty;

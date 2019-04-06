@@ -20,8 +20,7 @@ public:
         ~objdb();
 
         void            manage_root(if_obj* root);
-        void            push_updates(if_scene* scene,
-                                     if_camera* cam);
+        void            push_updates();
         void            clear();
 private:
         void            mark_clean(if_obj* obj);

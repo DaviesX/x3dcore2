@@ -3,11 +3,11 @@
 #include "obj.h"
 
 
-e8::if_obj_container::if_obj_container()
+e8::if_obj_manager::if_obj_manager()
 {
 }
 
-e8::if_obj_container::~if_obj_container()
+e8::if_obj_manager::~if_obj_manager()
 {
 }
 
@@ -33,6 +33,7 @@ e8::if_obj::if_obj():
 
 e8::if_obj::if_obj(obj_id_t id):
         m_id(id),
+        m_mgr(nullptr),
         m_parent(nullptr),
         m_dirty(true)
 {
@@ -89,6 +90,18 @@ bool
 e8::if_obj::dirty() const
 {
         return m_dirty;
+}
+
+e8::if_obj_manager*
+e8::if_obj::manage_by() const
+{
+        return m_mgr;
+}
+
+void
+e8::if_obj::managed_by(if_obj_manager* mgr)
+{
+        m_mgr = mgr;
 }
 
 bool

@@ -18,8 +18,7 @@ e8::objdb::manage_root(if_obj* root)
 }
 
 void
-e8::objdb::push_updates(if_scene* scene,
-                        if_camera* cam)
+e8::objdb::push_updates()
 {
         for (if_obj* obj: m_roots) {
                 mark_clean(obj);
