@@ -99,7 +99,7 @@ e8::if_obj::manage_by() const
 }
 
 void
-e8::if_obj::managed_by(if_obj_manager* mgr)
+e8::if_obj::manage_by(if_obj_manager* mgr)
 {
         m_mgr = mgr;
 }

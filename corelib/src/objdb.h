@@ -23,7 +23,8 @@ public:
         void            push_updates();
         void            clear();
 private:
-        void            mark_clean(if_obj* obj);
+        void            push_updates(if_obj* obj, e8util::mat44 const& global_trans);
+        void            clear(if_obj* obj);
 
         std::set<if_obj*>       m_roots;
 };

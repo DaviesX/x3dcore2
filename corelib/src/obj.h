@@ -19,7 +19,8 @@ public:
         if_obj_manager();
         virtual ~if_obj_manager();
 
-        virtual void    load(if_obj* obj) = 0;
+        virtual void    load(if_obj* obj, e8util::mat44 const& trans) = 0;
+        virtual void    unload(if_obj* obj) = 0;
 };
 
 typedef uint32_t                                                obj_id_t;
@@ -37,7 +38,7 @@ public:
         std::type_info const&   type() const;
         bool                    dirty() const;
         if_obj_manager*         manage_by() const;
-        void                    managed_by(if_obj_manager* mgr);
+        void                    manage_by(if_obj_manager* mgr);
 
         void                    init_blueprint(std::vector<transofrm_stage_name_t> const& stages);
         bool                    update_stage(transform_stage_t const& stage);
