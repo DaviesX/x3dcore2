@@ -3,6 +3,25 @@
 #include "obj.h"
 
 
+e8::incompat_obj_exception::incompat_obj_exception(std::type_info const& expected_type,
+                                                   std::type_info const& actual_type):
+        m_expected_type(expected_type),
+        m_actual_type(actual_type)
+{
+}
+
+e8::incompat_obj_exception::~incompat_obj_exception()
+{
+}
+
+char const*
+e8::incompat_obj_exception::what() const noexcept
+{
+        return (std::string("Incompatiable obj support. Expected: ") + m_expected_type.name()
+                + ", Actual: " + m_actual_type.name()).c_str();
+}
+
+
 e8::if_obj_manager::if_obj_manager()
 {
 }
@@ -52,12 +71,12 @@ e8::if_obj::id() const
 void
 e8::if_obj::init_blueprint(std::vector<transofrm_stage_name_t> const& stages)
 {
-         assert(std::set<std::string>(stages.begin(), stages.end()).size() == stages.size());
-         m_blueprint.clear();
-         for (unsigned i = 0; i < stages.size(); i ++) {
-                 m_blueprint.push_back(std::make_pair(stages[i],
-                                                      e8util::mat44_scale(1.0f)));
-         }
+        assert(std::set<std::string>(stages.begin(), stages.end()).size() == stages.size());
+        m_blueprint.clear();
+        for (unsigned i = 0; i < stages.size(); i ++) {
+                m_blueprint.push_back(std::make_pair(stages[i],
+                                                     e8util::mat44_scale(1.0f)));
+        }
 }
 
 bool
@@ -65,7 +84,7 @@ e8::if_obj::update_stage(transform_stage_t const& stage)
 {
         for (auto it = m_blueprint.begin(); it != m_blueprint.end(); ++ it) {
                 if (it->first == stage.first &&
-                    it->second != stage.second) {
+                                it->second != stage.second) {
                         it->second = stage.second;
                         mark_dirty();
                         return true;
@@ -128,4 +147,17 @@ e8::if_obj::remove_child(if_obj* child)
         } else {
                 return false;
         }
+}
+
+
+std::vector<e8::if_obj*>
+e8::if_obj::get_children(std::type_info const& interface_type)
+{
+        std::vector<e8::if_obj*> result;
+        for (if_obj* obj: m_children) {
+                if (obj->interface() == interface_type) {
+                        result.push_back(obj);
+                }
+        }
+        return result;
 }

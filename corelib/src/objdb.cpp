@@ -35,6 +35,9 @@ e8::objdb::push_updates(if_obj* obj, e8util::mat44 const& global_trans)
         e8util::mat44 const& modified_trans = local_trans*global_trans;
         if (obj->dirty()) {
                 if_obj_manager* mgr = obj->manage_by();
+                if (mgr->support() != typeid(*obj)) {
+                        throw incompat_obj_exception(mgr->support(), typeid(*obj));
+                }
                 mgr->unload(obj);
                 mgr->load(obj, modified_trans);
                 obj->mark_clean();

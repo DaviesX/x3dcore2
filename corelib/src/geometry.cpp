@@ -24,6 +24,12 @@ e8::if_geometry::name() const
         return m_name;
 }
 
+const std::type_info&
+e8::if_geometry::interface() const
+{
+        return typeid(*this);
+}
+
 // trimesh
 e8::trimesh::trimesh(std::string const& name):
         if_geometry(name),

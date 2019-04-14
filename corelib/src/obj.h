@@ -5,11 +5,24 @@
 #include <set>
 #include <queue>
 #include <vector>
+#include <exception>
 #include "tensor.h"
 
 
 namespace e8
 {
+
+class incompat_obj_exception: public std::exception
+{
+public:
+        incompat_obj_exception(std::type_info const& expected_type,
+                               std::type_info const& actual_type);
+        ~incompat_obj_exception();
+        char const*     what() const noexcept;
+private:
+        std::type_info const&   m_expected_type;
+        std::type_info const&   m_actual_type;
+};
 
 class if_obj;
 
@@ -19,8 +32,9 @@ public:
         if_obj_manager();
         virtual ~if_obj_manager();
 
-        virtual void    load(if_obj* obj, e8util::mat44 const& trans) = 0;
-        virtual void    unload(if_obj* obj) = 0;
+        virtual void                    load(if_obj* obj, e8util::mat44 const& trans) = 0;
+        virtual void                    unload(if_obj* obj) = 0;
+        virtual const std::type_info&   support() const = 0;
 };
 
 typedef uint32_t                                                obj_id_t;
@@ -34,18 +48,20 @@ class if_obj
 public:
         virtual ~if_obj();
 
-        obj_id_t                id() const;
-        std::type_info const&   type() const;
-        bool                    dirty() const;
-        if_obj_manager*         manage_by() const;
-        void                    manage_by(if_obj_manager* mgr);
+        virtual std::type_info const&   interface() const = 0;
 
-        void                    init_blueprint(std::vector<transofrm_stage_name_t> const& stages);
-        bool                    update_stage(transform_stage_t const& stage);
+        obj_id_t                        id() const;
+        std::type_info const&           type() const;
+        bool                            dirty() const;
+        if_obj_manager*                 manage_by() const;
+        void                            manage_by(if_obj_manager* mgr);
 
-        bool                    add_child(if_obj* child);
-        bool                    remove_child(if_obj* child);
+        void                            init_blueprint(std::vector<transofrm_stage_name_t> const& stages);
+        bool                            update_stage(transform_stage_t const& stage);
 
+        bool                            add_child(if_obj* child);
+        bool                            remove_child(if_obj* child);
+        std::vector<if_obj*>            get_children(std::type_info const& interface_type);
 protected:
         if_obj();
         if_obj(obj_id_t id);

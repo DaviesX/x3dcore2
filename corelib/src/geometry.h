@@ -18,6 +18,7 @@ public:
         virtual ~if_geometry();
 
         std::string                                     name() const;
+        const std::type_info&                           interface() const;
 
         virtual std::vector<e8util::vec3> const&        vertices() const = 0;
         virtual std::vector<e8util::vec3> const&        normals() const = 0;
