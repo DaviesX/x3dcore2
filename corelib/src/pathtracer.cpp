@@ -21,7 +21,7 @@ e8::position_pathtracer::~position_pathtracer()
 }
 
 std::vector<e8util::vec3>
-e8::position_pathtracer::sample(e8util::rng&, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned) const
+e8::position_pathtracer::sample(e8util::rng&, std::vector<e8util::ray> const& rays, if_path_space const* scene, unsigned) const
 {
         e8util::aabb const& aabb = scene->aabb();
         e8util::vec3 const& range = aabb.max() - aabb.min();
@@ -48,7 +48,7 @@ e8::normal_pathtracer::~normal_pathtracer()
 }
 
 std::vector<e8util::vec3>
-e8::normal_pathtracer::sample(e8util::rng&, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned) const
+e8::normal_pathtracer::sample(e8util::rng&, std::vector<e8util::ray> const& rays, if_path_space const* scene, unsigned) const
 {
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
@@ -77,7 +77,7 @@ e8::direct_pathtracer::sample_illum_source(e8util::rng& rng,
                                            e8util::vec3& n,
                                            float& density,
                                            e8::intersect_info const&,
-                                           if_scene const* scene) const
+                                           if_path_space const* scene) const
 {
         // sample light.
         float light_pdf;
@@ -96,7 +96,7 @@ e8::direct_pathtracer::transport_illum_source(if_light const* light,
                                               e8util::vec3 const& n_illum,
                                               e8::intersect_info const& target_vert,
                                               e8util::vec3 const& target_o_ray,
-                                              if_scene const* scene) const
+                                              if_path_space const* scene) const
 {
         // construct light path.
         e8util::vec3 const& l = target_vert.vertex - p_illum;
@@ -122,7 +122,7 @@ e8util::vec3
 e8::direct_pathtracer::sample_direct_illum(e8util::rng& rng,
                                            e8util::vec3 const& target_o_ray,
                                            e8::intersect_info const& target_vert,
-                                           if_scene const* scene,
+                                           if_path_space const* scene,
                                            unsigned multi_light_samps) const
 {
         e8util::vec3 rad;
@@ -138,7 +138,7 @@ e8::direct_pathtracer::sample_direct_illum(e8util::rng& rng,
 std::vector<e8util::vec3>
 e8::direct_pathtracer::sample(e8util::rng& rng,
                               std::vector<e8util::ray> const& rays,
-                              if_scene const* scene,
+                              if_path_space const* scene,
                               unsigned multi_light_samps) const
 {
         std::vector<e8util::vec3> rad(rays.size());
@@ -166,7 +166,7 @@ e8::unidirect_pathtracer::~unidirect_pathtracer()
 unsigned
 e8::unidirect_pathtracer::sample_path(e8util::rng& rng,
                                       sampled_pathlet* sampled_path,
-                                      if_scene const* scene,
+                                      if_path_space const* scene,
                                       unsigned depth,
                                       unsigned max_depth) const
 {
@@ -191,7 +191,7 @@ e8::unidirect_pathtracer::sample_path(e8util::rng& rng,
                                       sampled_pathlet* sampled_path,
                                       e8util::ray const& r0,
                                       float dens0,
-                                      if_scene const* scene,
+                                      if_path_space const* scene,
                                       unsigned max_depth) const
 {
         e8::intersect_info const& vert0 = scene->intersect(r0);
@@ -268,7 +268,7 @@ e8util::vec3
 e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                 e8util::vec3 const& o,
                                                 e8::intersect_info const& vert,
-                                                if_scene const* scene,
+                                                if_path_space const* scene,
                                                 unsigned depth,
                                                 unsigned multi_light_samps,
                                                 unsigned multi_indirect_samps) const
@@ -309,7 +309,7 @@ e8::unidirect_pathtracer::sample_indirect_illum(e8util::rng& rng,
 }
 
 std::vector<e8util::vec3>
-e8::unidirect_pathtracer::sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_scene const* scene, unsigned) const
+e8::unidirect_pathtracer::sample(e8util::rng& rng, std::vector<e8util::ray> const& rays, if_path_space const* scene, unsigned) const
 {
         std::vector<e8util::vec3> rad(rays.size());
         for (unsigned i = 0; i < rays.size(); i ++) {
@@ -339,7 +339,7 @@ e8util::vec3
 e8::bidirect_lt2_pathtracer::join_with_light_paths(e8util::rng& rng,
                                                    e8util::vec3 const& o,
                                                    e8::intersect_info const& poi,
-                                                   if_scene const* scene,
+                                                   if_path_space const* scene,
                                                    unsigned cam_path_len) const
 {
         e8util::vec3 const& p1_direct = sample_direct_illum(rng, o, poi, scene, 1);
@@ -389,7 +389,7 @@ e8util::vec3
 e8::bidirect_lt2_pathtracer::sample_indirect_illum(e8util::rng& rng,
                                                    e8util::vec3 const& o,
                                                    e8::intersect_info const& vert,
-                                                   if_scene const* scene,
+                                                   if_path_space const* scene,
                                                    unsigned depth) const
 {
         static const unsigned mutate_depth = 1;
@@ -421,7 +421,7 @@ e8::bidirect_lt2_pathtracer::sample_indirect_illum(e8util::rng& rng,
 std::vector<e8util::vec3>
 e8::bidirect_lt2_pathtracer::sample(e8util::rng& rng,
                                     std::vector<e8util::ray> const& rays,
-                                    if_scene const* scene,
+                                    if_path_space const* scene,
                                     unsigned) const
 {
         std::vector<e8util::vec3> rad(rays.size());
@@ -456,7 +456,7 @@ e8::bidirect_mis_pathtracer::sample_illum_source(e8util::rng& rng,
                                                  e8util::vec3& w,
                                                  float& density,
                                                  float& w_density,
-                                                 if_scene const* scene) const
+                                                 if_path_space const* scene) const
 {
         // sample light.
         float light_dens;
@@ -479,7 +479,7 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
                                                  e8util::vec3 const& light_n,
                                                  float pdf_light_p_dens,
                                                  if_light const* light,
-                                                 if_scene const* scene) const
+                                                 if_path_space const* scene) const
 {
         float weights[m_max_path_len*2 + 2] = {0};
         e8util::vec3 subpath_rads[m_max_path_len*2 + 2];
@@ -566,7 +566,7 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths(sampled_pathlet const* cam_path
 std::vector<e8util::vec3>
 e8::bidirect_mis_pathtracer::sample(e8util::rng& rng,
                                     std::vector<e8util::ray> const& rays,
-                                    if_scene const* scene,
+                                    if_path_space const* scene,
                                     unsigned) const
 {
         std::vector<e8util::vec3> rad(rays.size());

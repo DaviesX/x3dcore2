@@ -87,9 +87,9 @@ e8::pt_rendering_pipeline::update()
                         scene_layout_changed = true;
                         delete m_scene;
                         if (m_current.layout == "linear") {
-                                m_scene = new e8::linear_scene_layout();
+                                m_scene = new e8::linear_path_space_layout();
                         } else if (m_current.layout == "static bvh") {
-                                m_scene = new e8::bvh_scene_layout();
+                                m_scene = new e8::bvh_path_space_layout();
                         } else {
                                 assert(m_current.layout == "linear" ||
                                        m_current.layout == "static bvh");

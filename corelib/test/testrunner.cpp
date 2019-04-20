@@ -72,7 +72,7 @@ test::load(int argc, char** argv)
         runner.add("test_resource", new test_resource(), false);
         runner.add("test_gltf_resource", new test_gltf_resource(), false);
         runner.add("test_camera", new test_camera(), false);
-        runner.add("test_scene", new test_scene(), false);
+        runner.add("test_path_space", new test_path_space(), false);
         runner.add("test_direct_renderer", new test_direct_renderer(), false);
         runner.add("test_unidirect_renderer", new test_unidirect_renderer(), false);
         runner.add("test_bidirect_lt2_renderer", new test_bidirect_lt2_renderer(), false);

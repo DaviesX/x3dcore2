@@ -6,11 +6,11 @@
 namespace test
 {
 
-class test_scene: public if_test
+class test_path_space: public if_test
 {
 public:
-        test_scene();
-        ~test_scene();
+        test_path_space();
+        ~test_path_space() override;
 
         void    run() const override;
 };

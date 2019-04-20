@@ -40,7 +40,7 @@ e8::pt_image_renderer::sampling_task_data::sampling_task_data():
 }
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(e8util::data_id_t id,
-                                                              if_scene const* scene,
+                                                              if_path_space const* scene,
                                                               std::vector<e8util::ray> const& rays):
         e8util::if_task_storage(id),
         scene(scene),
@@ -128,7 +128,7 @@ e8::pt_image_renderer::~pt_image_renderer()
 }
 
 void
-e8::pt_image_renderer::render(if_scene const* scene, if_camera const* cam, if_compositor* compositor)
+e8::pt_image_renderer::render(if_path_space const* scene, if_camera const* cam, if_compositor* compositor)
 {
         // generate camera seed ray, if the update is dirty, for each tile task.
         if (update_image_view(cam, compositor)) {

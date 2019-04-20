@@ -4,11 +4,11 @@
 #include "scene.h"
 
 
-e8::if_scene::if_scene()
+e8::if_path_space::if_path_space()
 {
 }
 
-e8::if_scene::~if_scene()
+e8::if_path_space::~if_path_space()
 {
         std::set<if_material const*> mats;
         for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
@@ -24,40 +24,40 @@ e8::if_scene::~if_scene()
 }
 
 void
-e8::if_scene::add_geometry(if_geometry const* geometry)
+e8::if_path_space::add_geometry(if_geometry const* geometry)
 {
         if (m_geometries.find(geometry->id()) == m_geometries.end())
                 m_bound = m_bound + geometry->aabb();
         m_geometries.insert(std::make_pair(geometry->id(),
-                                           if_scene::binded_geometry(geometry, nullptr, nullptr)));
+                                           if_path_space::binded_geometry(geometry, nullptr, nullptr)));
 }
 
 void
-e8::if_scene::add_light(if_light const* light)
+e8::if_path_space::add_light(if_light const* light)
 {
         m_lights.insert(light);
 }
 
 void
-e8::if_scene::bind(if_geometry const* geometry, if_material const* mat)
+e8::if_path_space::bind(if_geometry const* geometry, if_material const* mat)
 {
         m_geometries.at(geometry->id()).mat = mat;
 }
 
 void
-e8::if_scene::bind(if_geometry const* geometry, if_light const* light)
+e8::if_path_space::bind(if_geometry const* geometry, if_light const* light)
 {
         m_geometries.at(geometry->id()).light = light;
 }
 
 e8util::aabb
-e8::if_scene::aabb() const
+e8::if_path_space::aabb() const
 {
         return m_bound;
 }
 
 void
-e8::if_scene::load(e8util::if_resource* res)
+e8::if_path_space::load(e8util::if_resource* res)
 {
         std::vector<if_geometry*> const& geos = res->load_geometries();
         std::vector<if_material*> const& mats = res->load_materials();
@@ -87,7 +87,7 @@ e8::if_scene::load(e8util::if_resource* res)
 }
 
 void
-e8::if_scene::load(if_obj* obj, e8util::mat44 const& trans)
+e8::if_path_space::load(if_obj* obj, e8util::mat44 const& trans)
 {
         if_geometry* geo = static_cast<if_geometry*>(obj)->transform(trans);
         std::vector<if_obj*> mats = obj->get_children(typeid(if_material));
@@ -102,7 +102,7 @@ e8::if_scene::load(if_obj* obj, e8util::mat44 const& trans)
 }
 
 void
-e8::if_scene::unload(if_obj* obj)
+e8::if_path_space::unload(if_obj* obj)
 {
         auto it = m_geometries.find(obj->id());
         if (it != m_geometries.end()) {
@@ -111,22 +111,22 @@ e8::if_scene::unload(if_obj* obj)
 }
 
 const std::type_info&
-e8::if_scene::support() const
+e8::if_path_space::support() const
 {
         return typeid(if_geometry);
 }
 
 
-e8::linear_scene_layout::linear_scene_layout()
+e8::linear_path_space_layout::linear_path_space_layout()
 {
 }
 
-e8::linear_scene_layout::~linear_scene_layout()
+e8::linear_path_space_layout::~linear_path_space_layout()
 {
 }
 
 void
-e8::linear_scene_layout::commit()
+e8::linear_path_space_layout::commit()
 {
         m_cum_power.resize(m_lights.size());
         m_light_list.resize(m_lights.size());
@@ -142,7 +142,7 @@ e8::linear_scene_layout::commit()
 }
 
 e8::intersect_info
-e8::linear_scene_layout::intersect(e8util::ray const& r) const
+e8::linear_path_space_layout::intersect(e8util::ray const& r) const
 {
         float const t_min = 1e-4f;
         float const t_max = 1000.0f;
@@ -193,7 +193,7 @@ e8::linear_scene_layout::intersect(e8util::ray const& r) const
 }
 
 bool
-e8::linear_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
+e8::linear_path_space_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
 {
         for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
                 if_geometry const* geo = p.second.geometry;
@@ -216,19 +216,19 @@ e8::linear_scene_layout::has_intersect(e8util::ray const& r, float t_min, float 
 }
 
 e8::batched_geometry
-e8::linear_scene_layout::get_relevant_geometries(e8util::frustum const&) const
+e8::linear_path_space_layout::get_relevant_geometries(e8util::frustum const&) const
 {
         throw std::string("Not implemented yet.");
 }
 
 std::vector<e8::if_light const*>
-e8::linear_scene_layout::get_relevant_lights(e8util::frustum const&) const
+e8::linear_path_space_layout::get_relevant_lights(e8util::frustum const&) const
 {
         throw std::string("Not implemented yet.");
 }
 
 e8::if_light const*
-e8::linear_scene_layout::sample_light(e8util::rng& rng, float& pdf) const
+e8::linear_path_space_layout::sample_light(e8util::rng& rng, float& pdf) const
 {
         assert(!m_light_list.empty());
         float e = rng.draw()*m_total_power;
@@ -251,16 +251,16 @@ e8::linear_scene_layout::sample_light(e8util::rng& rng, float& pdf) const
 #define BVH_RAY_TRIANGLE_COST   8
 #define BVH_RAY_BOX_COST        1
 
-e8::bvh_scene_layout::bvh_scene_layout()
+e8::bvh_path_space_layout::bvh_path_space_layout()
 {
 }
 
-e8::bvh_scene_layout::~bvh_scene_layout()
+e8::bvh_path_space_layout::~bvh_path_space_layout()
 {
 }
 
-std::vector<e8::bvh_scene_layout::bucket>
-e8::bvh_scene_layout::sah_buckets(std::vector<primitive_details> const& prims, unsigned start, unsigned end,
+std::vector<e8::bvh_path_space_layout::bucket>
+e8::bvh_path_space_layout::sah_buckets(std::vector<primitive_details> const& prims, unsigned start, unsigned end,
                                   unsigned axis, e8util::aabb const& bound, e8util::vec3 const& range)
 {
         // construct bucket.
@@ -296,7 +296,7 @@ e8::bvh_scene_layout::sah_buckets(std::vector<primitive_details> const& prims, u
 }
 
 e8util::aabb
-e8::bvh_scene_layout::bound(std::vector<primitive_details> const& prims, unsigned start, unsigned end)
+e8::bvh_path_space_layout::bound(std::vector<primitive_details> const& prims, unsigned start, unsigned end)
 {
         e8util::aabb bound;
         for (unsigned i = start; i < end; i ++) {
@@ -305,8 +305,8 @@ e8::bvh_scene_layout::bound(std::vector<primitive_details> const& prims, unsigne
         return bound;
 }
 
-e8::bvh_scene_layout::node*
-e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start, unsigned end, unsigned depth)
+e8::bvh_path_space_layout::node*
+e8::bvh_path_space_layout::bvh(std::vector<primitive_details>& prims, unsigned start, unsigned end, unsigned depth)
 {
         if (end - start == 0) {
                 // special (error) case: empty node.
@@ -394,7 +394,7 @@ e8::bvh_scene_layout::bvh(std::vector<primitive_details>& prims, unsigned start,
 }
 
 void
-e8::bvh_scene_layout::delete_bvh(node* bvh, unsigned depth)
+e8::bvh_path_space_layout::delete_bvh(node* bvh, unsigned depth)
 {
         if (bvh != nullptr) {
                 delete_bvh(bvh->children[0], depth + 1);
@@ -408,7 +408,7 @@ e8::bvh_scene_layout::delete_bvh(node* bvh, unsigned depth)
 }
 
 void
-e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
+e8::bvh_path_space_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 {
         if (bvh_node == nullptr) {
                 // special (error) case.
@@ -430,9 +430,9 @@ e8::bvh_scene_layout::flatten(std::vector<flattened_node>& bvh, node* bvh_node)
 }
 
 void
-e8::bvh_scene_layout::commit()
+e8::bvh_path_space_layout::commit()
 {
-        this->linear_scene_layout::commit();
+        this->linear_path_space_layout::commit();
 
         m_mat_list.clear();
         m_light_list.clear();
@@ -490,7 +490,7 @@ e8::bvh_scene_layout::commit()
 }
 
 e8::intersect_info
-e8::bvh_scene_layout::intersect(e8util::ray const& r) const
+e8::bvh_path_space_layout::intersect(e8util::ray const& r) const
 {
         if (m_bvh.empty()) {
                 return intersect_info();
@@ -570,7 +570,7 @@ e8::bvh_scene_layout::intersect(e8util::ray const& r) const
 }
 
 bool
-e8::bvh_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
+e8::bvh_path_space_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
 {
         std::vector<unsigned> candids({0});
         while (!candids.empty()) {
@@ -614,26 +614,26 @@ e8::bvh_scene_layout::has_intersect(e8util::ray const& r, float t_min, float t_m
 }
 
 unsigned
-e8::bvh_scene_layout::max_depth() const
+e8::bvh_path_space_layout::max_depth() const
 {
         return m_max_depth;
 }
 
 float
-e8::bvh_scene_layout::avg_depth() const
+e8::bvh_path_space_layout::avg_depth() const
 {
         return static_cast<float>(m_sum_depth)/m_num_paths;
 }
 
 float
-e8::bvh_scene_layout::dev_depth() const
+e8::bvh_path_space_layout::dev_depth() const
 {
         float mu = avg_depth();
         return std::sqrt(static_cast<float>(m_sum_depth2)/m_num_paths - mu*mu);
 }
 
 unsigned
-e8::bvh_scene_layout::num_nodes() const
+e8::bvh_path_space_layout::num_nodes() const
 {
         return m_num_nodes;
 }

@@ -35,11 +35,11 @@ struct intersect_info
 
 typedef std::map<if_material const*, std::vector<if_geometry const*>>   batched_geometry;
 
-class if_scene: public if_obj_manager
+class if_path_space: public if_obj_manager
 {
 public:
-        if_scene();
-        virtual ~if_scene() override;
+        if_path_space();
+        virtual ~if_path_space() override;
 
         virtual void                            commit() = 0;
         virtual intersect_info                  intersect(e8util::ray const& r) const = 0;
@@ -78,11 +78,11 @@ protected:
 
 
 
-class linear_scene_layout: public if_scene
+class linear_path_space_layout: public if_path_space
 {
 public:
-        linear_scene_layout();
-        ~linear_scene_layout() override;
+        linear_path_space_layout();
+        ~linear_path_space_layout() override;
 
         virtual void                            commit() override;
         virtual intersect_info                  intersect(e8util::ray const& r) const override;
@@ -97,11 +97,11 @@ private:
 };
 
 
-class bvh_scene_layout: public linear_scene_layout
+class bvh_path_space_layout: public linear_path_space_layout
 {
 public:
-        bvh_scene_layout();
-        ~bvh_scene_layout() override;
+        bvh_path_space_layout();
+        ~bvh_path_space_layout() override;
 
         void                    commit() override;
         intersect_info          intersect(e8util::ray const& r) const override;

@@ -10,16 +10,16 @@
 #include "testscene.h"
 
 
-test::test_scene::test_scene()
+test::test_path_space::test_path_space()
 {
 }
 
-test::test_scene::~test_scene()
+test::test_path_space::~test_path_space()
 {
 }
 
 void
-test::test_scene::run() const
+test::test_path_space::run() const
 {
         unsigned const width = 1024;
         unsigned const height = 768;
@@ -31,7 +31,7 @@ test::test_scene::run() const
         e8::if_camera* cam = res->load_camera();
 
         //e8::linear_scene_layout scene;
-        e8::bvh_scene_layout scene;
+        e8::bvh_path_space_layout scene;
         scene.load(res);
         scene.commit();
 
