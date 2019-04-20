@@ -10,12 +10,17 @@ e8::if_scene::if_scene()
 
 e8::if_scene::~if_scene()
 {
-        for (std::pair<obj_id_t, binded_geometry> p: m_geometries)
+        std::set<if_material const*> mats;
+        for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
+                mats.insert(p.second.mat);
                 delete p.second.geometry;
-        for (if_material const* mat: m_mats)
+        }
+        for (if_material const* mat: mats) {
                 delete mat;
-        for (if_light const* light: m_lights)
+        }
+        for (if_light const* light: m_lights) {
                 delete light;
+        }
 }
 
 void
@@ -25,12 +30,6 @@ e8::if_scene::add_geometry(if_geometry const* geometry)
                 m_bound = m_bound + geometry->aabb();
         m_geometries.insert(std::make_pair(geometry->id(),
                                            if_scene::binded_geometry(geometry, nullptr, nullptr)));
-}
-
-void
-e8::if_scene::add_material(if_material const* mat)
-{
-        m_mats.insert(mat);
 }
 
 void
@@ -69,7 +68,6 @@ e8::if_scene::load(e8util::if_resource* res)
                 add_geometry(geo);
         for (unsigned i = 0; i < mats.size(); i ++) {
                 if (mats[i]) {
-                        add_material(mats[i]);
                         bind(geos[i], mats[i]);
                 }
         }
@@ -88,6 +86,35 @@ e8::if_scene::load(e8util::if_resource* res)
         }
 }
 
+void
+e8::if_scene::load(if_obj* obj, e8util::mat44 const& trans)
+{
+        if_geometry* geo = static_cast<if_geometry*>(obj)->transform(trans);
+        std::vector<if_obj*> mats = obj->get_children(typeid(if_material));
+        std::vector<if_obj*> lights = obj->get_children(typeid(if_light));
+
+        add_geometry(geo);
+        // TODO: can be static_cast when if_material and if_light are if_objs.
+        bind(geo, reinterpret_cast<if_material*>(mats[0]));
+        bind(geo, reinterpret_cast<if_light*>(lights[0]));
+
+        m_lights.insert(reinterpret_cast<if_light*>(lights[0]));
+}
+
+void
+e8::if_scene::unload(if_obj* obj)
+{
+        auto it = m_geometries.find(obj->id());
+        if (it != m_geometries.end()) {
+                m_geometries.erase(it);
+        }
+}
+
+const std::type_info&
+e8::if_scene::support() const
+{
+        return typeid(if_geometry);
+}
 
 
 e8::linear_scene_layout::linear_scene_layout()
@@ -420,11 +447,12 @@ e8::bvh_scene_layout::commit()
         for (std::pair<obj_id_t, binded_geometry> geo: m_geometries) {
                 geo_map.insert(std::make_pair(geo.second.geometry, m_geo_list.size()));
                 m_geo_list.push_back(geo.second.geometry);
-        }
 
-        for (if_material const* mat: m_mats) {
-                mat_map.insert(std::make_pair(mat, m_mat_list.size()));
-                m_mat_list.push_back(mat);
+                auto it = mat_map.find(geo.second.mat);
+                if (it == mat_map.end()) {
+                        mat_map.insert(std::make_pair(geo.second.mat, m_mat_list.size()));
+                        m_mat_list.push_back(geo.second.mat);
+                }
         }
         mat_map.insert(std::make_pair(nullptr, 0xFFFF));
 

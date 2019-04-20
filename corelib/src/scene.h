@@ -35,11 +35,11 @@ struct intersect_info
 
 typedef std::map<if_material const*, std::vector<if_geometry const*>>   batched_geometry;
 
-class if_scene
+class if_scene: public if_obj_manager
 {
 public:
         if_scene();
-        virtual ~if_scene();
+        virtual ~if_scene() override;
 
         virtual void                            commit() = 0;
         virtual intersect_info                  intersect(e8util::ray const& r) const = 0;
@@ -49,13 +49,15 @@ public:
         virtual if_light const*                 sample_light(e8util::rng& rng, float& pdf) const = 0;
 
         void                                    add_geometry(if_geometry const* geometry);
-        void                                    add_material(if_material const* mat);
         void                                    add_light(if_light const* light);
         void                                    bind(if_geometry const* geometry, if_material const* mat);
         void                                    bind(if_geometry const* geometry, if_light const* light);
         e8util::aabb                            aabb() const;
 
         void                                    load(e8util::if_resource* res);
+        void                                    load(if_obj* obj, e8util::mat44 const& trans) override;
+        const std::type_info&                   support() const override;
+        void                                    unload(if_obj* obj) override;
 protected:
         struct binded_geometry
         {
@@ -70,7 +72,6 @@ protected:
         };
 
         std::map<obj_id_t, binded_geometry>             m_geometries;
-        std::set<if_material const*>                    m_mats;
         std::set<if_light const*>                       m_lights;
         e8util::aabb                                    m_bound;
 };
