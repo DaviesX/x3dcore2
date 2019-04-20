@@ -12,9 +12,27 @@ e8::objdb::~objdb()
 }
 
 void
+e8::objdb::load_manager(if_obj_manager* mgr)
+{
+        auto it = m_mgrs.find(mgr->support().name());
+        if (it != m_mgrs.end()) {
+                delete it->second;
+                it->second = nullptr;
+        }
+        m_mgrs[mgr->support().name()] = mgr;
+}
+
+e8::if_obj_manager*
+e8::objdb::manager_of_interface(std::type_info const& interface) const
+{
+        assert(m_mgrs.find(interface.name()) != m_mgrs.end());
+        return m_mgrs.at(interface.name());
+}
+
+e8::if_obj*
 e8::objdb::manage_root(if_obj* root)
 {
-        m_roots.insert(root);
+        return *m_roots.insert(root).first;
 }
 
 void
