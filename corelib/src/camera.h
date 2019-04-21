@@ -58,6 +58,8 @@ public:
         e8util::mat44                   projection() const override;
         pinhole_camera*                 transform(e8util::mat44 const& trans) const override;
 private:
+        void                            update_proj_mat();
+
         float           m_znear;
         float           m_sensor_size;
         float           m_focal_len;

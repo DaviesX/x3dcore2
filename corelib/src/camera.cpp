@@ -69,16 +69,7 @@ e8::pinhole_camera::pinhole_camera(std::string const& name,
         m_r(r)
 {
         m_proj = e8util::frustum_perspective2(0.5f*sensor_size/f, aspect, 2.0f*f, 1000.0f).projective_transform();
-
-        /*e8util::mat44 T = e8util::mat44({1,0,0,0,
-                                         0,1,0,0,
-                                         0,0,1,0,
-                                         t(0),t(1),t(2),1});*/
-        e8util::mat44 T_inv = e8util::mat44({1,0,0,0,
-                                             0,1,0,0,
-                                             0,0,1,0,
-                                             -t(0),-t(1),-t(2),1});
-        m_forward = m_proj * (~m_r) * T_inv;
+        update_proj_mat();
 }
 
 e8::pinhole_camera::~pinhole_camera()
@@ -103,6 +94,20 @@ e8::pinhole_camera::projection() const
         return m_forward;
 }
 
+void
+e8::pinhole_camera::update_proj_mat()
+{
+        /*e8util::mat44 T = e8util::mat44({1,0,0,0,
+                                         0,1,0,0,
+                                         0,0,1,0,
+                                         t(0),t(1),t(2),1});*/
+        e8util::mat44 T_inv = e8util::mat44({1,0,0,0,
+                                             0,1,0,0,
+                                             0,0,1,0,
+                                             -m_t(0),-m_t(1),-m_t(2),1});
+        m_forward = m_proj * (~m_r) * T_inv;
+}
+
 // TODO: transform needs to be more robust (i.e. handle arbitary linear transformations).
 e8::pinhole_camera*
 e8::pinhole_camera::transform(e8util::mat44 const& trans) const
@@ -113,5 +118,6 @@ e8::pinhole_camera::transform(e8util::mat44 const& trans) const
                                       trans(0,1), trans(1,1), trans(2,1), 0.0f,
                                       trans(0,2), trans(1,2), trans(2,2), 0.0f,
                                       0.0f, 0.0f, 0.0f, 1.0f};
+        new_cam->update_proj_mat();
         return new_cam;
 }
