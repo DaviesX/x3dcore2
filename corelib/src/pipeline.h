@@ -40,8 +40,8 @@ public:
                 unsigned        num_samps;
         };
 
-        e8::if_path_space*           m_scene = nullptr;
-        e8::if_im_renderer*     m_renderer = nullptr;
+        e8::if_path_space*      m_scene = nullptr;
+        e8::pt_image_renderer*  m_renderer = nullptr;
         e8::aces_compositor*    m_com = nullptr;
         e8::if_frame*           m_frame = nullptr;
         e8::if_camera*          m_cam = nullptr;

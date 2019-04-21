@@ -22,35 +22,19 @@ struct rendering_stats
         float           time_per_sample;
 };
 
-class if_im_renderer
-{
-public:
-        if_im_renderer();
-        virtual ~if_im_renderer();
 
-        virtual void                    render(if_path_space const* scene,
-                                               if_camera const* cam,
-                                               if_compositor* compositor) = 0;
-        virtual rendering_stats         get_stats() const = 0;
-        bool                            update_image_view(if_camera const* cam,
-                                                          if_compositor* compositor);
-protected:
-        unsigned                        m_w;
-        unsigned                        m_h;
-        e8util::mat44                   m_t;
-};
-
-
-class pt_image_renderer: public if_im_renderer
+class pt_image_renderer
 {
 public:
         pt_image_renderer(pathtracer_factory* fact);
-        ~pt_image_renderer() override;
+        ~pt_image_renderer();
 
+        bool                            update_image_view(if_camera const* cam,
+                                                          if_compositor* compositor);
         void                    render(if_path_space const* path_space,
                                        if_camera const* cam,
-                                       if_compositor* compositor) override;
-        rendering_stats         get_stats() const override;
+                                       if_compositor* compositor);
+        rendering_stats         get_stats() const;
 private:
         struct sampling_task_data: public e8util::if_task_storage
         {
@@ -81,6 +65,10 @@ private:
                 e8util::rng                             m_rng;
                 e8::if_pathtracer*                      m_pt;
         };
+
+        unsigned                        m_w;
+        unsigned                        m_h;
+        e8util::mat44                   m_t;
 
         unsigned                        m_num_tiles_per_dim;
         unsigned                        m_num_tasks;

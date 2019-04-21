@@ -4,36 +4,6 @@
 #include "renderer.h"
 
 
-e8::if_im_renderer::if_im_renderer():
-        m_w(0),
-        m_h(0),
-        m_t(e8util::mat44_scale(1.0f))
-{
-}
-
-e8::if_im_renderer::~if_im_renderer()
-{
-}
-
-bool
-e8::if_im_renderer::update_image_view(if_camera const* cam, if_compositor* compositor)
-{
-        e8util::mat44 const& proj = cam->projection();
-        if (proj != m_t ||
-            compositor->width() != m_w ||
-            compositor->height() != m_h) {
-                m_t = proj;
-                m_w = compositor->width();
-                m_h = compositor->height();
-                return true;
-        } else {
-                return false;
-        }
-}
-
-
-
-
 e8::pt_image_renderer::sampling_task_data::sampling_task_data():
         path_space(nullptr)
 {
@@ -103,6 +73,9 @@ e8::pt_image_renderer::sampling_task::get_estimates() const
 
 
 e8::pt_image_renderer::pt_image_renderer(pathtracer_factory* fact):
+        m_w(0),
+        m_h(0),
+        m_t(e8util::mat44_scale(1.0f)),
         m_num_tiles_per_dim(static_cast<unsigned>(std::ceil(std::sqrt(e8util::cpu_core_count())))),
         m_num_tasks(m_num_tiles_per_dim*m_num_tiles_per_dim),
         m_tasks(new sampling_task[m_num_tasks]),
@@ -125,6 +98,22 @@ e8::pt_image_renderer::~pt_image_renderer()
         delete [] m_task_storages;
         delete m_thrpool;
         delete m_fact;
+}
+
+bool
+e8::pt_image_renderer::update_image_view(if_camera const* cam, if_compositor* compositor)
+{
+        e8util::mat44 const& proj = cam->projection();
+        if (proj != m_t ||
+            compositor->width() != m_w ||
+            compositor->height() != m_h) {
+                m_t = proj;
+                m_w = compositor->width();
+                m_h = compositor->height();
+                return true;
+        } else {
+                return false;
+        }
 }
 
 void
