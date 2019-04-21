@@ -5,16 +5,17 @@
 #include <vector>
 #include <string>
 #include "tensor.h"
+#include "obj.h"
 
 
 namespace e8
 {
 
-class if_camera
+class if_camera: public if_operable_obj<if_camera>
 {
 public:
         if_camera(std::string const& name);
-        virtual ~if_camera();
+        virtual ~if_camera() override;
 
         virtual e8util::ray             sample(e8util::rng& rng,
                                                unsigned x,
@@ -24,8 +25,10 @@ public:
                                                float& pdf) const = 0;
         virtual e8util::mat44           projection() const = 0;
 
-        std::string     name() const;
-private:
+        std::string                     name() const;
+        std::type_info const&           interface() const override;
+protected:
+        if_camera(obj_id_t id, std::string const& name);
         std::string     m_name;
 };
 
@@ -43,6 +46,7 @@ public:
                        float sensor_size,
                        float f,
                        float aspect);
+        pinhole_camera(pinhole_camera const& rhs);
         ~pinhole_camera() override;
 
         e8util::ray                     sample(e8util::rng& rng,
@@ -52,6 +56,7 @@ public:
                                                unsigned h,
                                                float& pdf) const override;
         e8util::mat44                   projection() const override;
+        pinhole_camera*                 transform(e8util::mat44 const& trans) const override;
 private:
         float           m_znear;
         float           m_sensor_size;

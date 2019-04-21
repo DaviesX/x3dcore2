@@ -11,6 +11,24 @@ e8::if_camera::~if_camera()
 {
 }
 
+std::string
+e8::if_camera::name() const
+{
+        return m_name;
+}
+
+std::type_info const&
+e8::if_camera::interface() const
+{
+        return typeid(if_camera);
+}
+
+e8::if_camera::if_camera(obj_id_t id, std::string const& name):
+        if_operable_obj<if_camera>(id),
+        m_name(name)
+{
+}
+
 
 
 e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t,
@@ -21,7 +39,19 @@ e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t,
         e8::pinhole_camera("Unknown_PinholeCamera_Name", t, r, sensor_size, f, aspect)
 
 {
+}
 
+e8::pinhole_camera::pinhole_camera(pinhole_camera const& rhs):
+        if_camera(id(), name()),
+        m_znear(rhs.m_znear),
+        m_sensor_size(rhs.m_sensor_size),
+        m_focal_len(rhs.m_focal_len),
+        m_aspect(rhs.m_aspect),
+        m_t(rhs.m_t),
+        m_r(rhs.m_r),
+        m_proj(rhs.m_proj),
+        m_forward(rhs.m_forward)
+{
 }
 
 e8::pinhole_camera::pinhole_camera(std::string const& name,
@@ -71,4 +101,17 @@ e8util::mat44
 e8::pinhole_camera::projection() const
 {
         return m_forward;
+}
+
+// TODO: transform needs to be more robust (i.e. handle arbitary linear transformations).
+e8::pinhole_camera*
+e8::pinhole_camera::transform(e8util::mat44 const& trans) const
+{
+        pinhole_camera* new_cam = new pinhole_camera(*this);
+        new_cam->m_t = e8util::vec3 {trans(0,3), trans(1,3), trans(2,3)};
+        new_cam->m_r = e8util::mat44 {trans(0,0), trans(1,0), trans(2,0), 0.0f,
+                                      trans(0,1), trans(1,1), trans(2,1), 0.0f,
+                                      trans(0,2), trans(1,2), trans(2,2), 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f};
+        return new_cam;
 }
