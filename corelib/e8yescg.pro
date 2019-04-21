@@ -21,7 +21,6 @@ SOURCES += \
     src/tensor.cpp \
     src/geometry.cpp \
     src/light.cpp \
-    src/scene.cpp \
     src/renderer.cpp \
     src/material.cpp \
     test/test.cpp \
@@ -46,7 +45,8 @@ SOURCES += \
     test/testbidirectlt2renderer.cpp \
     test/testgltfresource.cpp \
     src/objdb.cpp \
-    src/obj.cpp
+    src/obj.cpp \
+    src/scene.cpp
 
 
 HEADERS += \

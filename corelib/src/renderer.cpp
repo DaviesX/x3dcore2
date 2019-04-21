@@ -35,15 +35,15 @@ e8::if_im_renderer::update_image_view(if_camera const* cam, if_compositor* compo
 
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data():
-        scene(nullptr)
+        path_space(nullptr)
 {
 }
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(e8util::data_id_t id,
-                                                              if_path_space const* scene,
+                                                              if_path_space const* path_space,
                                                               std::vector<e8util::ray> const& rays):
         e8util::if_task_storage(id),
-        scene(scene),
+        path_space(path_space),
         rays(rays)
 {
 }
@@ -92,7 +92,7 @@ e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage* p)
 {
         unsigned const n_samples = 1;
         sampling_task_data* data = static_cast<sampling_task_data*>(p);
-        m_estimate = m_pt->sample(m_rng, data->rays, data->scene, n_samples);
+        m_estimate = m_pt->sample(m_rng, data->rays, data->path_space, n_samples);
 }
 
 std::vector<e8util::vec3>
@@ -128,7 +128,9 @@ e8::pt_image_renderer::~pt_image_renderer()
 }
 
 void
-e8::pt_image_renderer::render(if_path_space const* scene, if_camera const* cam, if_compositor* compositor)
+e8::pt_image_renderer::render(if_path_space const* path_space,
+                              if_camera const* cam,
+                              if_compositor* compositor)
 {
         // generate camera seed ray, if the update is dirty, for each tile task.
         if (update_image_view(cam, compositor)) {
@@ -137,7 +139,7 @@ e8::pt_image_renderer::render(if_path_space const* scene, if_camera const* cam, 
                                 unsigned tile_w = i == m_num_tiles_per_dim - 1 ? m_w - m_w/m_num_tiles_per_dim*i : m_w/m_num_tiles_per_dim;
                                 unsigned tile_h = j == m_num_tiles_per_dim - 1 ? m_h - m_h/m_num_tiles_per_dim*j : m_h/m_num_tiles_per_dim;
                                 m_task_storages[i + j*m_num_tiles_per_dim].rays.resize(tile_w*tile_h);
-                                m_task_storages[i + j*m_num_tiles_per_dim].scene = scene;
+                                m_task_storages[i + j*m_num_tiles_per_dim].path_space = path_space;
                                 m_task_storages[i + j*m_num_tiles_per_dim].set_data_id(static_cast<e8util::data_id_t>(i + j*m_num_tiles_per_dim));
 
                                 unsigned top_left_i = m_w/m_num_tiles_per_dim*i;

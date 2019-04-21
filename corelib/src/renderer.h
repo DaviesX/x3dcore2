@@ -28,9 +28,12 @@ public:
         if_im_renderer();
         virtual ~if_im_renderer();
 
-        virtual void                    render(if_path_space const* scene, if_camera const* cam, if_compositor* compositor) = 0;
+        virtual void                    render(if_path_space const* scene,
+                                               if_camera const* cam,
+                                               if_compositor* compositor) = 0;
         virtual rendering_stats         get_stats() const = 0;
-        bool                            update_image_view(if_camera const* cam, if_compositor* compositor);
+        bool                            update_image_view(if_camera const* cam,
+                                                          if_compositor* compositor);
 protected:
         unsigned                        m_w;
         unsigned                        m_h;
@@ -44,19 +47,21 @@ public:
         pt_image_renderer(pathtracer_factory* fact);
         ~pt_image_renderer() override;
 
-        void                    render(if_path_space const* scene, if_camera const* cam, if_compositor* compositor) override;
+        void                    render(if_path_space const* path_space,
+                                       if_camera const* cam,
+                                       if_compositor* compositor) override;
         rendering_stats         get_stats() const override;
 private:
         struct sampling_task_data: public e8util::if_task_storage
         {
                 sampling_task_data();
                 sampling_task_data(e8util::data_id_t id,
-                                   if_path_space const* scene,
+                                   if_path_space const* path_space,
                                    std::vector<e8util::ray> const& rays);
 
                 virtual ~sampling_task_data();
 
-                if_path_space const*                 scene;
+                if_path_space const*            path_space;
                 std::vector<e8util::ray>        rays;
         };
 
