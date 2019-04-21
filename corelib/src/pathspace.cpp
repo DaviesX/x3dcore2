@@ -94,11 +94,9 @@ e8::if_path_space::load(if_obj* obj, e8util::mat44 const& trans)
         std::vector<if_obj*> lights = obj->get_children(typeid(if_light));
 
         add_geometry(geo);
-        // TODO: can be static_cast when if_material and if_light are if_objs.
-        bind(geo, reinterpret_cast<if_material*>(mats[0]));
-        bind(geo, reinterpret_cast<if_light*>(lights[0]));
-
-        m_lights.insert(reinterpret_cast<if_light*>(lights[0]));
+        bind(geo, static_cast<if_material*>(mats[0]));
+        bind(geo, static_cast<if_light*>(lights[0]));
+        m_lights.insert(static_cast<if_light*>(lights[0]));
 }
 
 void

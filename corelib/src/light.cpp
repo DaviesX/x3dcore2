@@ -23,6 +23,11 @@ e8::if_light::name() const
         return m_name;
 }
 
+std::type_info const&
+e8::if_light::interface() const
+{
+        return typeid(if_light);
+}
 
 e8::area_light::area_light(std::string const& name,
                            if_geometry const* geo,

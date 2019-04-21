@@ -3,15 +3,16 @@
 
 #include "tensor.h"
 #include "geometry.h"
+#include "obj.h"
 
 namespace e8
 {
 
-class if_light
+class if_light: public if_obj
 {
 public:
         if_light(std::string const& name);
-        virtual ~if_light();
+        virtual ~if_light() override;
 
         virtual void            set_scene_boundary(e8util::aabb const& bbox);
         virtual void            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
@@ -22,6 +23,7 @@ public:
         virtual e8util::vec3    power() const = 0;
 
         std::string             name() const;
+        std::type_info const&   interface() const override;
 private:
         std::string             m_name;
 };

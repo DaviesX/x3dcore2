@@ -16,6 +16,12 @@ e8::if_material::name() const
         return m_name;
 }
 
+std::type_info const&
+e8::if_material::interface() const
+{
+        return typeid(if_material);
+}
+
 
 e8::oren_nayar::oren_nayar(std::string const& name,
                            e8util::vec3 const& albedo,
