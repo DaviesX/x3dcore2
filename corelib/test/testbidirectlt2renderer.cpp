@@ -2,7 +2,7 @@
 #include "src/renderer.h"
 #include "src/resource.h"
 #include "src/camera.h"
-#include "src/scene.h"
+#include "src/pathspace.h"
 #include "src/frame.h"
 #include "src/compositor.h"
 #include "testbidirectlt2renderer.h"

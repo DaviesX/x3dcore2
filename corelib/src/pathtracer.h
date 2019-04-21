@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "tensor.h"
-#include "scene.h"
+#include "pathspace.h"
 
 namespace e8 {
 

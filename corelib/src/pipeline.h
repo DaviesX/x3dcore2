@@ -3,7 +3,7 @@
 
 #include <ctime>
 #include "resource.h"
-#include "scene.h"
+#include "pathspace.h"
 #include "compositor.h"
 #include "frame.h"
 #include "camera.h"

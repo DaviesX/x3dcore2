@@ -2,7 +2,7 @@
 #define RENDERER_H
 
 #include "thread.h"
-#include "scene.h"
+#include "pathspace.h"
 #include "camera.h"
 #include "compositor.h"
 #include "frame.h"

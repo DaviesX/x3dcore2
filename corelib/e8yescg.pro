@@ -46,11 +46,10 @@ SOURCES += \
     test/testgltfresource.cpp \
     src/objdb.cpp \
     src/obj.cpp \
-    src/scene.cpp
+    src/pathspace.cpp
 
 
 HEADERS += \
-    src/scene.h \
     src/camera.h \
     src/tensor.h \
     src/geometry.h \
@@ -79,7 +78,8 @@ HEADERS += \
     test/testbidirectlt2renderer.h \
     test/testgltfresource.h \
     src/objdb.h \
-    src/obj.h
+    src/obj.h \
+    src/pathspace.h
 
 win32 {
 LIBS += -lOpengl32

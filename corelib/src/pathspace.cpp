@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <algorithm>
-#include "scene.h"
+#include "pathspace.h"
 
 
 e8::if_path_space::if_path_space()

@@ -5,7 +5,7 @@
 #include <queue>
 #include <vector>
 #include "tensor.h"
-#include "scene.h"
+#include "pathspace.h"
 #include "camera.h"
 #include "obj.h"
 

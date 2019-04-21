@@ -1,5 +1,5 @@
 #include <set>
-#include "src/scene.h"
+#include "src/pathspace.h"
 #include "src/resource.h"
 #include "testgltfresource.h"
 
