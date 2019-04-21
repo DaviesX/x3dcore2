@@ -16,7 +16,12 @@ public:
         if_camera(std::string const& name);
         virtual ~if_camera();
 
-        virtual e8util::ray             sample(e8util::rng& rng, unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const = 0;
+        virtual e8util::ray             sample(e8util::rng& rng,
+                                               unsigned x,
+                                               unsigned y,
+                                               unsigned w,
+                                               unsigned h,
+                                               float& pdf) const = 0;
         virtual e8util::mat44           projection() const = 0;
 
         std::string     name() const;
@@ -27,11 +32,25 @@ private:
 class pinhole_camera: public if_camera
 {
 public:
-        pinhole_camera(std::string const& name, e8util::vec3 const& t, e8util::mat44 const& r, float sensor_size, float f, float aspect);
-        pinhole_camera(e8util::vec3 const& t, e8util::mat44 const& r, float sensor_size, float f, float aspect);
+        pinhole_camera(std::string const& name,
+                       e8util::vec3 const& t,
+                       e8util::mat44 const& r,
+                       float sensor_size,
+                       float f,
+                       float aspect);
+        pinhole_camera(e8util::vec3 const& t,
+                       e8util::mat44 const& r,
+                       float sensor_size,
+                       float f,
+                       float aspect);
         ~pinhole_camera() override;
 
-        e8util::ray                     sample(e8util::rng& rng, unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const override;
+        e8util::ray                     sample(e8util::rng& rng,
+                                               unsigned x,
+                                               unsigned y,
+                                               unsigned w,
+                                               unsigned h,
+                                               float& pdf) const override;
         e8util::mat44                   projection() const override;
 private:
         float           m_znear;
