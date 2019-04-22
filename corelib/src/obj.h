@@ -32,8 +32,8 @@ public:
         if_obj_manager();
         virtual ~if_obj_manager();
 
-        virtual void                    load(if_obj* obj, e8util::mat44 const& trans) = 0;
-        virtual void                    unload(if_obj* obj) = 0;
+        virtual void                    load(if_obj const* obj, e8util::mat44 const& trans) = 0;
+        virtual void                    unload(if_obj const* obj) = 0;
         virtual const std::type_info&   support() const = 0;
 };
 
@@ -61,7 +61,7 @@ public:
 
         bool                            add_child(if_obj* child);
         bool                            remove_child(if_obj* child);
-        std::vector<if_obj*>            get_children(std::type_info const& interface_type);
+        std::vector<if_obj*>            get_children(std::type_info const& interface_type) const;
 protected:
         if_obj();
         if_obj(obj_id_t id);

@@ -87,9 +87,9 @@ e8::if_path_space::load(e8util::if_resource* res)
 }
 
 void
-e8::if_path_space::load(if_obj* obj, e8util::mat44 const& trans)
+e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
 {
-        if_geometry* geo = static_cast<if_geometry*>(obj)->transform(trans);
+        if_geometry const* geo = static_cast<if_geometry const*>(obj)->transform(trans);
         std::vector<if_obj*> mats = obj->get_children(typeid(if_material));
         std::vector<if_obj*> lights = obj->get_children(typeid(if_light));
 
@@ -100,7 +100,7 @@ e8::if_path_space::load(if_obj* obj, e8util::mat44 const& trans)
 }
 
 void
-e8::if_path_space::unload(if_obj* obj)
+e8::if_path_space::unload(if_obj const* obj)
 {
         auto it = m_geometries.find(obj->id());
         if (it != m_geometries.end()) {

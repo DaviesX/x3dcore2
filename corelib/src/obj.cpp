@@ -151,7 +151,7 @@ e8::if_obj::remove_child(if_obj* child)
 
 
 std::vector<e8::if_obj*>
-e8::if_obj::get_children(std::type_info const& interface_type)
+e8::if_obj::get_children(std::type_info const& interface_type) const
 {
         std::vector<e8::if_obj*> result;
         for (if_obj* obj: m_children) {

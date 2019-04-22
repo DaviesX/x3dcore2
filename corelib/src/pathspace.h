@@ -55,9 +55,9 @@ public:
         e8util::aabb                            aabb() const;
 
         void                                    load(e8util::if_resource* res);
-        void                                    load(if_obj* obj, e8util::mat44 const& trans) override;
+        void                                    load(if_obj const* obj, e8util::mat44 const& trans) override;
         const std::type_info&                   support() const override;
-        void                                    unload(if_obj* obj) override;
+        void                                    unload(if_obj const* obj) override;
 protected:
         struct binded_geometry
         {
