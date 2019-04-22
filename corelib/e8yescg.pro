@@ -46,7 +46,8 @@ SOURCES += \
     test/testgltfresource.cpp \
     src/objdb.cpp \
     src/obj.cpp \
-    src/pathspace.cpp
+    src/pathspace.cpp \
+    src/cinematics.cpp
 
 
 HEADERS += \
@@ -79,7 +80,8 @@ HEADERS += \
     test/testgltfresource.h \
     src/objdb.h \
     src/obj.h \
-    src/pathspace.h
+    src/pathspace.h \
+    src/cinematics.h
 
 win32 {
 LIBS += -lOpengl32

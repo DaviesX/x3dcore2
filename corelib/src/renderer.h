@@ -29,8 +29,8 @@ public:
         pt_image_renderer(pathtracer_factory* fact);
         ~pt_image_renderer();
 
-        bool                            update_image_view(if_camera const* cam,
-                                                          if_compositor* compositor);
+        bool                    update_image_view(if_camera const* cam,
+                                                  if_compositor* compositor);
         void                    render(if_path_space const* path_space,
                                        if_camera const* cam,
                                        if_compositor* compositor);
