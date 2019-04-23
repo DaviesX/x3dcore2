@@ -52,13 +52,12 @@ e8::objdb::push_updates(if_obj* obj, e8util::mat44 const& global_trans)
         }
         e8util::mat44 const& modified_trans = local_trans*global_trans;
         if (obj->dirty()) {
-                if_obj_manager* mgr = obj->manage_by();
-                if (mgr->support() != typeid(*obj)) {
-                        throw incompat_obj_exception(mgr->support(), typeid(*obj));
+                if_obj_manager* mgr = manager_of_interface(obj->interface());
+                if (mgr != nullptr) {
+                        mgr->unload(obj);
+                        mgr->load(obj, modified_trans);
+                        obj->mark_clean();
                 }
-                mgr->unload(obj);
-                mgr->load(obj, modified_trans);
-                obj->mark_clean();
         }
         for (if_obj* child: obj->m_children) {
                 push_updates(child, modified_trans);
@@ -71,7 +70,7 @@ e8::objdb::clear(if_obj* obj)
         for (if_obj* child: obj->m_children) {
                 clear(child);
         }
-        if_obj_manager* mgr = obj->manage_by();
+        if_obj_manager* mgr = manager_of_interface(obj->interface());
         if (mgr != nullptr) {
                 mgr->unload(obj);
         }

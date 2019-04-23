@@ -53,8 +53,6 @@ public:
         obj_id_t                        id() const;
         std::type_info const&           type() const;
         bool                            dirty() const;
-        if_obj_manager*                 manage_by() const;
-        void                            manage_by(if_obj_manager* mgr);
 
         void                            init_blueprint(std::vector<transofrm_stage_name_t> const& stages);
         bool                            update_stage(transform_stage_t const& stage);
@@ -70,7 +68,6 @@ protected:
 private:
         obj_id_t                        m_id;
         transform_blueprint_t           m_blueprint;
-        if_obj_manager*                 m_mgr;
         if_obj*                         m_parent;
         std::set<if_obj*>               m_children;
         bool                            m_dirty;
