@@ -66,6 +66,7 @@ private:
         e8util::vec3            m_rad;
         e8util::vec3            m_ref_p;
         float                   m_dia;
+        uint32_t                m_padding;
 };
 
 }

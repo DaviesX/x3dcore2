@@ -15,7 +15,7 @@ public:
         virtual ~if_material() override;
 
         std::string             name() const;
-        std::type_info const&   interface() const;
+        std::type_info const&   interface() const override;
 
         virtual e8util::vec3    eval(e8util::vec3 const &n, e8util::vec3 const &o, e8util::vec3 const &i) const = 0;
         virtual e8util::vec3    sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 const &o, float& pdf) const = 0;
@@ -62,6 +62,7 @@ private:
         e8util::vec3    m_albedo;
         float           m_beta2;
         float           m_ior2;
+        uint32_t        m_padding;
 };
 
 }

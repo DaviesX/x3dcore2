@@ -71,6 +71,7 @@ private:
         if_obj*                         m_parent;
         std::set<if_obj*>               m_children;
         bool                            m_dirty;
+        char                            m_padding[7];
 };
 
 template<class T>
