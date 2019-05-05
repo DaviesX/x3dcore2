@@ -60,6 +60,7 @@ public:
         bool                            add_child(if_obj* child);
         bool                            remove_child(if_obj* child);
         std::vector<if_obj*>            get_children(std::type_info const& interface_type) const;
+        std::set<if_obj*>               get_children() const;
 protected:
         if_obj();
         if_obj(obj_id_t id);
@@ -84,6 +85,42 @@ public:
 
         virtual T*      transform(e8util::mat44 const& trans) const = 0;
 };
+
+struct obj_visitor
+{
+        void operator()(if_obj const*) {}
+};
+
+
+template<typename ReadOp>
+void
+visit_filtered(if_obj const* obj,
+               ReadOp op,
+               std::set<std::string> const& interfaces = std::set<std::string>())
+{
+        op(obj);
+        for (if_obj const* child: obj->get_children()) {
+                if (interfaces.empty() ||
+                    interfaces.find(obj->interface().name()) != interfaces.end()) {
+                        visit_filtered(child, op, interfaces);
+                }
+        }
+}
+
+
+template<typename ReadOp>
+void
+visit_all_filtered(std::vector<if_obj*> const& objs,
+                   ReadOp op,
+                   std::set<std::string> const& interfaces = std::set<std::string>())
+{
+        for (if_obj const* obj: objs) {
+                if (interfaces.empty() ||
+                    interfaces.find(obj->interface().name()) != interfaces.end()) {
+                        visit_filtered(obj, op, interfaces);
+                }
+        }
+}
 
 }
 

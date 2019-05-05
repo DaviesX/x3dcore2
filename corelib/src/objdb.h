@@ -2,11 +2,7 @@
 #define OBJDB_H
 
 #include <set>
-#include <queue>
-#include <vector>
-#include "tensor.h"
-#include "pathspace.h"
-#include "camera.h"
+#include <map>
 #include "obj.h"
 
 
@@ -24,6 +20,7 @@ public:
         if_obj*                 manage_root(if_obj* root);
         void                    push_updates();
         void                    clear();
+
 private:
         void                    push_updates(if_obj* obj, e8util::mat44 const& global_trans);
         void                    clear(if_obj* obj);

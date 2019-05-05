@@ -81,6 +81,18 @@ e8util::if_resource::save_geometries(std::vector<e8::if_geometry*> const&)
         throw std::string("resource doesn't support save_geometries");
 }
 
+std::vector<e8::if_obj*>
+e8util::if_resource::load_roots()
+{
+        throw std::string("resource doesn't support load_roots");
+}
+
+void
+e8util::if_resource::save_roots(std::vector<e8::if_obj*> const& /* roots */)
+{
+        throw std::string("resource doesn't support save_roots");
+}
+
 
 
 e8util::cornell_scene::cornell_scene()
@@ -91,14 +103,14 @@ std::vector<e8::if_geometry*>
 e8util::cornell_scene::load_geometries() const
 {
         std::vector<e8::if_geometry*> geometries(8);
-        geometries[0] = wavefront_obj("res/cornellbox/left_wall.obj").load_geometries()[0];
-        geometries[1] = wavefront_obj("res/cornellbox/right_wall.obj").load_geometries()[0];
-        geometries[2] = wavefront_obj("res/cornellbox/ceiling.obj").load_geometries()[0];
-        geometries[3] = wavefront_obj("res/cornellbox/floor.obj").load_geometries()[0];
-        geometries[4] = wavefront_obj("res/cornellbox/back_wall.obj").load_geometries()[0];
-        geometries[5] = wavefront_obj("res/cornellbox/left_sphere.obj").load_geometries()[0];
-        geometries[6] = wavefront_obj("res/cornellbox/right_sphere.obj").load_geometries()[0];
-        geometries[7] = wavefront_obj("res/cornellbox/light.obj").load_geometries()[0];
+        geometries[0] = wavefront_obj("res/cornellbox/left_wall.obj").load_geometry();
+        geometries[1] = wavefront_obj("res/cornellbox/right_wall.obj").load_geometry();
+        geometries[2] = wavefront_obj("res/cornellbox/ceiling.obj").load_geometry();
+        geometries[3] = wavefront_obj("res/cornellbox/floor.obj").load_geometry();
+        geometries[4] = wavefront_obj("res/cornellbox/back_wall.obj").load_geometry();
+        geometries[5] = wavefront_obj("res/cornellbox/left_sphere.obj").load_geometry();
+        geometries[6] = wavefront_obj("res/cornellbox/right_sphere.obj").load_geometry();
+        geometries[7] = wavefront_obj("res/cornellbox/light.obj").load_geometry();
         return geometries;
 }
 
@@ -136,6 +148,12 @@ e8util::cornell_scene::load_camera() const
         return new e8::pinhole_camera(e8util::vec3({0.0f, 0.795f, 3.4f}), 1.0f, 0.032f, 0.035f, 4.0f/3.0f);
 }
 
+std::vector<e8::if_obj*>
+e8util::cornell_scene::load_roots()
+{
+        return std::vector<e8::if_obj*> { load_geometries()[0] };
+}
+
 
 
 e8util::wavefront_obj::wavefront_obj(std::string const& location):
@@ -158,13 +176,13 @@ split(std::string const& s, char delim)
         return parts;
 }
 
-std::vector<e8::if_geometry*>
-e8util::wavefront_obj::load_geometries() const
+e8::if_geometry*
+e8util::wavefront_obj::load_geometry() const
 {
         std::ifstream file(m_location);
         if (!file.is_open()) {
                 std::perror(("wavefront_obj::load_geometries to " + m_location).c_str());
-                return std::vector<e8::if_geometry*>();
+                return nullptr;
         }
 
         // 1. The obj data is assumed to be all triangulated.
@@ -278,15 +296,12 @@ e8util::wavefront_obj::load_geometries() const
         mesh->texcoords(packed_tex);
         mesh->triangles(triangles);
         mesh->update();
-        return std::vector<e8::if_geometry*>({mesh});
+        return mesh;
 }
 
 bool
-e8util::wavefront_obj::save_geometries(std::vector<e8::if_geometry*> const& geometries)
+e8util::wavefront_obj::save_geometry(e8::if_geometry const* geo)
 {
-        if (geometries.size() != 1)
-                throw std::string("Can save only 1 geometry at a time.");
-
         std::ofstream file(m_location);
 
         if (!file.is_open()) {
@@ -295,8 +310,6 @@ e8util::wavefront_obj::save_geometries(std::vector<e8::if_geometry*> const& geom
         }
 
         file << "# e8yescg wavefront_obj" << std::endl;
-
-        e8::if_geometry* geo = geometries[0];
 
         // output vertices.
         std::vector<e8util::vec3> const& verts = geo->vertices();
@@ -328,6 +341,23 @@ e8util::wavefront_obj::save_geometries(std::vector<e8::if_geometry*> const& geom
 
         return true;
 }
+
+std::vector<e8::if_obj*>
+e8util::wavefront_obj::load_roots()
+{
+        return std::vector<e8::if_obj*> { load_geometry() };
+}
+
+void
+e8util::wavefront_obj::save_roots(std::vector<e8::if_obj*> const& roots)
+{
+        e8::visit_all_filtered(roots, [this] (e8::if_obj const* obj)
+        {
+                this->save_geometry(static_cast<e8::if_geometry const*>(obj));
+        },
+        std::set<std::string> {typeid(e8::if_geometry).name()});
+}
+
 
 class e8util::gltf_scene_internal
 {
@@ -600,4 +630,16 @@ e8util::gltf_scene::load_camera() const
         } else {
                 return nullptr;
         }
+}
+
+std::vector<e8::if_obj*>
+e8util::gltf_scene::load_roots()
+{
+        // TODO: implement this.
+}
+
+void
+e8util::gltf_scene::save_roots(std::vector<e8::if_obj*> const& roots)
+{
+        // TODO: implement this.
 }

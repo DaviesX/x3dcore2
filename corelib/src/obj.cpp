@@ -148,3 +148,9 @@ e8::if_obj::get_children(std::type_info const& interface_type) const
         }
         return result;
 }
+
+std::set<e8::if_obj*>
+e8::if_obj::get_children() const
+{
+        return m_children;
+}
