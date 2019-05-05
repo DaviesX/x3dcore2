@@ -302,7 +302,7 @@ e8util::wavefront_obj::load_geometry() const
 bool
 e8util::wavefront_obj::save_geometry(e8::if_geometry const* geo)
 {
-        std::ofstream file(m_location);
+        std::ofstream file(m_location + "_" + std::to_string(geo->id()) + ".obj");
 
         if (!file.is_open()) {
                 std::perror(("wavefront_obj::save_geometries to " + m_location).c_str());
