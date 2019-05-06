@@ -151,7 +151,16 @@ e8util::cornell_scene::load_camera() const
 std::vector<e8::if_obj*>
 e8util::cornell_scene::load_roots()
 {
-        return std::vector<e8::if_obj*> { load_geometries()[0] };
+        std::vector<e8::if_geometry*> geometries = load_geometries();
+        std::vector<e8::if_material*> mats = load_materials();
+        e8::if_camera* cams = load_camera();
+        std::vector<e8::if_obj*> roots;
+        roots.push_back(cams);
+        for (unsigned i = 0; i < geometries.size(); i ++) {
+                geometries[i]->add_child(mats[i]);
+                roots.push_back(geometries[i]);
+        }
+        return roots;
 }
 
 
@@ -634,12 +643,6 @@ e8util::gltf_scene::load_camera() const
 
 std::vector<e8::if_obj*>
 e8util::gltf_scene::load_roots()
-{
-        // TODO: implement this.
-}
-
-void
-e8util::gltf_scene::save_roots(std::vector<e8::if_obj*> const& roots)
 {
         // TODO: implement this.
 }

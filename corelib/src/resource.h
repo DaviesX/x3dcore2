@@ -110,7 +110,6 @@ public:
         e8::if_camera*                  load_camera() const override;
 
         std::vector<e8::if_obj*>        load_roots() override;
-        void                            save_roots(std::vector<e8::if_obj*> const& roots) override;
 private:
         gltf_scene_internal*    m_pimpl;
 };
