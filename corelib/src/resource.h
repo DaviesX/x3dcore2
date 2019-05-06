@@ -58,13 +58,13 @@ class cornell_scene: public if_resource
 {
 public:
         cornell_scene();
+        std::vector<e8::if_obj*>        load_roots() override;
+
         std::vector<e8::if_geometry*>   load_geometries() const override;
         std::vector<e8::if_material*>   load_materials() const override;
         std::vector<e8::if_light*>      load_lights() const override;
         std::vector<e8::if_light*>      load_virtual_lights() const override;
         e8::if_camera*                  load_camera() const override;
-
-        std::vector<e8::if_obj*>        load_roots() override;
 };
 
 class gltf_scene_internal;
