@@ -153,12 +153,20 @@ e8util::cornell_scene::load_roots()
 {
         std::vector<e8::if_geometry*> geometries = load_geometries();
         std::vector<e8::if_material*> mats = load_materials();
+        std::vector<e8::if_light*> obj_lights = load_lights();
         e8::if_camera* cams = load_camera();
         std::vector<e8::if_obj*> roots;
         roots.push_back(cams);
         for (unsigned i = 0; i < geometries.size(); i ++) {
                 geometries[i]->add_child(mats[i]);
+                if (obj_lights[i] != nullptr) {
+                        geometries[i]->add_child(obj_lights[i]);
+                }
                 roots.push_back(geometries[i]);
+        }
+        std::vector<e8::if_light*> virtual_lights = load_virtual_lights();
+        for (unsigned i = 0; i < virtual_lights.size(); i ++) {
+                roots.push_back(virtual_lights[i]);
         }
         return roots;
 }
