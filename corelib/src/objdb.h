@@ -15,7 +15,7 @@ public:
         objdb();
         ~objdb();
 
-        void                    load_manager(if_obj_manager* mgr);
+        void                    register_manager(if_obj_manager* mgr);
         if_obj_manager*         manager_of_interface(std::type_info const& interface) const;
         if_obj*                 manage_root(if_obj* root);
         void                    push_updates();

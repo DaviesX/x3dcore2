@@ -515,73 +515,73 @@ gltf_vec2_get(unsigned char const* idx_data, unsigned stride, unsigned i)
 }
 
 
-std::vector<e8::if_geometry*>
-e8util::gltf_scene::load_geometries() const
+static e8::if_geometry*
+load_geometry(tinygltf::Mesh const& mesh, tinygltf::Model const& model)
 {
-        std::vector<e8::if_geometry*> geos;
-        tinygltf::Model const& model = m_pimpl->get_model();
 
-        for (size_t i = 0; i < model.meshes.size(); i ++) {
-                tinygltf::Mesh const& mesh = model.meshes[i];
-                e8::trimesh* geo = new e8::trimesh();
+        e8::trimesh* geo = new e8::trimesh();
 
-                std::vector<e8::triangle> tris;
-                std::vector<e8util::vec3> verts;
-                std::vector<e8util::vec3> normals;
-                std::vector<e8util::vec2> texcoords;
+        std::vector<e8::triangle> tris;
+        std::vector<e8util::vec3> verts;
+        std::vector<e8util::vec3> normals;
+        std::vector<e8util::vec2> texcoords;
 
-                for (size_t k = 0; k < mesh.primitives.size(); k ++) {
-                        tinygltf::Primitive const& prim = mesh.primitives[k];
-                        tinygltf::Accessor const& idx_accessor = model.accessors[static_cast<unsigned>(prim.indices)];
-                        tinygltf::BufferView const& idx_buf_view = model.bufferViews[static_cast<unsigned>(idx_accessor.bufferView)];
-                        tinygltf::Buffer const& idx_buf = model.buffers[static_cast<unsigned>(idx_buf_view.buffer)];
-                        unsigned char const* idx_data = idx_buf.data.data() + idx_buf_view.byteOffset + idx_accessor.byteOffset;
-                        unsigned stride = static_cast<unsigned>(idx_accessor.ByteStride(idx_buf_view));
-                        unsigned count = static_cast<unsigned>(idx_accessor.count);
+        for (size_t k = 0; k < mesh.primitives.size(); k ++) {
+                tinygltf::Primitive const& prim = mesh.primitives[k];
+                tinygltf::Accessor const& idx_accessor = model.accessors[static_cast<unsigned>(prim.indices)];
+                tinygltf::BufferView const& idx_buf_view = model.bufferViews[static_cast<unsigned>(idx_accessor.bufferView)];
+                tinygltf::Buffer const& idx_buf = model.buffers[static_cast<unsigned>(idx_buf_view.buffer)];
+                unsigned char const* idx_data = idx_buf.data.data() + idx_buf_view.byteOffset + idx_accessor.byteOffset;
+                unsigned stride = static_cast<unsigned>(idx_accessor.ByteStride(idx_buf_view));
+                unsigned count = static_cast<unsigned>(idx_accessor.count);
 
-                        assert(count % 3 == 0);
+                assert(count % 3 == 0);
 
-                        for (unsigned i = 0; i < count; i += 3) {
-                                tris.push_back(e8::triangle({gltf_idx_get(idx_data, stride, i),
-                                                             gltf_idx_get(idx_data, stride, i + 1),
-                                                             gltf_idx_get(idx_data, stride, i + 2)}));
-                        }
+                for (unsigned i = 0; i < count; i += 3) {
+                        tris.push_back(e8::triangle({gltf_idx_get(idx_data, stride, i),
+                                                     gltf_idx_get(idx_data, stride, i + 1),
+                                                     gltf_idx_get(idx_data, stride, i + 2)}));
+                }
 
-                        for (std::pair<std::string, int> const attri: prim.attributes) {
-                                tinygltf::Accessor const& attri_acs = model.accessors[static_cast<unsigned>(attri.second)];
-                                tinygltf::BufferView const& attri_buf_view = model.bufferViews[static_cast<unsigned>(attri_acs.bufferView)];
-                                tinygltf::Buffer const& attri_buf = model.buffers[static_cast<unsigned>(attri_buf_view.buffer)];
-                                unsigned char const* attri_data = attri_buf.data.data() +
-                                                                  attri_buf_view.byteOffset +
-                                                                  attri_acs.byteOffset;
-                                unsigned stride = static_cast<unsigned>(attri_acs.ByteStride(attri_buf_view));
-                                unsigned count = static_cast<unsigned>(attri_acs.count);
+                for (std::pair<std::string, int> const attri: prim.attributes) {
+                        tinygltf::Accessor const& attri_acs = model.accessors[static_cast<unsigned>(attri.second)];
+                        tinygltf::BufferView const& attri_buf_view = model.bufferViews[static_cast<unsigned>(attri_acs.bufferView)];
+                        tinygltf::Buffer const& attri_buf = model.buffers[static_cast<unsigned>(attri_buf_view.buffer)];
+                        unsigned char const* attri_data = attri_buf.data.data() +
+                                        attri_buf_view.byteOffset +
+                                        attri_acs.byteOffset;
+                        unsigned stride = static_cast<unsigned>(attri_acs.ByteStride(attri_buf_view));
+                        unsigned count = static_cast<unsigned>(attri_acs.count);
 
-                                if (attri.first == "POSITION") {
-                                        for (unsigned i = 0; i < count; i ++) {
-                                                verts.push_back(gltf_vec3_get(attri_data, stride, i));
-                                        }
-                                } else if (attri.first == "NORMAL") {
-                                        for (unsigned i = 0; i < count; i ++) {
-                                                normals.push_back(gltf_vec3_get(attri_data, stride, i));
-                                        }
-                                } else if (attri.first == "TEXCOORD_0") {
-                                        for (unsigned i = 0; i < count; i ++) {
-                                                texcoords.push_back(gltf_vec2_get(attri_data, stride, i));
-                                        }
+                        if (attri.first == "POSITION") {
+                                for (unsigned i = 0; i < count; i ++) {
+                                        verts.push_back(gltf_vec3_get(attri_data, stride, i));
+                                }
+                        } else if (attri.first == "NORMAL") {
+                                for (unsigned i = 0; i < count; i ++) {
+                                        normals.push_back(gltf_vec3_get(attri_data, stride, i));
+                                }
+                        } else if (attri.first == "TEXCOORD_0") {
+                                for (unsigned i = 0; i < count; i ++) {
+                                        texcoords.push_back(gltf_vec2_get(attri_data, stride, i));
                                 }
                         }
                 }
-
-                geo->triangles(tris);
-                geo->vertices(verts);
-                geo->normals(normals);
-                geo->texcoords(texcoords);
-                geo->update();
-
-                geos.push_back(geo);
         }
-        return geos;
+
+        geo->triangles(tris);
+        geo->vertices(verts);
+        geo->normals(normals);
+        geo->texcoords(texcoords);
+        geo->update();
+
+        return geo;
+}
+
+std::vector<e8::if_geometry*>
+e8util::gltf_scene::load_geometries() const
+{
+        return std::vector<e8::if_geometry*>();
 }
 
 std::vector<e8::if_material*>
@@ -625,32 +625,72 @@ e8util::gltf_scene::load_virtual_lights() const
 e8::if_camera*
 e8util::gltf_scene::load_camera() const
 {
-        // Always capture the first camera, if any.
-        tinygltf::Model const& model = m_pimpl->get_model();
-        if (!model.cameras.empty()) {
-                tinygltf::Camera const& gltfcam = model.cameras[0];
-                if (gltfcam.type == "perspective") {
-                        // gltfcam.perspective.
-                         e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,
-                                                                          e8util::vec3(),
-                                                                          e8util::mat44_rotate(0, e8util::vec3({0, 0, 1})),
-                                                                          static_cast<float>(2*gltfcam.perspective.znear*std::tan(gltfcam.perspective.yfov)),
-                                                                          static_cast<float>(gltfcam.perspective.znear/std::tan(gltfcam.perspective.yfov)),
-                                                                          static_cast<float>(gltfcam.perspective.aspectRatio));
-                         return cam;
-                } else if (gltfcam.type == "orthographic") {
-                        // TODO: need to support orthographic camera.
-                        return nullptr;
-                } else {
-                        return nullptr;
-                }
+        return nullptr;
+}
+
+static e8::if_camera*
+load_camera(tinygltf::Camera const& gltfcam)
+{
+        if (gltfcam.type == "perspective") {
+                // gltfcam.perspective.
+                e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,
+                                                                 e8util::vec3(),
+                                                                 e8util::mat44_rotate(0, e8util::vec3({0, 0, 1})),
+                                                                 static_cast<float>(2*gltfcam.perspective.znear*std::tan(gltfcam.perspective.yfov)),
+                                                                 static_cast<float>(gltfcam.perspective.znear/std::tan(gltfcam.perspective.yfov)),
+                                                                 static_cast<float>(gltfcam.perspective.aspectRatio));
+                return cam;
+        } else if (gltfcam.type == "orthographic") {
+                // TODO: need to support orthographic camera.
+                return nullptr;
         } else {
                 return nullptr;
         }
 }
 
+static e8::if_obj*
+load_node(tinygltf::Node const& node, tinygltf::Model const& model)
+{
+        // Create current node with metadata loaded in.
+        e8::if_obj* node_obj = nullptr;
+        if (node.mesh >= 0) {
+                node_obj = load_geometry(model.meshes[static_cast<unsigned>(node.mesh)], model);
+        } else if (node.camera >= 0) {
+                node_obj = load_camera(model.cameras[static_cast<unsigned>(node.camera)]);
+        }
+
+        if (node_obj == nullptr) {
+                node_obj = new e8::null_obj();
+        }
+
+        // Load in transformation.
+        e8util::mat44 transform;
+        for (unsigned i = 0; i < 2; i ++) {
+                for (unsigned j = 0; j < 2; j ++) {
+                        transform(j, i) = static_cast<float>(node.matrix[j + i*2]);
+                }
+        }
+        node_obj->init_blueprint(std::vector<e8::transform_stage_name_t>{"GLTF_DEFAULT"});
+        node_obj->update_stage(std::make_pair("GLTF_DEFAULT", transform));
+
+        // Load childrens.
+        for (int node_child_i: node.children) {
+                node_obj->add_child(load_node(model.nodes[static_cast<unsigned>(node_child_i)], model));
+        }
+        return node_obj;
+}
+
 std::vector<e8::if_obj*>
 e8util::gltf_scene::load_roots()
 {
-        // TODO: implement this.
+        std::vector<e8::if_obj*> roots;
+        tinygltf::Model model = m_pimpl->get_model();
+        std::vector<tinygltf::Node> nodes = model.nodes;
+        if (!model.scenes.empty()) {
+                // Can only handle one scene.
+                for (int node_i: model.scenes[0].nodes) {
+                        roots.push_back(load_node(model.nodes[static_cast<unsigned>(node_i)], model));
+                }
+        }
+        return roots;
 }

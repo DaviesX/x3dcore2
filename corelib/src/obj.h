@@ -37,9 +37,9 @@ public:
         virtual const std::type_info&   support() const = 0;
 };
 
-typedef uint32_t                                                obj_id_t;
-typedef std::string                                             transofrm_stage_name_t;
-typedef std::pair<transofrm_stage_name_t, e8util::mat44>        transform_stage_t;
+typedef uint64_t                                                obj_id_t;
+typedef std::string                                             transform_stage_name_t;
+typedef std::pair<transform_stage_name_t, e8util::mat44>        transform_stage_t;
 typedef std::deque<transform_stage_t>                           transform_blueprint_t;
 
 class if_obj
@@ -54,7 +54,7 @@ public:
         std::type_info const&           type() const;
         bool                            dirty() const;
 
-        void                            init_blueprint(std::vector<transofrm_stage_name_t> const& stages);
+        void                            init_blueprint(std::vector<transform_stage_name_t> const& stages);
         bool                            update_stage(transform_stage_t const& stage);
 
         bool                            add_child(if_obj* child);
@@ -73,6 +73,12 @@ private:
         std::set<if_obj*>               m_children;
         bool                            m_dirty;
         char                            m_padding[7];
+};
+
+class null_obj: public if_obj
+{
+public:
+        std::type_info const& interface() const override;
 };
 
 template<class T>

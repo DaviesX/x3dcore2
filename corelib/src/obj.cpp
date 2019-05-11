@@ -68,7 +68,7 @@ e8::if_obj::id() const
 }
 
 void
-e8::if_obj::init_blueprint(std::vector<transofrm_stage_name_t> const& stages)
+e8::if_obj::init_blueprint(std::vector<transform_stage_name_t> const& stages)
 {
         assert(std::set<std::string>(stages.begin(), stages.end()).size() == stages.size());
         m_blueprint.clear();
@@ -153,4 +153,10 @@ std::set<e8::if_obj*>
 e8::if_obj::get_children() const
 {
         return m_children;
+}
+
+std::type_info const&
+e8::null_obj::interface() const
+{
+        return typeid(null_obj);
 }

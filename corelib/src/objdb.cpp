@@ -12,7 +12,7 @@ e8::objdb::~objdb()
 }
 
 void
-e8::objdb::load_manager(if_obj_manager* mgr)
+e8::objdb::register_manager(if_obj_manager* mgr)
 {
         auto it = m_mgrs.find(mgr->support().name());
         if (it != m_mgrs.end()) {
