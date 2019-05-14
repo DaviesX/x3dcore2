@@ -51,7 +51,7 @@ App::on_check_autoexposure_stateChanged(int)
 void
 App::on_button_save_clicked()
 {
-        if (m_task.is_running()) {
+        if (m_pipeline.is_running()) {
                 m_ui->statusbar->showMessage("Cannot save rendering result while the renderer is running. Please pause the renderer first.");
                 return;
         }
@@ -71,23 +71,23 @@ App::on_button_save_clicked()
 void
 App::on_button_render_clicked()
 {
-        if (m_task.is_running()) {
-                m_task.enable(false);
+        if (m_pipeline.is_running()) {
+                m_pipeline.enable();
                 e8util::sync(m_info);
 
                 m_ui->button_render->setText("start");
                 m_ui->statusbar->showMessage("paused.");
                 m_stats_update_timer.stop();
         } else {
-                m_task.m_frame = m_frame;
-                m_task.m_current.exposure = static_cast<float>(m_ui->spin_manualexposure->value());
-                m_task.m_current.layout = m_ui->combo_structure->currentText().toStdString();
-                m_task.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
-                m_task.m_current.num_samps = static_cast<unsigned>(m_ui->spin_sample->value());
-                m_task.update();
+                m_pipeline.m_frame = m_frame;
+                m_pipeline.m_current.exposure = static_cast<float>(m_ui->spin_manualexposure->value());
+                m_pipeline.m_current.layout = m_ui->combo_structure->currentText().toStdString();
+                m_pipeline.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
+                m_pipeline.m_current.num_samps = static_cast<unsigned>(m_ui->spin_sample->value());
+                m_pipeline.push_updates();
 
-                m_task.enable(true);
-                m_info = e8util::run(&m_task);
+                m_pipeline.enable();
+                m_info = e8util::run(&m_pipeline);
 
                 m_stats_update_timer.start(500);
                 m_ui->button_render->setText("pause");
@@ -100,27 +100,27 @@ App::on_update_stats()
 {
         //std::cout << "Updating stats" << std::endl;
         m_frame->repaint();
-        m_ui->label_time->setText(QString::fromStdString(std::to_string(m_task.time_elapsed()) + " s"));
-        m_ui->label_samp_count1->setText(QString::fromStdString(std::to_string(m_task.num_commits())));
+        m_ui->label_time->setText(QString::fromStdString(std::to_string(m_pipeline.time_elapsed()) + " s"));
+        m_ui->label_samp_count1->setText(QString::fromStdString(std::to_string(m_pipeline.frame_no())));
 }
 
 void
 App::on_MainWindow_destroyed()
 {
-        m_task.enable(false);
+        m_pipeline.disable();
         e8util::sync(m_info);
 }
 
 void
 App::on_action_openfile_triggered()
 {
-        if (m_task.is_running()) {
+        if (m_pipeline.is_running()) {
                 m_ui->statusbar->showMessage("Renderer is running. Need to stop the rendering task first.");
                 return ;
         } else {
                 QString file_name = QFileDialog::getOpenFileName(this,
                     tr("Open scene"), "./res", tr("glTF Scene File (*.gltf)"));
-                m_task.m_current.scene = file_name.toStdString();
+                m_pipeline.m_current.scene = file_name.toStdString();
                 m_ui->statusbar->showMessage("Using scene " + file_name + ".");
         }
 }

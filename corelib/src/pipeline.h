@@ -9,22 +9,49 @@
 #include "camera.h"
 #include "renderer.h"
 #include "thread.h"
+#include "objdb.h"
 
 namespace e8
 {
 
-class pt_rendering_pipeline: public e8util::if_task
+class if_render_pipeline: public e8util::if_task
 {
 public:
-        pt_rendering_pipeline();
-        virtual ~pt_rendering_pipeline() override;
+        if_render_pipeline();
+        virtual ~if_render_pipeline() override;
 
-        void            run(e8util::if_task_storage* storage) override;
-        void            update();
+        void            run(e8util::if_task_storage* unused = nullptr) override;
+        void            push_updates();
+
+        e8::objdb&      objdb();
+
         bool            is_running() const;
-        void            enable(bool state);
-        uint32_t        num_commits() const;
+        void            enable();
+        void            disable();
+
+        unsigned        frame_no() const;
         float           time_elapsed() const;
+protected:
+        virtual void    render_frame() = 0;
+        virtual void    update_pipeline() = 0;
+
+        e8::objdb               m_objdb;
+        unsigned                m_frame_no = 0;
+        bool                    m_is_running = false;
+
+private:
+        std::clock_t            m_task_started = 0;
+        e8util::mutex_t         m_mutex;
+};
+
+class pt_render_pipeline: public if_render_pipeline
+{
+public:
+        pt_render_pipeline();
+        virtual ~pt_render_pipeline() override;
+
+        void            render_frame() override;
+        void            update_pipeline() override;
 
         struct settings
         {
@@ -48,10 +75,7 @@ public:
 
         settings                m_old;
         settings                m_current;
-        e8util::mutex_t         m_mutex;
-        bool                    m_is_running = false;
-        std::clock_t            m_task_started = 0;
-        uint32_t                m_num_commits = 0;
+
 };
 
 }

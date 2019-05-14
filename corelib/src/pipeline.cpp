@@ -2,7 +2,74 @@
 #include "pipeline.h"
 
 
-e8::pt_rendering_pipeline::settings::settings():
+e8::if_render_pipeline::if_render_pipeline():
+        m_mutex(e8util::mutex())
+{
+}
+
+e8::if_render_pipeline::~if_render_pipeline()
+{
+        e8util::destroy(m_mutex);
+}
+
+void
+e8::if_render_pipeline::run(e8util::if_task_storage* /* unused */)
+{
+        m_task_started = std::clock();
+        while (m_is_running) {
+                e8util::lock(m_mutex);
+                render_frame();
+                m_frame_no ++;
+                e8util::unlock(m_mutex);
+        }
+}
+
+void
+e8::if_render_pipeline::push_updates()
+{
+        e8util::lock(m_mutex);
+        update_pipeline();
+        e8util::unlock(m_mutex);
+}
+
+e8::objdb&
+e8::if_render_pipeline::objdb()
+{
+        return m_objdb;
+}
+
+bool
+e8::if_render_pipeline::is_running() const
+{
+        return m_is_running;
+}
+
+void
+e8::if_render_pipeline::enable()
+{
+        m_is_running = true;
+}
+
+void
+e8::if_render_pipeline::disable()
+{
+        m_is_running = false;
+}
+
+unsigned
+e8::if_render_pipeline::frame_no() const
+{
+        return m_frame_no;
+}
+
+float
+e8::if_render_pipeline::time_elapsed() const
+{
+        return static_cast<float>(std::clock() - m_task_started)/CLOCKS_PER_SEC;
+}
+
+
+e8::pt_render_pipeline::settings::settings():
         scene("cornellball"),
         renderer("normal"),
         layout("linear"),
@@ -12,55 +79,48 @@ e8::pt_rendering_pipeline::settings::settings():
 }
 
 bool
-e8::pt_rendering_pipeline::settings::operator==(settings const& rhs) const
+e8::pt_render_pipeline::settings::operator==(settings const& rhs) const
 {
         return scene == rhs.scene &&
                 renderer == rhs.renderer &&
                         layout == rhs.layout &&
-                        exposure == rhs.exposure &&
+                        e8util::equals(exposure, rhs.exposure) &&
                         num_samps == rhs.num_samps;
 }
 
 bool
-e8::pt_rendering_pipeline::settings::operator!=(settings const& rhs) const
+e8::pt_render_pipeline::settings::operator!=(settings const& rhs) const
 {
         return !((*this) == rhs);
 }
 
 
 
-e8::pt_rendering_pipeline::pt_rendering_pipeline()
+e8::pt_render_pipeline::pt_render_pipeline()
 {
-        m_mutex = e8util::mutex();
         m_com = new e8::aces_compositor(0, 0);
-        update();
+        push_updates();
 }
 
-e8::pt_rendering_pipeline::~pt_rendering_pipeline()
+e8::pt_render_pipeline::~pt_render_pipeline()
 {
-        e8util::destroy(m_mutex);
-}
 
-void
-e8::pt_rendering_pipeline::run(e8util::if_task_storage*)
-{
-        while (m_is_running) {
-                e8util::lock(m_mutex);
-                m_com->resize(m_frame->width(), m_frame->height());
-                m_com->enable_auto_exposure(false);
-                m_com->exposure(m_old.exposure);
-                m_renderer->render(m_scene, m_cam, m_com);
-                m_com->commit(m_frame);
-                m_frame->commit();
-                m_num_commits ++;
-                e8util::unlock(m_mutex);
-        }
 }
 
 void
-e8::pt_rendering_pipeline::update()
+e8::pt_render_pipeline::render_frame()
 {
-        e8util::lock(m_mutex);
+        m_com->resize(m_frame->width(), m_frame->height());
+        m_com->enable_auto_exposure(false);
+        m_com->exposure(m_old.exposure);
+        m_renderer->render(m_scene, m_cam, m_com);
+        m_com->commit(m_frame);
+        m_frame->commit();
+}
+
+void
+e8::pt_render_pipeline::update_pipeline()
+{
         if (m_current != m_old) {
                 // update.
                 if (m_renderer == nullptr || m_current.renderer != m_old.renderer) {
@@ -110,32 +170,5 @@ e8::pt_rendering_pipeline::update()
                         }
                 }
                 m_old = m_current;
-                m_num_commits = 0;
-                m_task_started = std::clock();
         }
-        e8util::unlock(m_mutex);
-}
-
-bool
-e8::pt_rendering_pipeline::is_running() const
-{
-        return m_is_running;
-}
-
-void
-e8::pt_rendering_pipeline::enable(bool state)
-{
-        m_is_running = state;
-}
-
-uint32_t
-e8::pt_rendering_pipeline::num_commits() const
-{
-        return m_num_commits;
-}
-
-float
-e8::pt_rendering_pipeline::time_elapsed() const
-{
-        return static_cast<float>(std::clock() - m_task_started)/CLOCKS_PER_SEC;
 }

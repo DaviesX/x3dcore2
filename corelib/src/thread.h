@@ -12,7 +12,7 @@ namespace e8util
 
 typedef pthread_mutex_t         mutex_t;
 typedef unsigned int            tid_t;
-typedef int                     data_id_t;
+typedef uint64_t                data_id_t;
 
 
 class if_task_storage
@@ -43,6 +43,8 @@ public:
 private:
         int     m_worker_id;
         bool    m_drop_on_completion;
+        int8_t  m_reserved0;
+        int16_t m_reserved1;
 };
 
 class task_info
