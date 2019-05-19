@@ -28,6 +28,8 @@ App::App(QWidget *parent) :
         connect(&m_stats_update_timer, SIGNAL(timeout()), this, SLOT(on_update_stats()));
 
         m_frame = new e8::ram_ogl_frame(m_ui->centralwidget);
+        m_pipeline = new e8::pt_render_pipeline(m_frame);
+        m_pipeline_config = m_pipeline->config();
         m_ui->gridLayout->addWidget(m_frame, 0, 0, 10, 1);
 
         m_ui->statusbar->showMessage("e8yescg started.");
@@ -51,8 +53,9 @@ App::on_check_autoexposure_stateChanged(int)
 void
 App::on_button_save_clicked()
 {
-        if (m_pipeline.is_running()) {
-                m_ui->statusbar->showMessage("Cannot save rendering result while the renderer is running. Please pause the renderer first.");
+        if (m_pipeline->is_running()) {
+                m_ui->statusbar->showMessage("Cannot save rendering result while the render pipeline"
+                                             " is still running. Please pause the pipeline.");
                 return;
         }
         QString file_name = QFileDialog::getSaveFileName(this,
@@ -71,23 +74,19 @@ App::on_button_save_clicked()
 void
 App::on_button_render_clicked()
 {
-        if (m_pipeline.is_running()) {
-                m_pipeline.enable();
-                e8util::sync(m_info);
+        if (m_pipeline->is_running()) {
+                // Stop the render pipeline.
+                m_pipeline->enable();
+                e8util::sync(m_pipeline_task);
 
                 m_ui->button_render->setText("start");
                 m_ui->statusbar->showMessage("paused.");
                 m_stats_update_timer.stop();
         } else {
-                m_pipeline.m_frame = m_frame;
-                m_pipeline.m_current.exposure = static_cast<float>(m_ui->spin_manualexposure->value());
-                m_pipeline.m_current.layout = m_ui->combo_structure->currentText().toStdString();
-                m_pipeline.m_current.renderer = m_ui->combo_tracer->currentText().toStdString();
-                m_pipeline.m_current.num_samps = static_cast<unsigned>(m_ui->spin_sample->value());
-                m_pipeline.push_updates();
-
-                m_pipeline.enable();
-                m_info = e8util::run(&m_pipeline);
+                // Start the render pipeline.
+                m_pipeline->config(m_pipeline_config);
+                m_pipeline->enable();
+                m_pipeline_task = e8util::run(m_pipeline);
 
                 m_stats_update_timer.start(500);
                 m_ui->button_render->setText("pause");
@@ -100,27 +99,27 @@ App::on_update_stats()
 {
         //std::cout << "Updating stats" << std::endl;
         m_frame->repaint();
-        m_ui->label_time->setText(QString::fromStdString(std::to_string(m_pipeline.time_elapsed()) + " s"));
-        m_ui->label_samp_count1->setText(QString::fromStdString(std::to_string(m_pipeline.frame_no())));
+        m_ui->label_time->setText(QString::fromStdString(std::to_string(m_pipeline->time_elapsed()) + " s"));
+        m_ui->label_samp_count1->setText(QString::fromStdString(std::to_string(m_pipeline->frame_no())));
 }
 
 void
 App::on_MainWindow_destroyed()
 {
-        m_pipeline.disable();
-        e8util::sync(m_info);
+        m_pipeline->disable();
+        e8util::sync(m_pipeline_task);
 }
 
 void
 App::on_action_openfile_triggered()
 {
-        if (m_pipeline.is_running()) {
-                m_ui->statusbar->showMessage("Renderer is running. Need to stop the rendering task first.");
+        if (m_pipeline->is_running()) {
+                m_ui->statusbar->showMessage("Render pipeline is running. Need to stop the rendering task first.");
                 return ;
         } else {
                 QString file_name = QFileDialog::getOpenFileName(this,
                     tr("Open scene"), "./res", tr("glTF Scene File (*.gltf)"));
-                m_pipeline.m_current.scene = file_name.toStdString();
+                m_pipeline_config.str_val["scene_file"] = file_name.toStdString();
                 m_ui->statusbar->showMessage("Using scene " + file_name + ".");
         }
 }

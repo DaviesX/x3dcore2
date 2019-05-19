@@ -25,8 +25,12 @@ e8::objdb::register_manager(if_obj_manager* mgr)
 e8::if_obj_manager*
 e8::objdb::manager_of_interface(std::type_info const& interface) const
 {
-        assert(m_mgrs.find(interface.name()) != m_mgrs.end());
-        return m_mgrs.at(interface.name());
+        auto it = m_mgrs.find(interface.name());
+        if (it != m_mgrs.end()) {
+                return it->second;
+        } else {
+                return nullptr;
+        }
 }
 
 e8::if_obj*
@@ -35,10 +39,23 @@ e8::objdb::manage_root(if_obj* root)
         return *m_roots.insert(root).first;
 }
 
+std::vector<e8::if_obj*>
+e8::objdb::manage_roots(std::vector<if_obj*> roots)
+{
+        std::vector<e8::if_obj*> result;
+        for (if_obj* obj: roots) {
+                result.push_back(manage_root(obj));
+        }
+        return result;
+}
+
+#include <iostream>
+
 void
 e8::objdb::push_updates()
 {
         for (if_obj* obj: m_roots) {
+                std::cout << "pushing update for root " << obj->interface().name() << std::endl;
                 push_updates(obj, e8util::mat44_scale(1.0f));
         }
 }

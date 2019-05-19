@@ -51,7 +51,6 @@ public:
         virtual std::type_info const&   interface() const = 0;
 
         obj_id_t                        id() const;
-        std::type_info const&           type() const;
         bool                            dirty() const;
 
         void                            init_blueprint(std::vector<transform_stage_name_t> const& stages);

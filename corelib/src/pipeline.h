@@ -2,11 +2,13 @@
 #define PIPELINE_H
 
 #include <ctime>
+
+#include "util.h"
 #include "resource.h"
 #include "pathspace.h"
 #include "compositor.h"
 #include "frame.h"
-#include "camera.h"
+#include "cinematics.h"
 #include "renderer.h"
 #include "thread.h"
 #include "objdb.h"
@@ -17,65 +19,51 @@ namespace e8
 class if_render_pipeline: public e8util::if_task
 {
 public:
-        if_render_pipeline();
+        if_render_pipeline(if_frame* target);
         virtual ~if_render_pipeline() override;
 
-        void            run(e8util::if_task_storage* unused = nullptr) override;
-        void            push_updates();
+        void                    config(e8util::flex_config const& new_config);
+        e8util::flex_config     config() const;
+        void                    run(e8util::if_task_storage* unused = nullptr) override;
 
-        e8::objdb&      objdb();
+        e8::objdb&              objdb();
 
-        bool            is_running() const;
-        void            enable();
-        void            disable();
+        bool                    is_running() const;
+        void                    enable();
+        void                    disable();
 
-        unsigned        frame_no() const;
-        float           time_elapsed() const;
+        unsigned                frame_no() const;
+        float                   time_elapsed() const;
 protected:
-        virtual void    render_frame() = 0;
-        virtual void    update_pipeline() = 0;
+        virtual void                    render_frame() = 0;
+        virtual void                    update_pipeline(e8util::flex_config const& diff) = 0;
+        virtual e8util::flex_config     config_protocol() const = 0;
 
         e8::objdb               m_objdb;
+        e8::if_frame*           m_frame;
         unsigned                m_frame_no = 0;
         bool                    m_is_running = false;
-
 private:
         std::clock_t            m_task_started = 0;
         e8util::mutex_t         m_mutex;
+        e8util::flex_config     m_old_config;
 };
 
 class pt_render_pipeline: public if_render_pipeline
 {
 public:
-        pt_render_pipeline();
+        pt_render_pipeline(if_frame* target);
         virtual ~pt_render_pipeline() override;
 
-        void            render_frame() override;
-        void            update_pipeline() override;
+        void                    render_frame() override;
+        void                    update_pipeline(e8util::flex_config const& diff) override;
+        e8util::flex_config     config_protocol() const override;
 
-        struct settings
-        {
-                settings();
-
-                bool    operator==(settings const& rhs) const;
-                bool    operator!=(settings const& rhs) const;
-
-                std::string     scene;
-                std::string     renderer;
-                std::string     layout;
-                float           exposure;
-                unsigned        num_samps;
-        };
-
-        e8::if_path_space*      m_scene = nullptr;
+private:
+        e8::if_path_space*      m_path_space = nullptr;
+        e8::if_cinematics*      m_cinematics = nullptr;
         e8::pt_image_renderer*  m_renderer = nullptr;
         e8::aces_compositor*    m_com = nullptr;
-        e8::if_frame*           m_frame = nullptr;
-        e8::if_camera*          m_cam = nullptr;
-
-        settings                m_old;
-        settings                m_current;
-
 };
 
 }

@@ -129,7 +129,7 @@ std::vector<e8::if_light*>
 e8util::cornell_scene::load_lights() const
 {
         return std::vector<e8::if_light*>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                                                  new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometries()[0],
+                                                  new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometry(),
                                                               e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)});
 }
 

@@ -18,6 +18,7 @@ public:
         void                    register_manager(if_obj_manager* mgr);
         if_obj_manager*         manager_of_interface(std::type_info const& itf) const;
         if_obj*                 manage_root(if_obj* root);
+        std::vector<if_obj*>    manage_roots(std::vector<if_obj*> roots);
         void                    push_updates();
         void                    clear();
 

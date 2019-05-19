@@ -23,6 +23,7 @@ SOURCES += \
     src/light.cpp \
     src/renderer.cpp \
     src/material.cpp \
+    src/util.cpp \
     test/test.cpp \
     test/testrunner.cpp \
     test/testtensor.cpp \
@@ -56,6 +57,7 @@ HEADERS += \
     src/geometry.h \
     src/light.h \
     src/renderer.h \
+    src/util.h \
     test/test.h \
     src/material.h \
     test/testrunner.h \

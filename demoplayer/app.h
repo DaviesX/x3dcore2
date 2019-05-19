@@ -40,9 +40,9 @@ private:
         QTimer                          m_stats_update_timer;
 
         e8::ram_ogl_frame*              m_frame;
-
-        e8::pt_render_pipeline       m_pipeline;
-        e8util::task_info               m_info;
+        e8::if_render_pipeline*         m_pipeline;
+        e8util::task_info               m_pipeline_task;
+        e8util::flex_config             m_pipeline_config;
 };
 
 #endif // APP_H
