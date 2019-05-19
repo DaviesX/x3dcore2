@@ -35,6 +35,7 @@ public:
         virtual void                    load(if_obj const* obj, e8util::mat44 const& trans) = 0;
         virtual void                    unload(if_obj const* obj) = 0;
         virtual const std::type_info&   support() const = 0;
+        virtual void                    commit() = 0;
 };
 
 typedef uint64_t                                                obj_id_t;

@@ -23,7 +23,9 @@ public:
         void                    clear();
 
 private:
-        void                    push_updates(if_obj* obj, e8util::mat44 const& global_trans);
+        void                    push_updates(if_obj* obj,
+                                             e8util::mat44 const& global_trans,
+                                             bool is_dirty_anyway);
         void                    clear(if_obj* obj);
 
         std::set<if_obj*>                       m_roots;

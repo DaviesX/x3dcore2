@@ -41,7 +41,7 @@ public:
         if_path_space();
         virtual ~if_path_space() override;
 
-        virtual void                            commit() = 0;
+        virtual void                            commit() override = 0;
         virtual intersect_info                  intersect(e8util::ray const& r) const = 0;
         virtual bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const = 0;
         virtual batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const = 0;

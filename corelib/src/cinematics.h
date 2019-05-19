@@ -16,6 +16,7 @@ public:
         virtual ~if_cinematics() override;
 
         virtual if_camera*      main_cam() const = 0;
+        virtual void            commit() override = 0;
 
         void                    load(if_obj const* obj, e8util::mat44 const& trans) override;
         void                    unload(if_obj const* obj) override;
@@ -35,6 +36,7 @@ public:
         ~stationary_cam_controller() override;
 
         if_camera*              main_cam() const override;
+        void                    commit() override;
 };
 
 

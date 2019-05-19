@@ -32,6 +32,12 @@ e8::if_cinematics::support() const
         return typeid(if_camera);
 }
 
+std::string
+e8::if_cinematics::name() const
+{
+        return m_name;
+}
+
 
 e8::stationary_cam_controller::stationary_cam_controller(std::string const& name):
         if_cinematics(name)
@@ -51,3 +57,6 @@ e8::stationary_cam_controller::main_cam() const
                 return nullptr;
         }
 }
+
+void
+e8::stationary_cam_controller::commit() {}

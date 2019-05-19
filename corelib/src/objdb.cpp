@@ -49,36 +49,44 @@ e8::objdb::manage_roots(std::vector<if_obj*> roots)
         return result;
 }
 
-#include <iostream>
-
 void
 e8::objdb::push_updates()
 {
         for (if_obj* obj: m_roots) {
-                std::cout << "pushing update for root " << obj->interface().name() << std::endl;
-                push_updates(obj, e8util::mat44_scale(1.0f));
+                push_updates(obj,
+                             e8util::mat44_scale(1.0f),
+                             obj->dirty());
+        }
+        for (auto const& it: m_mgrs) {
+                it.second->commit();
         }
 }
 
 void
-e8::objdb::push_updates(if_obj* obj, e8util::mat44 const& global_trans)
+e8::objdb::push_updates(if_obj* obj,
+                        e8util::mat44 const& global_trans,
+                        bool is_dirty_anyway)
 {
         e8util::mat44 local_trans = e8util::mat44_scale(1.0f);
         for (auto it = obj->m_blueprint.begin(); it != obj->m_blueprint.end(); ++it) {
                 local_trans = it->second*local_trans;
         }
         e8util::mat44 const& modified_trans = local_trans*global_trans;
-        if (obj->dirty()) {
+        if (obj->dirty() || is_dirty_anyway) {
                 if_obj_manager* mgr = manager_of_interface(obj->interface());
                 if (mgr != nullptr) {
                         mgr->unload(obj);
                         mgr->load(obj, modified_trans);
-                        obj->mark_clean();
                 }
         }
+
         for (if_obj* child: obj->m_children) {
-                push_updates(child, modified_trans);
+                push_updates(child,
+                             modified_trans,
+                             obj->dirty() || is_dirty_anyway);
         }
+
+        obj->mark_clean();
 }
 
 void
