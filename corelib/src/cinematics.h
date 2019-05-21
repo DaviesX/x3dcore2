@@ -20,7 +20,7 @@ public:
 
         void                    load(if_obj const* obj, e8util::mat44 const& trans) override;
         void                    unload(if_obj const* obj) override;
-        const std::type_info&   support() const override;
+        obj_type                support() const override;
         std::string             name() const;
 
 protected:

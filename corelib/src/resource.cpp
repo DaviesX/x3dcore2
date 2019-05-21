@@ -372,7 +372,7 @@ e8util::wavefront_obj::save_roots(std::vector<e8::if_obj*> const& roots)
         {
                 this->save_geometry(static_cast<e8::if_geometry const*>(obj));
         },
-        std::set<std::string> {typeid(e8::if_geometry).name()});
+        std::set<e8::obj_type> { e8::obj_type::obj_type_geometry });
 }
 
 

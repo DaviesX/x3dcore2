@@ -12,16 +12,24 @@
 namespace e8
 {
 
+enum obj_type {
+        obj_type_null,
+        obj_type_geometry,
+        obj_type_camera,
+        obj_type_light,
+        obj_type_material,
+};
+
 class incompat_obj_exception: public std::exception
 {
 public:
-        incompat_obj_exception(std::type_info const& expected_type,
-                               std::type_info const& actual_type);
+        incompat_obj_exception(obj_type expected_type,
+                               obj_type actual_type);
         ~incompat_obj_exception();
         char const*     what() const noexcept;
 private:
-        std::type_info const&   m_expected_type;
-        std::type_info const&   m_actual_type;
+        obj_type        m_expected_type;
+        obj_type        m_actual_type;
 };
 
 class if_obj;
@@ -34,7 +42,7 @@ public:
 
         virtual void                    load(if_obj const* obj, e8util::mat44 const& trans) = 0;
         virtual void                    unload(if_obj const* obj) = 0;
-        virtual const std::type_info&   support() const = 0;
+        virtual obj_type                support() const = 0;
         virtual void                    commit() = 0;
 };
 
@@ -49,7 +57,7 @@ class if_obj
 public:
         virtual ~if_obj();
 
-        virtual std::type_info const&   interface() const = 0;
+        virtual obj_type                interface() const = 0;
 
         obj_id_t                        id() const;
         bool                            dirty() const;
@@ -59,7 +67,7 @@ public:
 
         bool                            add_child(if_obj* child);
         bool                            remove_child(if_obj* child);
-        std::vector<if_obj*>            get_children(std::type_info const& interface_type) const;
+        std::vector<if_obj*>            get_children(obj_type const& interface_type) const;
         std::set<if_obj*>               get_children() const;
 protected:
         if_obj();
@@ -78,7 +86,7 @@ private:
 class null_obj: public if_obj
 {
 public:
-        std::type_info const& interface() const override;
+        obj_type        interface() const override;
 };
 
 template<class T>
@@ -102,12 +110,12 @@ template<typename ReadOp>
 void
 visit_filtered(if_obj const* obj,
                ReadOp op,
-               std::set<std::string> const& interfaces = std::set<std::string>())
+               std::set<obj_type> const& interfaces = std::set<obj_type>())
 {
         op(obj);
         for (if_obj const* child: obj->get_children()) {
                 if (interfaces.empty() ||
-                    interfaces.find(obj->interface().name()) != interfaces.end()) {
+                    interfaces.find(obj->interface()) != interfaces.end()) {
                         visit_filtered(child, op, interfaces);
                 }
         }
@@ -118,11 +126,11 @@ template<typename ReadOp>
 void
 visit_all_filtered(std::vector<if_obj*> const& objs,
                    ReadOp op,
-                   std::set<std::string> const& interfaces = std::set<std::string>())
+                   std::set<obj_type> const& interfaces = std::set<obj_type>())
 {
         for (if_obj const* obj: objs) {
                 if (interfaces.empty() ||
-                    interfaces.find(obj->interface().name()) != interfaces.end()) {
+                    interfaces.find(obj->interface()) != interfaces.end()) {
                         visit_filtered(obj, op, interfaces);
                 }
         }

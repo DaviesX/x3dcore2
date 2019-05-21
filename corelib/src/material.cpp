@@ -16,10 +16,10 @@ e8::if_material::name() const
         return m_name;
 }
 
-std::type_info const&
+e8::obj_type
 e8::if_material::interface() const
 {
-        return typeid(if_material);
+        return obj_type::obj_type_material;
 }
 
 

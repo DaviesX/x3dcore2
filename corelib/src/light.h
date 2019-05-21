@@ -23,7 +23,7 @@ public:
         virtual e8util::vec3    power() const = 0;
 
         std::string             name() const;
-        std::type_info const&   interface() const override;
+        obj_type                interface() const override;
 private:
         std::string             m_name;
 };

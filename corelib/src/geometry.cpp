@@ -24,10 +24,10 @@ e8::if_geometry::name() const
         return m_name;
 }
 
-const std::type_info&
+e8::obj_type
 e8::if_geometry::interface() const
 {
-        return typeid(*this);
+        return obj_type::obj_type_geometry;
 }
 
 // trimesh

@@ -90,8 +90,8 @@ void
 e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
 {
         if_geometry const* geo = static_cast<if_geometry const*>(obj)->transform(trans);
-        std::vector<if_obj*> mats = obj->get_children(typeid(if_material));
-        std::vector<if_obj*> lights = obj->get_children(typeid(if_light));
+        std::vector<if_obj*> mats = obj->get_children(obj_type::obj_type_material);
+        std::vector<if_obj*> lights = obj->get_children(obj_type::obj_type_light);
 
         add_geometry(geo);
         bind(geo, static_cast<if_material*>(mats[0]));
@@ -108,10 +108,10 @@ e8::if_path_space::unload(if_obj const* obj)
         }
 }
 
-const std::type_info&
+e8::obj_type
 e8::if_path_space::support() const
 {
-        return typeid(if_geometry);
+        return obj_type::obj_type_geometry;
 }
 
 

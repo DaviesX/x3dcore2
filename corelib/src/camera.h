@@ -26,7 +26,7 @@ public:
         virtual e8util::mat44           projection() const = 0;
 
         std::string                     name() const;
-        std::type_info const&           interface() const override;
+        obj_type                        interface() const override;
 protected:
         if_camera(obj_id_t id, std::string const& name);
         std::string     m_name;

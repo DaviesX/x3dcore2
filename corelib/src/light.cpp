@@ -23,10 +23,10 @@ e8::if_light::name() const
         return m_name;
 }
 
-std::type_info const&
+e8::obj_type
 e8::if_light::interface() const
 {
-        return typeid(if_light);
+        return obj_type::obj_type_light;
 }
 
 e8::area_light::area_light(std::string const& name,

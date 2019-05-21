@@ -17,10 +17,10 @@ e8::if_camera::name() const
         return m_name;
 }
 
-std::type_info const&
+e8::obj_type
 e8::if_camera::interface() const
 {
-        return typeid(if_camera);
+        return obj_type::obj_type_camera;
 }
 
 e8::if_camera::if_camera(obj_id_t id, std::string const& name):

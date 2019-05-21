@@ -3,8 +3,8 @@
 #include "obj.h"
 
 
-e8::incompat_obj_exception::incompat_obj_exception(std::type_info const& expected_type,
-                                                   std::type_info const& actual_type):
+e8::incompat_obj_exception::incompat_obj_exception(obj_type expected_type,
+                                                   obj_type actual_type):
         m_expected_type(expected_type),
         m_actual_type(actual_type)
 {
@@ -17,8 +17,8 @@ e8::incompat_obj_exception::~incompat_obj_exception()
 char const*
 e8::incompat_obj_exception::what() const noexcept
 {
-        return (std::string("Incompatiable obj support. Expected: ") + m_expected_type.name()
-                + ", Actual: " + m_actual_type.name()).c_str();
+        return (std::string("Incompatiable obj support. Expected: ") + std::to_string(m_expected_type)
+                + ", Actual: " + std::to_string(m_actual_type)).c_str();
 }
 
 
@@ -138,7 +138,7 @@ e8::if_obj::remove_child(if_obj* child)
 
 
 std::vector<e8::if_obj*>
-e8::if_obj::get_children(std::type_info const& interface_type) const
+e8::if_obj::get_children(obj_type const& interface_type) const
 {
         std::vector<e8::if_obj*> result;
         for (if_obj* obj: m_children) {
@@ -155,8 +155,8 @@ e8::if_obj::get_children() const
         return m_children;
 }
 
-std::type_info const&
+e8::obj_type
 e8::null_obj::interface() const
 {
-        return typeid(null_obj);
+        return obj_type_null;
 }

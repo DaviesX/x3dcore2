@@ -14,18 +14,18 @@ e8::objdb::~objdb()
 void
 e8::objdb::register_manager(if_obj_manager* mgr)
 {
-        auto it = m_mgrs.find(mgr->support().name());
+        auto it = m_mgrs.find(mgr->support());
         if (it != m_mgrs.end()) {
                 delete it->second;
                 it->second = nullptr;
         }
-        m_mgrs[mgr->support().name()] = mgr;
+        m_mgrs[mgr->support()] = mgr;
 }
 
 e8::if_obj_manager*
-e8::objdb::manager_of_interface(std::type_info const& interface) const
+e8::objdb::manager_of_interface(obj_type type) const
 {
-        auto it = m_mgrs.find(interface.name());
+        auto it = m_mgrs.find(type);
         if (it != m_mgrs.end()) {
                 return it->second;
         } else {

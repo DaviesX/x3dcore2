@@ -26,10 +26,10 @@ e8::if_cinematics::unload(if_obj const* obj)
         }
 }
 
-const std::type_info&
+e8::obj_type
 e8::if_cinematics::support() const
 {
-        return typeid(if_camera);
+        return obj_type::obj_type_camera;
 }
 
 std::string

@@ -16,7 +16,7 @@ public:
         ~objdb();
 
         void                    register_manager(if_obj_manager* mgr);
-        if_obj_manager*         manager_of_interface(std::type_info const& itf) const;
+        if_obj_manager*         manager_of_interface(obj_type type) const;
         if_obj*                 manage_root(if_obj* root);
         std::vector<if_obj*>    manage_roots(std::vector<if_obj*> roots);
         void                    push_updates();
@@ -29,7 +29,7 @@ private:
         void                    clear(if_obj* obj);
 
         std::set<if_obj*>                       m_roots;
-        std::map<std::string, if_obj_manager*>  m_mgrs;
+        std::map<obj_type, if_obj_manager*>     m_mgrs;
 };
 
 }
