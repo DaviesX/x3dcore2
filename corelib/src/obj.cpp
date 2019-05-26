@@ -1,4 +1,5 @@
 #include <cassert>
+#include <algorithm>
 #include "thread.h"
 #include "obj.h"
 
@@ -81,6 +82,12 @@ e8::if_obj::init_blueprint(std::vector<transform_stage_name_t> const& stages)
 bool
 e8::if_obj::update_stage(transform_stage_t const& stage)
 {
+        std::string const& stage_name = stage.first;
+        assert(std::find_if(m_blueprint.begin(),
+                            m_blueprint.end(),
+                            [&stage_name] (transform_stage_t const& stage) {
+                       return stage.first == stage_name;
+               }) != m_blueprint.end());
         for (auto it = m_blueprint.begin(); it != m_blueprint.end(); ++ it) {
                 if (it->first == stage.first &&
                                 it->second != stage.second) {
