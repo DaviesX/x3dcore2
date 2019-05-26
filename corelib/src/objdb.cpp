@@ -14,6 +14,7 @@ e8::objdb::~objdb()
 void
 e8::objdb::register_manager(std::unique_ptr<if_obj_manager> mgr)
 {
+        unregister_manager_for(mgr->support());
         m_mgrs.insert(std::make_pair(mgr->support(), std::move(mgr)));
 }
 
@@ -22,7 +23,10 @@ e8::objdb::unregister_manager_for(obj_type type)
 {
         auto it = m_mgrs.find(type);
         if (it != m_mgrs.end()) {
-                // TODO: implement this properly: mark underlying objects dirty also.
+                visit_all_filtered(m_roots.begin(),
+                                   m_roots.end(),
+                                   [] (if_obj* obj) { obj->mark_dirty(); },
+                                   std::set<obj_type> {type});
                 m_mgrs.erase(it);
         }
 }
@@ -45,7 +49,7 @@ e8::objdb::manage_root(if_obj* root)
 }
 
 std::vector<e8::if_obj*>
-e8::objdb::manage_roots(std::vector<if_obj*> roots)
+e8::objdb::manage_roots(std::vector<if_obj*> const& roots)
 {
         std::vector<e8::if_obj*> result;
         for (if_obj* obj: roots) {

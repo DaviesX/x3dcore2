@@ -102,18 +102,18 @@ public:
 
 struct obj_visitor
 {
-        void operator()(if_obj const*) {}
+        void operator()(if_obj*) {}
 };
 
 
 template<typename ReadOp>
 void
-visit_filtered(if_obj const* obj,
+visit_filtered(if_obj* obj,
                ReadOp op,
                std::set<obj_type> const& interfaces = std::set<obj_type>())
 {
         op(obj);
-        for (if_obj const* child: obj->get_children()) {
+        for (if_obj* child: obj->get_children()) {
                 if (interfaces.empty() ||
                     interfaces.find(obj->interface()) != interfaces.end()) {
                         visit_filtered(child, op, interfaces);
@@ -122,16 +122,17 @@ visit_filtered(if_obj const* obj,
 }
 
 
-template<typename ReadOp>
+template<typename ReadOp, typename Iterator>
 void
-visit_all_filtered(std::vector<if_obj*> const& objs,
+visit_all_filtered(Iterator const& begin,
+                   Iterator const& end,
                    ReadOp op,
                    std::set<obj_type> const& interfaces = std::set<obj_type>())
 {
-        for (if_obj const* obj: objs) {
+        for (Iterator it = begin; it != end; ++ it) {
                 if (interfaces.empty() ||
-                    interfaces.find(obj->interface()) != interfaces.end()) {
-                        visit_filtered(obj, op, interfaces);
+                    interfaces.find((*it)->interface()) != interfaces.end()) {
+                        visit_filtered(*it, op, interfaces);
                 }
         }
 }

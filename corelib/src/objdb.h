@@ -20,7 +20,7 @@ public:
         void                    unregister_manager_for(obj_type type);
         if_obj_manager*         manager_for(obj_type type) const;
         if_obj*                 manage_root(if_obj* root);
-        std::vector<if_obj*>    manage_roots(std::vector<if_obj*> roots);
+        std::vector<if_obj*>    manage_roots(std::vector<if_obj*> const& roots);
         void                    push_updates();
         void                    clear();
 

@@ -368,11 +368,12 @@ e8util::wavefront_obj::load_roots()
 void
 e8util::wavefront_obj::save_roots(std::vector<e8::if_obj*> const& roots)
 {
-        e8::visit_all_filtered(roots, [this] (e8::if_obj const* obj)
-        {
-                this->save_geometry(static_cast<e8::if_geometry const*>(obj));
-        },
-        std::set<e8::obj_type> { e8::obj_type::obj_type_geometry });
+        e8::visit_all_filtered(roots.begin(),
+                               roots.end(),
+                               [this] (e8::if_obj const* obj) {
+                                this->save_geometry(static_cast<e8::if_geometry const*>(obj));
+                               },
+                               std::set<e8::obj_type> { e8::obj_type::obj_type_geometry });
 }
 
 
