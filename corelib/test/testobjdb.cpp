@@ -155,8 +155,8 @@ test::test_objdb::run() const
                                              e8util::vec3 {-1, -1, -1},
                                              e8util::vec3 {1, 1, -1});
         assert(e8util::equals(expected_root.vertices(), t_root_n->vertices()));
-        // assert(e8util::equals(expected_root.normals(), t_root_n->normals()));
+        assert(e8util::equals(expected_root.normals(), t_root_n->normals()));
 
         assert(e8util::equals(expected_child.vertices(), t_child_n->vertices()));
-        // assert(e8util::equals(expected_child.normals(), t_child_n->normals()));
+        assert(e8util::equals(expected_child.normals(), t_child_n->normals()));
 }

@@ -125,6 +125,10 @@ e8::trimesh::transform(e8util::mat44 const& trans) const
         for (unsigned i = 0; i < transformed->m_verts.size(); i ++) {
                 transformed->m_verts[i] = (trans*transformed->m_verts[i].homo(1.0f)).cart();
         }
+        e8util::mat44 normal_trans = ~(trans^(-1));
+        for (unsigned i = 0; i < transformed->m_verts.size(); i ++) {
+                transformed->m_norms[i] = (normal_trans*transformed->m_norms[i].homo(1.0f)).cart();
+        }
         transformed->update_aabb();
         return transformed;
 }
