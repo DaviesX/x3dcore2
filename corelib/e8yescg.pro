@@ -48,7 +48,8 @@ SOURCES += \
     src/objdb.cpp \
     src/obj.cpp \
     src/pathspace.cpp \
-    src/cinematics.cpp
+    src/cinematics.cpp \
+    test/testobjdb.cpp
 
 
 HEADERS += \
@@ -83,7 +84,8 @@ HEADERS += \
     src/objdb.h \
     src/obj.h \
     src/pathspace.h \
-    src/cinematics.h
+    src/cinematics.h \
+    test/testobjdb.h
 
 win32 {
 LIBS += -lOpengl32

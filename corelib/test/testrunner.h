@@ -12,6 +12,7 @@ class test_runner
 {
 public:
         test_runner();
+        test_runner(test_runner const& other);
         ~test_runner();
 
         void run_all() const;

@@ -13,10 +13,17 @@
 #include "testunidirectrenderer.h"
 #include "testbidirectlt2renderer.h"
 #include "testbidirectmisrenderer.h"
+#include "testobjdb.h"
 
 
 test::test_runner::test_runner()
 {
+}
+
+test::test_runner::test_runner(test_runner const& other)
+{
+        m_tests = other.m_tests;
+        m_status = other.m_status;
 }
 
 test::test_runner::~test_runner()
@@ -78,6 +85,7 @@ test::load(int argc, char** argv)
         runner.add("test_bidirect_lt2_renderer", new test_bidirect_lt2_renderer(), false);
         runner.add("test_bidirect_mis_renderer", new test_bidirect_mis_renderer(), false);
         runner.add("test_frame", new test_frame(), false);
+        runner.add("test_objdb", new test_objdb(), false);
 
         for (int i = 1; i < argc; i ++) {
                 if ((!std::strcmp(argv[i], "--test") || !std::strcmp(argv[i], "-t")) && (i + 1 < argc)) {

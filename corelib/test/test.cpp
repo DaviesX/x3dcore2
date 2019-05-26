@@ -2,8 +2,8 @@
 #include "test.h"
 
 
-std::mt19937 engine;
-std::uniform_real_distribution<float>   ur(0,1);
+static std::mt19937 engine;
+static std::uniform_real_distribution<float> ur(0,1);
 
 test::if_test::if_test()
 {
