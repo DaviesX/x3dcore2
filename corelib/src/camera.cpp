@@ -42,7 +42,7 @@ e8::pinhole_camera::pinhole_camera(e8util::vec3 const& t,
 }
 
 e8::pinhole_camera::pinhole_camera(pinhole_camera const& rhs):
-        if_camera(id(), name()),
+        if_camera(rhs.id(), rhs.name()),
         m_znear(rhs.m_znear),
         m_sensor_size(rhs.m_sensor_size),
         m_focal_len(rhs.m_focal_len),
