@@ -46,6 +46,7 @@ public:
         vec             operator/(vec const& rhs) const;
 
         vec&            operator+=(vec const& rhs);
+        vec&            operator-=(vec const& rhs);
         vec&            operator*=(vec const& rhs);             // modulation, not cross product.
 
         T               inner(vec const& rhs) const;
@@ -225,6 +226,15 @@ vec<N, T>::operator+=(vec const& rhs)
 {
         for (unsigned i = 0; i < N; i ++)
                 (*this)(i) += rhs(i);
+        return *this;
+}
+
+template<unsigned N, typename T>
+vec<N, T>&
+vec<N, T>::operator-=(vec const& rhs)
+{
+        for (unsigned i = 0; i < N; i ++)
+                (*this)(i) -= rhs(i);
         return *this;
 }
 
