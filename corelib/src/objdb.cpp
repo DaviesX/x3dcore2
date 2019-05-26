@@ -12,22 +12,27 @@ e8::objdb::~objdb()
 }
 
 void
-e8::objdb::register_manager(if_obj_manager* mgr)
+e8::objdb::register_manager(std::unique_ptr<if_obj_manager> mgr)
 {
-        auto it = m_mgrs.find(mgr->support());
-        if (it != m_mgrs.end()) {
-                delete it->second;
-                it->second = nullptr;
-        }
-        m_mgrs[mgr->support()] = mgr;
+        m_mgrs.insert(std::make_pair(mgr->support(), std::move(mgr)));
 }
 
-e8::if_obj_manager*
-e8::objdb::manager_of_interface(obj_type type) const
+void
+e8::objdb::unregister_manager_for(obj_type type)
 {
         auto it = m_mgrs.find(type);
         if (it != m_mgrs.end()) {
-                return it->second;
+                // TODO: implement this properly: mark underlying objects dirty also.
+                m_mgrs.erase(it);
+        }
+}
+
+e8::if_obj_manager*
+e8::objdb::manager_for(obj_type type) const
+{
+        auto it = m_mgrs.find(type);
+        if (it != m_mgrs.end()) {
+                return it->second.get();
         } else {
                 return nullptr;
         }
@@ -73,7 +78,7 @@ e8::objdb::push_updates(if_obj* obj,
         }
         e8util::mat44 const& modified_trans = local_trans*global_trans;
         if (obj->dirty() || is_dirty_anyway) {
-                if_obj_manager* mgr = manager_of_interface(obj->interface());
+                if_obj_manager* mgr = manager_for(obj->interface());
                 if (mgr != nullptr) {
                         mgr->unload(obj);
                         mgr->load(obj, modified_trans);
@@ -95,7 +100,7 @@ e8::objdb::clear(if_obj* obj)
         for (if_obj* child: obj->m_children) {
                 clear(child);
         }
-        if_obj_manager* mgr = manager_of_interface(obj->interface());
+        if_obj_manager* mgr = manager_for(obj->interface());
         if (mgr != nullptr) {
                 mgr->unload(obj);
         }

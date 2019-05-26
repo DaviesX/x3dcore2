@@ -3,6 +3,7 @@
 
 #include <set>
 #include <map>
+#include <memory>
 #include "obj.h"
 
 
@@ -15,8 +16,9 @@ public:
         objdb();
         ~objdb();
 
-        void                    register_manager(if_obj_manager* mgr);
-        if_obj_manager*         manager_of_interface(obj_type type) const;
+        void                    register_manager(std::unique_ptr<if_obj_manager> mgr);
+        void                    unregister_manager_for(obj_type type);
+        if_obj_manager*         manager_for(obj_type type) const;
         if_obj*                 manage_root(if_obj* root);
         std::vector<if_obj*>    manage_roots(std::vector<if_obj*> roots);
         void                    push_updates();
@@ -28,8 +30,8 @@ private:
                                              bool is_dirty_anyway);
         void                    clear(if_obj* obj);
 
-        std::set<if_obj*>                       m_roots;
-        std::map<obj_type, if_obj_manager*>     m_mgrs;
+        std::set<if_obj*>                                       m_roots;
+        std::map<obj_type, std::unique_ptr<if_obj_manager>>     m_mgrs;
 };
 
 }

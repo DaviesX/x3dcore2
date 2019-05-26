@@ -60,8 +60,6 @@ public:
         e8util::flex_config     config_protocol() const override;
 
 private:
-        e8::if_path_space*      m_path_space = nullptr;
-        e8::if_cinematics*      m_cinematics = nullptr;
         e8::pt_image_renderer*  m_renderer = nullptr;
         e8::aces_compositor*    m_com = nullptr;
 };

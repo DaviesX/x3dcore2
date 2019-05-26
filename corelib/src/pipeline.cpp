@@ -85,13 +85,9 @@ e8::if_render_pipeline::time_elapsed() const
 e8::pt_render_pipeline::pt_render_pipeline(if_frame* target):
         if_render_pipeline(target)
 {
-        m_com = new e8::aces_compositor(0, 0);
-        m_cinematics = new e8::stationary_cam_controller("default_cinematics");
-
+        m_com = new aces_compositor(0, 0);
         update_pipeline(config_protocol());
-
-        m_objdb.register_manager(m_path_space);
-        m_objdb.register_manager(m_cinematics);
+        m_objdb.register_manager(std::make_unique<stationary_cam_controller>("default_cinematics"));
 }
 
 e8::pt_render_pipeline::~pt_render_pipeline()
@@ -103,9 +99,13 @@ e8::pt_render_pipeline::render_frame()
 {
         m_com->resize(m_frame->width(), m_frame->height());
         m_objdb.push_updates();
-        if_camera* cur_cam = m_cinematics->main_cam();
+        if_cinematics* cinematics = static_cast<if_cinematics*>(
+                                m_objdb.manager_for(obj_type::obj_type_camera));
+        if_path_space* path_space = static_cast<if_path_space*>(
+                                m_objdb.manager_for(obj_type::obj_type_geometry));
+        if_camera* cur_cam = cinematics->main_cam();
         if (cur_cam != nullptr) {
-                m_renderer->render(m_path_space, cur_cam, m_com);
+                m_renderer->render(path_space, cur_cam, m_com);
         }
         m_com->commit(m_frame);
         m_frame->commit();
@@ -160,14 +160,12 @@ e8::pt_render_pipeline::update_pipeline(e8util::flex_config const& diff)
                                                                                   e8::pathtracer_factory::options()));
         });
 
-        // @FIXME: mark objects in the obj manager dirty because the new obj manager is empty.
         diff.find_enum("path_space", [this] (std::string const& path_space_type,
                                              e8util::flex_config const* /*config*/) {
-                delete m_path_space;
                 if (path_space_type == "linear") {
-                        m_path_space = new e8::linear_path_space_layout();
+                        m_objdb.register_manager(std::make_unique<linear_path_space_layout>());
                 } else if (path_space_type == "static_bvh") {
-                        m_path_space = new e8::bvh_path_space_layout();
+                        m_objdb.register_manager(std::make_unique<bvh_path_space_layout>());
                 }
         });
 
