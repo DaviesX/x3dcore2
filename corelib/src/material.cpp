@@ -23,6 +23,32 @@ e8::if_material::interface() const
 }
 
 
+e8::mat_fail_safe::mat_fail_safe(std::string const& name):
+        if_material(name),
+        m_albedo { 0.8f, 0.8f, 0.8f}
+{
+}
+
+e8util::vec3
+e8::mat_fail_safe::eval(e8util::vec3 const& /* n */,
+                             e8util::vec3 const& /* o */,
+                             e8util::vec3 const& /* i */) const
+{
+        return m_albedo * (1.0f/static_cast<float>(M_PI));
+}
+
+e8util::vec3
+e8::mat_fail_safe::sample(e8util::rng& rng,
+                               e8util::vec3 const& n,
+                               e8util::vec3 const& /* o */,
+                               float& pdf) const
+{
+        e8util::vec3 const& i = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
+        pdf = i.inner(n)/static_cast<float>(M_PI);
+        return i;
+}
+
+
 e8::oren_nayar::oren_nayar(std::string const& name,
                            e8util::vec3 const& albedo,
                            float roughness):
@@ -44,7 +70,9 @@ e8::oren_nayar::oren_nayar(e8util::vec3 const& albedo,
 }
 
 e8util::vec3
-e8::oren_nayar::eval(e8util::vec3 const &n, e8util::vec3 const &o, e8util::vec3 const &i) const
+e8::oren_nayar::eval(e8util::vec3 const& n,
+                     e8util::vec3 const& o,
+                     e8util::vec3 const& i) const
 {
         float cos_thei = i.inner(n);
         float cos_theo = o.inner(n);
@@ -66,11 +94,15 @@ e8::oren_nayar::eval(e8util::vec3 const &n, e8util::vec3 const &o, e8util::vec3 
         float cos_theio =  cos_alpha*cos_beta + sin_alpha*sin_beta;
         float tan_beta = sin_beta/cos_theo;
 
-        return m_albedo * (1.0f/static_cast<float>(M_PI)) * (A + B * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
+        return m_albedo * (1.0f/static_cast<float>(M_PI)) *
+                        (A + B * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
 }
 
 e8util::vec3
-e8::oren_nayar::sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 const &, float& pdf) const
+e8::oren_nayar::sample(e8util::rng& rng,
+                       e8util::vec3 const& n,
+                       e8util::vec3 const& /* o */,
+                       float& pdf) const
 {
         e8util::vec3 const& i = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
         pdf = i.inner(n)/static_cast<float>(M_PI);
@@ -125,13 +157,17 @@ e8::cook_torr::ggx_shadow1(e8util::vec3 const& v, e8util::vec3 const& h) const
 }
 
 float
-e8::cook_torr::ggx_shadow(e8util::vec3 const& i, e8util::vec3 const& o, e8util::vec3 const& h) const
+e8::cook_torr::ggx_shadow(e8util::vec3 const& i,
+                          e8util::vec3 const& o,
+                          e8util::vec3 const& h) const
 {
         return ggx_shadow1(i, h) * ggx_shadow1(o, h);
 }
 
 e8util::vec3
-e8::cook_torr::eval(e8util::vec3 const &n, e8util::vec3 const &o, e8util::vec3 const &i) const
+e8::cook_torr::eval(e8util::vec3 const &n,
+                    e8util::vec3 const &o,
+                    e8util::vec3 const &i) const
 {
         float cos_the2 = n.inner(o);
         float cos_the = n.inner(i);
@@ -148,7 +184,10 @@ e8::cook_torr::eval(e8util::vec3 const &n, e8util::vec3 const &o, e8util::vec3 c
 }
 
 e8util::vec3
-e8::cook_torr::sample(e8util::rng& rng, e8util::vec3 const &n, e8util::vec3 const &o, float& pdf) const
+e8::cook_torr::sample(e8util::rng& rng,
+                      e8util::vec3 const& n,
+                      e8util::vec3 const& o,
+                      float& pdf) const
 {
         // sample over the ggx distribution.
         e8util::vec3 u, v;

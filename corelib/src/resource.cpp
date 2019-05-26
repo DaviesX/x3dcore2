@@ -693,5 +693,15 @@ e8util::gltf_scene::load_roots()
                         roots.push_back(load_node(model.nodes[static_cast<unsigned>(node_i)], model));
                 }
         }
+
+        // assign default material if geometry doesn't have material assigned.
+        e8::visit_all_filtered(roots.begin(),
+                               roots.end(),
+                               [] (e8::if_obj* obj) {
+                                if (obj->get_children(e8::obj_type::obj_type_material).empty()) {
+                                        obj->add_child(new e8::mat_fail_safe("gltf_fail_safe"));
+                                }
+                               },
+                               std::set<e8::obj_type> { e8::obj_type::obj_type_geometry });
         return roots;
 }
