@@ -94,9 +94,13 @@ e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
         std::vector<if_obj*> lights = obj->get_children(obj_type::obj_type_light);
 
         add_geometry(geo);
+        assert(mats.size() == 1);
         bind(geo, static_cast<if_material*>(mats[0]));
-        bind(geo, static_cast<if_light*>(lights[0]));
-        m_lights.insert(static_cast<if_light*>(lights[0]));
+        if (!lights.empty()) {
+                assert(lights.size() == 1);
+                bind(geo, static_cast<if_light*>(lights[0]));
+                m_lights.insert(static_cast<if_light*>(lights[0]));
+        }
 }
 
 void
