@@ -7,6 +7,7 @@
 #include <cmath>
 #include <random>
 #include <initializer_list>
+#include <cassert>
 
 namespace e8util
 {
@@ -21,6 +22,18 @@ inline bool equals(float a, float b)
 inline bool equals(double a, double b)
 {
         return std::abs(a - b) <= static_cast<double>(T_CMP_EPSILON);
+}
+
+template<typename T>
+bool equals(std::vector<T> const& a, std::vector<T> const& b)
+{
+        assert(a.size() == b.size());
+        for (unsigned i = 0; i < a.size(); i ++) {
+                if (!equals(a[i], b[i])) {
+                        return false;
+                }
+        }
+        return true;
 }
 
 template<unsigned N, typename T = float>
@@ -337,6 +350,11 @@ inline std::ostream& operator<<(std::ostream& os, vec<N, T> const& v)
         return os;
 }
 
+template<unsigned N, typename T>
+bool equals(vec<N,T> const& a, vec<N,T> const& b)
+{
+        return a == b;
+}
 
 template <unsigned M, unsigned N, typename T = float>
 class mat
