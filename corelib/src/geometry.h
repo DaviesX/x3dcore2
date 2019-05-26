@@ -68,6 +68,15 @@ protected:
         float                           m_area;
 };
 
+class triangle_fragment: public trimesh
+{
+public:
+        triangle_fragment(std::string const& name,
+                          e8util::vec3 const& a,
+                          e8util::vec3 const& b,
+                          e8util::vec3 const& c);
+        ~triangle_fragment();
+};
 
 class uv_sphere: public trimesh
 {

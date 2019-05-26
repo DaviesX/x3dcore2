@@ -43,7 +43,7 @@ e8::trimesh::trimesh():
 }
 
 e8::trimesh::trimesh(trimesh const& mesh):
-        if_geometry(id(), name())
+        if_geometry(mesh.id(), mesh.name())
 {
         m_verts = mesh.m_verts;
         m_norms = mesh.m_norms;
@@ -187,6 +187,49 @@ e8::trimesh::update()
                 return;
         update_aabb();
         update_face_cdf();
+}
+
+
+e8::triangle_fragment::triangle_fragment(std::string const& name,
+                                         e8util::vec3 const& a,
+                                         e8util::vec3 const& b,
+                                         e8util::vec3 const& c):
+        trimesh(name)
+{
+        vertices(std::vector<e8util::vec3> {a, b, c});
+
+        e8util::vec3 normal = (c - a).outer(b - a).normalize();
+        normals(std::vector<e8util::vec3> {normal, normal, normal});
+
+        e8util::vec3 ori = (a + b + c)/3.0f;
+        e8util::vec3 t_a = a - ori;
+        e8util::vec3 t_b = b - ori;
+        e8util::vec3 t_c = c - ori;
+        e8util::aabb bbox =
+                        e8util::aabb(t_a, t_a) +
+                        e8util::aabb(t_b, t_b) +
+                        e8util::aabb(t_c, t_c);
+        t_a -= bbox.min();
+        t_b -= bbox.min();
+        t_c -= bbox.min();
+        e8util::vec3 plane_vec = bbox.max() - bbox.min();
+        e8util::vec3 x_basis;
+        if (!e8util::equals(plane_vec(0), 0.0f)) {
+                x_basis = e8util::vec3 {1.0f, 0, 0};
+        } else {
+                x_basis = e8util::vec3 {0, 1.0f, 0};
+        }
+        x_basis *= plane_vec.inner(x_basis);
+        e8util::vec3 y_basis = plane_vec - x_basis;
+        texcoords(std::vector<e8util::vec2> {{t_a.inner(x_basis), t_a.inner(y_basis)},
+                                             {t_b.inner(x_basis), t_b.inner(y_basis)},
+                                             {t_c.inner(x_basis), t_c.inner(y_basis)}});
+
+        triangles(std::vector<triangle> {e8util::vec<3, unsigned> {0, 1, 2}});
+}
+
+e8::triangle_fragment::~triangle_fragment()
+{
 }
 
 
