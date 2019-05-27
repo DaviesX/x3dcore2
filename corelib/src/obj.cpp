@@ -99,6 +99,16 @@ e8::if_obj::update_stage(transform_stage_t const& stage)
         return false;
 }
 
+e8util::mat44
+e8::if_obj::blueprint_to_transform() const
+{
+        e8util::mat44 trans = e8util::mat44_scale(1.0f);
+        for (auto it = m_blueprint.begin(); it != m_blueprint.end(); ++it) {
+                trans = it->second*trans;
+        }
+        return trans;
+}
+
 void
 e8::if_obj::mark_dirty()
 {

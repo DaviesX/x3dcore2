@@ -36,14 +36,10 @@ class pinhole_camera: public if_camera
 {
 public:
         pinhole_camera(std::string const& name,
-                       e8util::vec3 const& t,
-                       e8util::mat44 const& r,
                        float sensor_size,
                        float f,
                        float aspect);
-        pinhole_camera(e8util::vec3 const& t,
-                       e8util::mat44 const& r,
-                       float sensor_size,
+        pinhole_camera(float sensor_size,
                        float f,
                        float aspect);
         pinhole_camera(pinhole_camera const& rhs);

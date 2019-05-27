@@ -145,7 +145,13 @@ e8util::cornell_scene::load_camera() const
         /*return new e8::pinhole_camera(e8util::vec3({0.0f, -3.4f, 0.795f}),
                                       e8util::mat44_rotate(M_PI/2.0f, e8util::vec3({1, 0, 0})),
                                       0.032f, 0.035f, 4.0f/3.0f);*/
-        return new e8::pinhole_camera(e8util::vec3({0.0f, 0.795f, 3.4f}), 1.0f, 0.032f, 0.035f, 4.0f/3.0f);
+        e8util::mat44 trans = e8util::mat44_translate({0.0f, 0.795f, 3.4f});
+        e8util::mat44 rot = e8util::mat44_rotate(0.0f, {0, 0, 1});
+        e8::if_camera* cam = new e8::pinhole_camera("cornell_cam", 0.032f, 0.035f, 4.0f/3.0f);
+        cam->init_blueprint({"rotation", "translation"});
+        cam->update_stage(std::make_pair("rotation", rot));
+        cam->update_stage(std::make_pair("translation", trans));
+        return cam;
 }
 
 std::vector<e8::if_obj*>
@@ -635,8 +641,6 @@ load_camera(tinygltf::Camera const& gltfcam)
         if (gltfcam.type == "perspective") {
                 // gltfcam.perspective.
                 e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,
-                                                                 e8util::vec3(),
-                                                                 e8util::mat44_rotate(0, e8util::vec3({0, 0, 1})),
                                                                  static_cast<float>(2*gltfcam.perspective.znear*std::tan(gltfcam.perspective.yfov)),
                                                                  static_cast<float>(gltfcam.perspective.znear/std::tan(gltfcam.perspective.yfov)),
                                                                  static_cast<float>(gltfcam.perspective.aspectRatio));

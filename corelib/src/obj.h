@@ -64,6 +64,7 @@ public:
 
         void                            init_blueprint(std::vector<transform_stage_name_t> const& stages);
         bool                            update_stage(transform_stage_t const& stage);
+        e8util::mat44                   blueprint_to_transform() const;
 
         bool                            add_child(if_obj* child);
         bool                            remove_child(if_obj* child);

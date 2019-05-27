@@ -76,11 +76,7 @@ e8::objdb::push_updates(if_obj* obj,
                         e8util::mat44 const& global_trans,
                         bool is_dirty_anyway)
 {
-        e8util::mat44 local_trans = e8util::mat44_scale(1.0f);
-        for (auto it = obj->m_blueprint.begin(); it != obj->m_blueprint.end(); ++it) {
-                local_trans = it->second*local_trans;
-        }
-        e8util::mat44 const& modified_trans = local_trans*global_trans;
+        e8util::mat44 const& modified_trans = obj->blueprint_to_transform()*global_trans;
         if (obj->dirty() || is_dirty_anyway) {
                 if_obj_manager* mgr = manager_for(obj->interface());
                 if (mgr != nullptr) {
