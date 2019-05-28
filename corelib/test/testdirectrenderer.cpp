@@ -25,8 +25,9 @@ test::test_direct_renderer::run() const
         e8::pt_image_renderer r(new e8::pathtracer_factory(e8::pathtracer_factory::pt_type::direct,
                                                            e8::pathtracer_factory::options()));
 
-        e8util::if_resource* res = new e8util::cornell_scene();
-        e8::if_camera* cam = res->load_camera();
+        e8util::cornell_scene* res = new e8util::cornell_scene();
+        e8::if_camera* cam_res = res->load_camera();
+        e8::if_camera* cam = cam_res->transform(cam_res->blueprint_to_transform());
 
         e8::bvh_path_space_layout path_space;
         //e8::linear_path_space_layout path_space;
