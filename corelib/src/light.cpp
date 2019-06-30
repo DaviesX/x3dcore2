@@ -23,25 +23,42 @@ e8::if_light::name() const
         return m_name;
 }
 
-e8::obj_type
-e8::if_light::interface() const
+e8::obj_protocol
+e8::if_light::protocol() const
 {
-        return obj_type::obj_type_light;
+        return obj_protocol::obj_protocol_light;
 }
 
+e8::if_light::if_light(obj_id_t id, std::string const& name):
+        if_operable_obj<if_light>(id),
+        m_name(name)
+{
+}
+
+
+
 e8::area_light::area_light(std::string const& name,
-                           if_geometry const* geo,
+                           if_geometry const& geo,
                            e8util::vec3 const& rad):
         if_light(name),
         m_geo(geo),
         m_rad(rad),
-        m_power(static_cast<float>(M_PI)*m_geo->surface_area()*rad)
+        m_power(static_cast<float>(M_PI)*m_geo.surface_area()*rad)
 {
 }
 
-e8::area_light::area_light(if_geometry const* geo, e8util::vec3 const& rad):
+e8::area_light::area_light(if_geometry const& geo,
+                           e8util::vec3 const& rad):
         area_light("Unkown_Area_Light_Name",
                    geo, rad)
+{
+}
+
+e8::area_light::area_light(area_light const& other):
+        if_light(other.id(), other.name()),
+        m_geo(other.m_geo),
+        m_rad(other.m_rad),
+        m_power(other.m_power)
 {
 }
 
@@ -49,7 +66,7 @@ void
 e8::area_light::sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
                        e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const
 {
-        m_geo->sample(rng, p, n, p_pdf);
+        m_geo.sample(rng, p, n, p_pdf);
         w = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
         w_pdf = n.inner(w)/static_cast<float>(M_PI);
 }
@@ -57,7 +74,7 @@ e8::area_light::sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
 void
 e8::area_light::sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const
 {
-        m_geo->sample(rng, p, n, pdf);
+        m_geo.sample(rng, p, n, pdf);
 }
 
 e8util::vec3
@@ -87,6 +104,19 @@ e8::area_light::power() const
         return m_power;
 }
 
+std::unique_ptr<e8::if_light>
+e8::area_light::copy() const
+{
+        return std::make_unique<area_light>(*this);
+}
+
+std::unique_ptr<e8::if_light>
+e8::area_light::transform(e8util::mat44 const& /* trans */) const
+{
+        return copy();
+}
+
+
 
 e8::sky_light::sky_light(std::string const& name,
                          e8util::vec3 const& rad):
@@ -97,6 +127,14 @@ e8::sky_light::sky_light(std::string const& name,
 
 e8::sky_light::sky_light(e8util::vec3 const& rad):
         sky_light("Unkown_Sky_Light_Name", rad)
+{
+}
+
+e8::sky_light::sky_light(sky_light const& other):
+        if_light(other.id(), other.name()),
+        m_rad(other.m_rad),
+        m_ref_p(other.m_ref_p),
+        m_dia(other.m_dia)
 {
 }
 
@@ -150,4 +188,16 @@ e8util::vec3
 e8::sky_light::power() const
 {
         return static_cast<float>(M_PI)*(m_dia*m_dia/2);
+}
+
+std::unique_ptr<e8::if_light>
+e8::sky_light::copy() const
+{
+        return std::make_unique<sky_light>(*this);
+}
+
+std::unique_ptr<e8::if_light>
+e8::sky_light::transform(e8util::mat44 const& /* trans */) const
+{
+        return copy();
 }

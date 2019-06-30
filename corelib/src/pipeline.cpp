@@ -100,13 +100,15 @@ e8::pt_render_pipeline::render_frame()
         m_com->resize(m_frame->width(), m_frame->height());
         m_objdb.push_updates();
         if_cinematics* cinematics = static_cast<if_cinematics*>(
-                                m_objdb.manager_for(obj_type::obj_type_camera));
+                                m_objdb.manager_for(obj_protocol::obj_protocol_camera));
         if_path_space* path_space = static_cast<if_path_space*>(
-                                m_objdb.manager_for(obj_type::obj_type_geometry));
+                                m_objdb.manager_for(obj_protocol::obj_protocol_geometry));
+        if_light_sources* light_sources = static_cast<if_light_sources*>(
+                                m_objdb.manager_for(obj_protocol::obj_protocol_light));
         if_camera* cur_cam = cinematics->main_cam();
         if (cur_cam != nullptr) {
                 for (unsigned i = 0; i < m_samps_per_frame; i ++) {
-                        m_renderer->render(path_space, cur_cam, m_com);
+                        m_renderer->render(*path_space, *light_sources, *cur_cam, m_com);
                 }
         }
         m_com->commit(m_frame);
@@ -118,7 +120,6 @@ e8::pt_render_pipeline::config_protocol() const
 {
         e8util::flex_config config;
         config.str_val["scene_file"] = "cornellball";
-        config.str_val["path_space"] = "static_bvh";
         config.enum_vals["path_space"] = std::set<std::string> {
                         "linear",
                         "static_bvh"};
@@ -131,6 +132,9 @@ e8::pt_render_pipeline::config_protocol() const
                         "bidirectional_lt2",
                         "bidirectional_mis"};
         config.enum_sel["path_tracer"] = "unidirectional";
+        config.enum_vals["light_sources"] = std::set<std::string> {
+                        "basic"};
+        config.enum_sel["light_sources"] = "basic";
         config.bool_val["auto_exposure"] = false;
         config.float_val["exposure"] = 1.0f;
         config.int_val["super_samples"] = 16;
@@ -169,6 +173,13 @@ e8::pt_render_pipeline::update_pipeline(e8util::flex_config const& diff)
                         m_objdb.register_manager(std::make_unique<linear_path_space_layout>());
                 } else if (path_space_type == "static_bvh") {
                         m_objdb.register_manager(std::make_unique<bvh_path_space_layout>());
+                }
+        });
+
+        diff.find_enum("light_sources", [this] (std::string const& light_sources_type,
+                                                e8util::flex_config const* /*config*/) {
+                if (light_sources_type == "basic") {
+                        m_objdb.register_manager(std::make_unique<basic_light_sources>());
                 }
         });
 

@@ -14,8 +14,8 @@ public:
         if_material(std::string const& name);
         virtual ~if_material() override;
 
-        std::string             name() const;
-        obj_type                interface() const override;
+        std::string                             name() const;
+        obj_protocol                            protocol() const override;
 
         virtual std::unique_ptr<if_material>    copy() const override = 0;
         virtual e8util::vec3                    eval(e8util::vec3 const &n,
@@ -46,6 +46,7 @@ public:
                                                float& pdf) const override;
 private:
         e8util::vec3    m_albedo;
+        unsigned        m_padding;
 };
 
 

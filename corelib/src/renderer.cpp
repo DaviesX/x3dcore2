@@ -11,9 +11,11 @@ e8::pt_image_renderer::sampling_task_data::sampling_task_data():
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(e8util::data_id_t id,
                                                               if_path_space const* path_space,
+                                                              if_light_sources const* light_sources,
                                                               std::vector<e8util::ray> const& rays):
         e8util::if_task_storage(id),
         path_space(path_space),
+        light_sources(light_sources),
         rays(rays)
 {
 }
@@ -62,7 +64,11 @@ e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage* p)
 {
         unsigned const n_samples = 1;
         sampling_task_data* data = static_cast<sampling_task_data*>(p);
-        m_estimate = m_pt->sample(m_rng, data->rays, data->path_space, n_samples);
+        m_estimate = m_pt->sample(m_rng,
+                                  data->rays,
+                                  *data->path_space,
+                                  *data->light_sources,
+                                  n_samples);
 }
 
 std::vector<e8util::vec3>
@@ -101,9 +107,9 @@ e8::pt_image_renderer::~pt_image_renderer()
 }
 
 bool
-e8::pt_image_renderer::update_image_view(if_camera const* cam, if_compositor* compositor)
+e8::pt_image_renderer::update_image_view(if_camera const& cam, if_compositor* compositor)
 {
-        e8util::mat44 const& proj = cam->projection();
+        e8util::mat44 const& proj = cam.projection();
         if (proj != m_t ||
             compositor->width() != m_w ||
             compositor->height() != m_h) {
@@ -117,8 +123,9 @@ e8::pt_image_renderer::update_image_view(if_camera const* cam, if_compositor* co
 }
 
 void
-e8::pt_image_renderer::render(if_path_space const* path_space,
-                              if_camera const* cam,
+e8::pt_image_renderer::render(if_path_space const& path_space,
+                              if_light_sources const& light_sources,
+                              if_camera const& cam,
                               if_compositor* compositor)
 {
         // generate camera seed ray, if the update is dirty, for each tile task.
@@ -128,7 +135,8 @@ e8::pt_image_renderer::render(if_path_space const* path_space,
                                 unsigned tile_w = i == m_num_tiles_per_dim - 1 ? m_w - m_w/m_num_tiles_per_dim*i : m_w/m_num_tiles_per_dim;
                                 unsigned tile_h = j == m_num_tiles_per_dim - 1 ? m_h - m_h/m_num_tiles_per_dim*j : m_h/m_num_tiles_per_dim;
                                 m_task_storages[i + j*m_num_tiles_per_dim].rays.resize(tile_w*tile_h);
-                                m_task_storages[i + j*m_num_tiles_per_dim].path_space = path_space;
+                                m_task_storages[i + j*m_num_tiles_per_dim].path_space = &path_space;
+                                m_task_storages[i + j*m_num_tiles_per_dim].light_sources = &light_sources;
                                 m_task_storages[i + j*m_num_tiles_per_dim].set_data_id(static_cast<e8util::data_id_t>(i + j*m_num_tiles_per_dim));
 
                                 unsigned top_left_i = m_w/m_num_tiles_per_dim*i;
@@ -137,9 +145,9 @@ e8::pt_image_renderer::render(if_path_space const* path_space,
                                 for (unsigned tj = 0; tj < tile_h; tj ++) {
                                         for (unsigned ti = 0; ti < tile_w; ti ++) {
                                                 float pdf;
-                                                tile_rays[ti + tj*tile_w] = cam->sample(m_rng,
-                                                                                        top_left_i + ti, top_left_j + tj,
-                                                                                        m_w, m_h, pdf);
+                                                tile_rays[ti + tj*tile_w] = cam.sample(m_rng,
+                                                                                       top_left_i + ti, top_left_j + tj,
+                                                                                       m_w, m_h, pdf);
                                         }
                                 }
                         }

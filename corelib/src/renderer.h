@@ -29,10 +29,11 @@ public:
         pt_image_renderer(pathtracer_factory* fact);
         ~pt_image_renderer();
 
-        bool                    update_image_view(if_camera const* cam,
+        bool                    update_image_view(if_camera const& cam,
                                                   if_compositor* compositor);
-        void                    render(if_path_space const* path_space,
-                                       if_camera const* cam,
+        void                    render(if_path_space const& path_space,
+                                       if_light_sources const& light_sources,
+                                       if_camera const& cam,
                                        if_compositor* compositor);
         rendering_stats         get_stats() const;
 private:
@@ -41,11 +42,13 @@ private:
                 sampling_task_data();
                 sampling_task_data(e8util::data_id_t id,
                                    if_path_space const* path_space,
+                                   if_light_sources const* light_sources,
                                    std::vector<e8util::ray> const& rays);
 
                 virtual ~sampling_task_data();
 
                 if_path_space const*            path_space;
+                if_light_sources const*         light_sources;
                 std::vector<e8util::ray>        rays;
         };
 

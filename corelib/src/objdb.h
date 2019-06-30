@@ -17,8 +17,8 @@ public:
         ~objdb();
 
         void                    register_manager(std::unique_ptr<if_obj_manager> mgr);
-        void                    unregister_manager_for(obj_type type);
-        if_obj_manager*         manager_for(obj_type type) const;
+        void                    unregister_manager_for(obj_protocol type);
+        if_obj_manager*         manager_for(obj_protocol type) const;
         if_obj*                 manage_root(if_obj* root);
         std::vector<if_obj*>    manage_roots(std::vector<if_obj*> const& roots);
         void                    push_updates();
@@ -31,7 +31,7 @@ private:
         void                    clear(if_obj* obj);
 
         std::set<if_obj*>                                       m_roots;
-        std::map<obj_type, std::unique_ptr<if_obj_manager>>     m_mgrs;
+        std::map<obj_protocol, std::unique_ptr<if_obj_manager>>     m_mgrs;
 };
 
 }

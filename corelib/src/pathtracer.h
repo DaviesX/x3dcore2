@@ -4,6 +4,7 @@
 #include <vector>
 #include "tensor.h"
 #include "pathspace.h"
+#include "lightsources.h"
 
 namespace e8 {
 
@@ -18,7 +19,8 @@ public:
 
         virtual std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                        std::vector<e8util::ray> const& rays,
-                                                       if_path_space const* path_space,
+                                                       if_path_space const& path_space,
+                                                       if_light_sources const& light_sources,
                                                        unsigned n) const = 0;
 };
 
@@ -33,7 +35,8 @@ public:
 
         std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                std::vector<e8util::ray> const& rays,
-                                               if_path_space const* path_space,
+                                               if_path_space const& path_space,
+                                               if_light_sources const& light_sources,
                                                unsigned n) const override;
 };
 
@@ -48,7 +51,8 @@ public:
 
         std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                std::vector<e8util::ray> const& rays,
-                                               if_path_space const* path_space,
+                                               if_path_space const& path_space,
+                                               if_light_sources const& light_sources,
                                                unsigned n) const override;
 };
 
@@ -64,7 +68,8 @@ public:
 
         virtual std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                        std::vector<e8util::ray> const& rays,
-                                                       if_path_space const* path_space,
+                                                       if_path_space const& path_space,
+                                                       if_light_sources const& light_sources,
                                                        unsigned n) const override;
 protected:
         if_light const*                         sample_illum_source(e8util::rng& rng,
@@ -72,17 +77,18 @@ protected:
                                                                     e8util::vec3& n,
                                                                     float& density,
                                                                     e8::intersect_info const& target_vert,
-                                                                    if_path_space const* path_space) const;
-        e8util::vec3                            transport_illum_source(if_light const* light,
+                                                                    if_light_sources const& light_sources) const;
+        e8util::vec3                            transport_illum_source(if_light const& light,
                                                                        e8util::vec3 const& p_illum,
                                                                        e8util::vec3 const& n_illum,
                                                                        e8::intersect_info const& target_vert,
                                                                        e8util::vec3 const& target_o_ray,
-                                                                       if_path_space const* path_space) const;
+                                                                       if_path_space const& path_space) const;
         e8util::vec3                            sample_direct_illum(e8util::rng& rng,
                                                                     e8util::vec3 const& target_o_ray,
                                                                     e8::intersect_info const& target_vert,
-                                                                    if_path_space const* path_space,
+                                                                    if_path_space const& path_space,
+                                                                    if_light_sources const& light_sources,
                                                                     unsigned n) const;
 };
 
@@ -98,7 +104,8 @@ public:
 
         std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                std::vector<e8util::ray> const& rays,
-                                               if_path_space const* path_space,
+                                               if_path_space const& path_space,
+                                               if_light_sources const& light_sources,
                                                unsigned n) const override;
 protected:
         struct sampled_pathlet
@@ -125,7 +132,7 @@ protected:
                                                     sampled_pathlet* sampled_path,
                                                     e8util::ray const& r0,
                                                     float dens0,
-                                                    if_path_space const* path_space,
+                                                    if_path_space const& path_space,
                                                     unsigned max_depth) const;
         e8util::vec3                    transport_subpath(e8util::vec3 const& src_rad,
                                                           e8util::vec3 const& appending_ray,
@@ -140,14 +147,15 @@ protected:
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& vert,
-                                                              if_path_space const* path_space,
+                                                              if_path_space const& path_space,
+                                                              if_light_sources const& light_sources,
                                                               unsigned depth,
                                                               unsigned n,
                                                               unsigned m) const;
 private:
         unsigned                        sample_path(e8util::rng& rng,
                                                     sampled_pathlet* sampled_path,
-                                                    if_path_space const* path_space,
+                                                    if_path_space const& path_space,
                                                     unsigned depth,
                                                     unsigned max_depth) const;
 
@@ -166,18 +174,21 @@ public:
 
         std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                std::vector<e8util::ray> const& rays,
-                                               if_path_space const* path_space,
+                                               if_path_space const& path_space,
+                                               if_light_sources const& light_sources,
                                                unsigned n) const override;
 protected:
         e8util::vec3                    join_with_light_paths(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& vert,
-                                                              if_path_space const* path_space,
+                                                              if_path_space const& path_space,
+                                                              if_light_sources const& light_sources,
                                                               unsigned cam_path_len) const;
         e8util::vec3                    sample_indirect_illum(e8util::rng& rng,
                                                               e8util::vec3 const& o,
                                                               e8::intersect_info const& vert,
-                                                              if_path_space const* path_space,
+                                                              if_path_space const& path_space,
+                                                              if_light_sources const& light_sources,
                                                               unsigned depth) const;
 };
 
@@ -193,7 +204,8 @@ public:
 
         std::vector<e8util::vec3>       sample(e8util::rng& rng,
                                                std::vector<e8util::ray> const& rays,
-                                               if_path_space const* path_space,
+                                               if_path_space const& path_space,
+                                               if_light_sources const& light_sources,
                                                unsigned n) const override;
 protected:
         e8::if_light const*             sample_illum_source(e8util::rng& rng,
@@ -202,7 +214,7 @@ protected:
                                                             e8util::vec3& w,
                                                             float& density,
                                                             float& w_density,
-                                                            if_path_space const* path_space) const;
+                                                            if_light_sources const& light_sources) const;
         e8util::vec3                    sample_all_subpaths(sampled_pathlet const* cam_path,
                                                             unsigned cam_path_len,
                                                             sampled_pathlet const* light_path,
@@ -210,8 +222,8 @@ protected:
                                                             e8util::vec3 const& light_p,
                                                             e8util::vec3 const& light_n,
                                                             float pdf_light_p_dens,
-                                                            if_light const* light,
-                                                            if_path_space const* path_space) const;
+                                                            if_light const& light,
+                                                            if_path_space const& path_space) const;
 private:
         static unsigned const           m_max_path_len = 4;
 };

@@ -17,7 +17,7 @@ public:
         if_geometry(std::string const& name);
         virtual ~if_geometry() override;
 
-        obj_type                                        interface() const override;
+        obj_protocol                                    protocol() const override;
         std::string                                     name() const;
         virtual std::vector<e8util::vec3> const&        vertices() const = 0;
         virtual std::vector<e8util::vec3> const&        normals() const = 0;

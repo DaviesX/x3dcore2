@@ -24,10 +24,10 @@ e8::if_geometry::name() const
         return m_name;
 }
 
-e8::obj_type
-e8::if_geometry::interface() const
+e8::obj_protocol
+e8::if_geometry::protocol() const
 {
-        return obj_type::obj_type_geometry;
+        return obj_protocol::obj_protocol_geometry;
 }
 
 // trimesh

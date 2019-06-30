@@ -76,7 +76,7 @@ App::on_button_render_clicked()
 {
         if (m_pipeline->is_running()) {
                 // Stop the render pipeline.
-                m_pipeline->enable();
+                m_pipeline->disable();
                 e8util::sync(m_pipeline_task);
 
                 m_ui->button_render->setText("start");

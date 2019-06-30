@@ -1,12 +1,6 @@
 #include <iostream>
-#include "src/pathtracer.h"
-#include "src/pathtracerfact.h"
-#include "src/renderer.h"
-#include "src/resource.h"
-#include "src/camera.h"
-#include "src/pathspace.h"
 #include "src/frame.h"
-#include "src/compositor.h"
+#include "src/pipeline.h"
 #include "testscene.h"
 
 
@@ -24,32 +18,23 @@ test::test_path_space::run() const
         unsigned const width = 1024;
         unsigned const height = 768;
 
-        e8::pt_image_renderer r(new e8::pathtracer_factory(e8::pathtracer_factory::pt_type::normal,
-                                                           e8::pathtracer_factory::options()));
+        e8::img_file_frame img("test_bidirect.png", width, height);
+        e8::pt_render_pipeline pipeline(&img);
 
-        e8util::cornell_scene* res = new e8util::cornell_scene();
-        e8::if_camera* cam = res->load_camera();
+        e8util::flex_config config = pipeline.config_protocol();
+        config.enum_sel["path_space"] = "static_bvh";
+        config.enum_sel["path_tracer"] = "normal";
+        config.int_val["samples_per_frame"] = 5;
+        pipeline.update_pipeline(config);
 
-        //e8::linear_scene_layout scene;
-        e8::bvh_path_space_layout scene;
-        scene.load(res);
-        scene.commit();
+        pipeline.render_frame();
 
-        std::cout << "max_depth: " << scene.max_depth() << std::endl;
-        std::cout << "avg_depth: " << scene.avg_depth() << std::endl;
-        std::cout << "dev_depth: " << scene.dev_depth() << std::endl;
-        std::cout << "num_nodes: " << scene.num_nodes() << std::endl;
-
-
-        e8::img_file_frame img("test.png", width, height);
-        e8::aces_compositor com(width, height);
-        com.enable_auto_exposure(false);
-        com.exposure(1.0f);
-        r.render(&scene, cam, &com);
-
-        com.commit(&img);
-        img.commit();
-
-        delete res;
-        delete cam;
+        e8::bvh_path_space_layout* scene = static_cast<e8::bvh_path_space_layout*>(
+                                pipeline.
+                                objdb().
+                                manager_for(e8::obj_protocol::obj_protocol_geometry));
+        std::cout << "max_depth: " << scene->max_depth() << std::endl;
+        std::cout << "avg_depth: " << scene->avg_depth() << std::endl;
+        std::cout << "dev_depth: " << scene->dev_depth() << std::endl;
+        std::cout << "num_nodes: " << scene->num_nodes() << std::endl;
 }

@@ -93,7 +93,7 @@ std::vector<e8::if_light*>
 e8util::cornell_scene::load_lights() const
 {
         return std::vector<e8::if_light*>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                                                  new e8::area_light(wavefront_obj("res/cornellbox/light.obj").load_geometry(),
+                                                  new e8::area_light(*wavefront_obj("res/cornellbox/light.obj").load_geometry(),
                                                               e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)});
 }
 
@@ -343,7 +343,7 @@ e8util::wavefront_obj::save_roots(std::vector<e8::if_obj*> const& roots)
                                [this] (e8::if_obj const* obj) {
                                 this->save_geometry(static_cast<e8::if_geometry const*>(obj));
                                },
-                               std::set<e8::obj_type> { e8::obj_type::obj_type_geometry });
+                               std::set<e8::obj_protocol> { e8::obj_protocol::obj_protocol_geometry });
 }
 
 
@@ -666,10 +666,10 @@ e8util::gltf_scene::load_roots()
         e8::visit_all_filtered(roots.begin(),
                                roots.end(),
                                [] (e8::if_obj* obj) {
-                                if (obj->get_children(e8::obj_type::obj_type_material).empty()) {
+                                if (obj->get_children(e8::obj_protocol::obj_protocol_material).empty()) {
                                         obj->add_child(new e8::mat_fail_safe("gltf_fail_safe"));
                                 }
                                },
-                               std::set<e8::obj_type> { e8::obj_type::obj_type_geometry });
+                               std::set<e8::obj_protocol> { e8::obj_protocol::obj_protocol_geometry });
         return roots;
 }

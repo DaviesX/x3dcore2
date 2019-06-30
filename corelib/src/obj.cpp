@@ -4,8 +4,8 @@
 #include "obj.h"
 
 
-e8::incompat_obj_exception::incompat_obj_exception(obj_type expected_type,
-                                                   obj_type actual_type):
+e8::incompat_obj_exception::incompat_obj_exception(obj_protocol expected_type,
+                                                   obj_protocol actual_type):
         m_expected_type(expected_type),
         m_actual_type(actual_type)
 {
@@ -155,11 +155,11 @@ e8::if_obj::remove_child(if_obj* child)
 
 
 std::vector<e8::if_obj*>
-e8::if_obj::get_children(obj_type const& interface_type) const
+e8::if_obj::get_children(obj_protocol const& interface_type) const
 {
         std::vector<e8::if_obj*> result;
         for (if_obj* obj: m_children) {
-                if (obj->interface() == interface_type) {
+                if (obj->protocol() == interface_type) {
                         result.push_back(obj);
                 }
         }
@@ -172,8 +172,8 @@ e8::if_obj::get_children() const
         return m_children;
 }
 
-e8::obj_type
-e8::null_obj::interface() const
+e8::obj_protocol
+e8::null_obj::protocol() const
 {
-        return obj_type_null;
+        return obj_protocol_null;
 }

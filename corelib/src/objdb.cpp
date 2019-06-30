@@ -19,20 +19,20 @@ e8::objdb::register_manager(std::unique_ptr<if_obj_manager> mgr)
 }
 
 void
-e8::objdb::unregister_manager_for(obj_type type)
+e8::objdb::unregister_manager_for(obj_protocol type)
 {
         auto it = m_mgrs.find(type);
         if (it != m_mgrs.end()) {
                 visit_all_filtered(m_roots.begin(),
                                    m_roots.end(),
                                    [] (if_obj* obj) { obj->mark_dirty(); },
-                                   std::set<obj_type> {type});
+                                   std::set<obj_protocol> {type});
                 m_mgrs.erase(it);
         }
 }
 
 e8::if_obj_manager*
-e8::objdb::manager_for(obj_type type) const
+e8::objdb::manager_for(obj_protocol type) const
 {
         auto it = m_mgrs.find(type);
         if (it != m_mgrs.end()) {
@@ -78,7 +78,7 @@ e8::objdb::push_updates(if_obj* obj,
 {
         e8util::mat44 const& modified_trans = obj->blueprint_to_transform()*global_trans;
         if (obj->dirty() || is_dirty_anyway) {
-                if_obj_manager* mgr = manager_for(obj->interface());
+                if_obj_manager* mgr = manager_for(obj->protocol());
                 if (mgr != nullptr) {
                         mgr->unload(obj);
                         mgr->load(obj, modified_trans);
@@ -100,7 +100,7 @@ e8::objdb::clear(if_obj* obj)
         for (if_obj* child: obj->m_children) {
                 clear(child);
         }
-        if_obj_manager* mgr = manager_for(obj->interface());
+        if_obj_manager* mgr = manager_for(obj->protocol());
         if (mgr != nullptr) {
                 mgr->unload(obj);
         }

@@ -53,7 +53,7 @@ public:
         e8util::aabb                            aabb() const;
 
         void                                    load(if_obj const* obj, e8util::mat44 const& trans) override;
-        obj_type                                support() const override;
+        obj_protocol                            support() const override;
         void                                    unload(if_obj const* obj) override;
 protected:
         struct binded_geometry

@@ -23,10 +23,10 @@ e8::if_material::name() const
         return m_name;
 }
 
-e8::obj_type
-e8::if_material::interface() const
+e8::obj_protocol
+e8::if_material::protocol() const
 {
-        return obj_type::obj_type_material;
+        return obj_protocol::obj_protocol_material;
 }
 
 
@@ -45,7 +45,7 @@ e8::mat_fail_safe::mat_fail_safe(mat_fail_safe const& other):
 std::unique_ptr<e8::if_material>
 e8::mat_fail_safe::copy() const
 {
-        return std::static_pointer_cast<if_material>(std::make_unique<mat_fail_safe>());
+        return std::make_unique<mat_fail_safe>(*this);
 }
 
 e8util::vec3

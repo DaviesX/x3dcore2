@@ -12,24 +12,24 @@
 namespace e8
 {
 
-enum obj_type {
-        obj_type_null,
-        obj_type_geometry,
-        obj_type_camera,
-        obj_type_light,
-        obj_type_material,
+enum obj_protocol {
+        obj_protocol_null,
+        obj_protocol_geometry,
+        obj_protocol_camera,
+        obj_protocol_light,
+        obj_protocol_material,
 };
 
 class incompat_obj_exception: public std::exception
 {
 public:
-        incompat_obj_exception(obj_type expected_type,
-                               obj_type actual_type);
+        incompat_obj_exception(obj_protocol expected_type,
+                               obj_protocol actual_type);
         ~incompat_obj_exception();
         char const*     what() const noexcept;
 private:
-        obj_type        m_expected_type;
-        obj_type        m_actual_type;
+        obj_protocol        m_expected_type;
+        obj_protocol        m_actual_type;
 };
 
 class if_obj;
@@ -42,7 +42,7 @@ public:
 
         virtual void                    load(if_obj const* obj, e8util::mat44 const& trans) = 0;
         virtual void                    unload(if_obj const* obj) = 0;
-        virtual obj_type                support() const = 0;
+        virtual obj_protocol                support() const = 0;
         virtual void                    commit() = 0;
 };
 
@@ -57,7 +57,7 @@ class if_obj
 public:
         virtual ~if_obj();
 
-        virtual obj_type                interface() const = 0;
+        virtual obj_protocol                protocol() const = 0;
 
         obj_id_t                        id() const;
         bool                            dirty() const;
@@ -68,7 +68,7 @@ public:
 
         bool                            add_child(if_obj* child);
         bool                            remove_child(if_obj* child);
-        std::vector<if_obj*>            get_children(obj_type const& interface_type) const;
+        std::vector<if_obj*>            get_children(obj_protocol const& interface_type) const;
         std::set<if_obj*>               get_children() const;
 protected:
         if_obj();
@@ -91,13 +91,15 @@ public:
         if_copyable_obj() {}
         if_copyable_obj(obj_id_t id): if_obj(id) {}
         virtual ~if_copyable_obj() {}
+
+        virtual obj_protocol                protocol() const override = 0;
         virtual std::unique_ptr<T>      copy() const = 0;
 };
 
 class null_obj: public if_obj
 {
 public:
-        obj_type        interface() const override;
+        obj_protocol        protocol() const override;
 };
 
 template<class T>
@@ -108,6 +110,7 @@ public:
         if_operable_obj(obj_id_t id): if_copyable_obj<T>(id) {}
         virtual ~if_operable_obj() {}
 
+        virtual obj_protocol                protocol() const override = 0;
         virtual std::unique_ptr<T>      copy() const override = 0;
         virtual std::unique_ptr<T>      transform(e8util::mat44 const& trans) const = 0;
 };
@@ -122,13 +125,13 @@ template<typename ReadOp>
 void
 visit_filtered(if_obj* obj,
                ReadOp op,
-               std::set<obj_type> const& interfaces = std::set<obj_type>())
+               std::set<obj_protocol> const& protocol = std::set<obj_protocol>())
 {
         op(obj);
         for (if_obj* child: obj->get_children()) {
-                if (interfaces.empty() ||
-                    interfaces.find(obj->interface()) != interfaces.end()) {
-                        visit_filtered(child, op, interfaces);
+                if (protocol.empty() ||
+                    protocol.find(obj->protocol()) != protocol.end()) {
+                        visit_filtered(child, op, protocol);
                 }
         }
 }
@@ -139,12 +142,12 @@ void
 visit_all_filtered(Iterator const& begin,
                    Iterator const& end,
                    ReadOp op,
-                   std::set<obj_type> const& interfaces = std::set<obj_type>())
+                   std::set<obj_protocol> const& protocol = std::set<obj_protocol>())
 {
         for (Iterator it = begin; it != end; ++ it) {
-                if (interfaces.empty() ||
-                    interfaces.find((*it)->interface()) != interfaces.end()) {
-                        visit_filtered(*it, op, interfaces);
+                if (protocol.empty() ||
+                    protocol.find((*it)->protocol()) != protocol.end()) {
+                        visit_filtered(*it, op, protocol);
                 }
         }
 }

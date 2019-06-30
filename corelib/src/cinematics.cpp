@@ -26,10 +26,10 @@ e8::if_cinematics::unload(if_obj const* obj)
         }
 }
 
-e8::obj_type
+e8::obj_protocol
 e8::if_cinematics::support() const
 {
-        return obj_type::obj_type_camera;
+        return obj_protocol::obj_protocol_camera;
 }
 
 std::string

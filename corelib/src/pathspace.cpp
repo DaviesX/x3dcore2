@@ -43,8 +43,8 @@ void
 e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
 {
         std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const*>(obj)->transform(trans);
-        std::vector<if_obj*> mats = obj->get_children(obj_type::obj_type_material);
-        std::vector<if_obj*> lights = obj->get_children(obj_type::obj_type_light);
+        std::vector<if_obj*> mats = obj->get_children(obj_protocol::obj_protocol_material);
+        std::vector<if_obj*> lights = obj->get_children(obj_protocol::obj_protocol_light);
 
         assert(mats.size() == 1);
         std::unique_ptr<if_material const> mat = static_cast<if_material*>(mats[0])->copy();
@@ -56,7 +56,7 @@ e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
         }
 
         m_bound = m_bound + geo->aabb();
-        m_geometries.insert(std::make_pair(geo->id(),
+        m_geometries.insert(std::make_pair(obj->id(),
                                            binded_geometry(geo, mat, light)));
 }
 
@@ -69,10 +69,10 @@ e8::if_path_space::unload(if_obj const* obj)
         }
 }
 
-e8::obj_type
+e8::obj_protocol
 e8::if_path_space::support() const
 {
-        return obj_type::obj_type_geometry;
+        return obj_protocol::obj_protocol_geometry;
 }
 
 
@@ -375,19 +375,26 @@ e8::bvh_path_space_layout::commit()
         std::map<if_material const*, unsigned short> mat2ind;
         std::map<if_light const*, unsigned short> light2ind;
         for (std::pair<obj_id_t const, binded_geometry> const& geo: m_geometries) {
-                geo2ind.insert(std::make_pair(geo.second.geometry.get(), m_geo_list.size()));
+                geo2ind.insert(std::make_pair(geo.second.geometry.get(),
+                                              m_geo_list.size()));
                 m_geo_list.push_back(geo.second.geometry.get());
 
-                auto mat_it = mat2ind.find(geo.second.mat.get());
-                if (mat_it == mat2ind.end()) {
-                        mat2ind.insert(std::make_pair(geo.second.mat.get(), m_mat_list.size()));
-                        m_mat_list.push_back(geo.second.mat.get());
+                if (geo.second.mat != nullptr) {
+                        auto mat_it = mat2ind.find(geo.second.mat.get());
+                        if (mat_it == mat2ind.end()) {
+                                mat2ind.insert(std::make_pair(geo.second.mat.get(),
+                                                              m_mat_list.size()));
+                                m_mat_list.push_back(geo.second.mat.get());
+                        }
                 }
 
-                auto light_it = light2ind.find(geo.second.light.get());
-                if (light_it == light2ind.end()) {
-                        light2ind.insert(std::make_pair(geo.second.light.get(), m_mat_list.size()));
-                        m_light_list.push_back(geo.second.light.get());
+                if (geo.second.light != nullptr) {
+                        auto light_it = light2ind.find(geo.second.light.get());
+                        if (light_it == light2ind.end()) {
+                                light2ind.insert(std::make_pair(geo.second.light.get(),
+                                                                m_light_list.size()));
+                                m_light_list.push_back(geo.second.light.get());
+                        }
                 }
         }
         mat2ind.insert(std::make_pair(nullptr, 0xFFFF));

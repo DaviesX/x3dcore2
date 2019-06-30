@@ -27,8 +27,8 @@ public:
         virtual std::unique_ptr<if_camera>      copy() const override = 0;
         virtual std::unique_ptr<if_camera>      transform(e8util::mat44 const& trans) const override = 0;
 
-        std::string                     name() const;
-        obj_type                        interface() const override;
+        std::string                             name() const;
+        obj_protocol                            protocol() const override;
 protected:
         if_camera(obj_id_t id, std::string const& name);
         std::string     m_name;

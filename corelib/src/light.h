@@ -24,9 +24,10 @@ public:
         virtual std::unique_ptr<if_light>       copy() const override = 0;
         virtual std::unique_ptr<if_light>       transform(e8util::mat44 const& trans) const override = 0;
 
-        std::string             name() const;
-        obj_type                interface() const override;
-private:
+        std::string                             name() const;
+        obj_protocol                            protocol() const override;
+protected:
+        if_light(obj_id_t id, std::string const& name);
         std::string             m_name;
 };
 
@@ -34,18 +35,22 @@ class area_light: public if_light
 {
 public:
         area_light(std::string const& name,
-                   if_geometry const* geo,
+                   if_geometry const& geo,
                    e8util::vec3 const& rad);
-        area_light(if_geometry const* geo,
+        area_light(if_geometry const& geo,
                    e8util::vec3 const& rad);
-        void            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
-                               e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
-        void            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const override;
-        e8util::vec3    eval(e8util::vec3 const& i, e8util::vec3 const& n) const override;
-        e8util::vec3    emission(e8util::vec3 const& w, e8util::vec3 const& n) const override;
-        e8util::vec3    power() const override;
+        area_light(area_light const& other);
+
+        void                            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
+                                                e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
+        void                            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const override;
+        e8util::vec3                    eval(e8util::vec3 const& i, e8util::vec3 const& n) const override;
+        e8util::vec3                    emission(e8util::vec3 const& w, e8util::vec3 const& n) const override;
+        e8util::vec3                    power() const override;
+        std::unique_ptr<if_light>       copy() const override;
+        std::unique_ptr<if_light>       transform(e8util::mat44 const& trans) const override;
 private:
-        if_geometry const*      m_geo;
+        if_geometry const&      m_geo;
         e8util::vec3            m_rad;
         e8util::vec3            m_power;
 };
@@ -56,14 +61,17 @@ public:
         sky_light(std::string const& name,
                   e8util::vec3 const& rad);
         sky_light(e8util::vec3 const& rad);
+        sky_light(sky_light const& other);
 
-        void            set_scene_boundary(e8util::aabb const& bbox) override;
-        void            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
-                               e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
-        void            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const override;
-        e8util::vec3    eval(e8util::vec3 const& i, e8util::vec3 const& n) const override;
-        e8util::vec3    emission(e8util::vec3 const& w, e8util::vec3 const& n) const override;
-        e8util::vec3    power() const override;
+        void                            set_scene_boundary(e8util::aabb const& bbox) override;
+        void                            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
+                                               e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const override;
+        void                            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const override;
+        e8util::vec3                    eval(e8util::vec3 const& i, e8util::vec3 const& n) const override;
+        e8util::vec3                    emission(e8util::vec3 const& w, e8util::vec3 const& n) const override;
+        e8util::vec3                    power() const override;
+        std::unique_ptr<if_light>       copy() const override;
+        std::unique_ptr<if_light>       transform(e8util::mat44 const& trans) const override;
 private:
         e8util::vec3            m_rad;
         e8util::vec3            m_ref_p;

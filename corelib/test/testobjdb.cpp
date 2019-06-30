@@ -17,11 +17,11 @@ test::test_objdb::~test_objdb()
 class test_geo_manger : public e8::if_obj_manager
 {
 public:
-        ~test_geo_manger();
+        ~test_geo_manger() override;
         void                    load(e8::if_obj const* obj,
                                      e8util::mat44 const& trans) override;
         void                    unload(e8::if_obj const* obj) override;
-        e8::obj_type            support() const override;
+        e8::obj_protocol            support() const override;
         void                    commit() override;
 
         unsigned                num_geos() const;
@@ -48,7 +48,7 @@ test_geo_manger::unload(e8::if_obj const* obj)
 {
         auto it = std::find_if(m_geos.begin(),
                                m_geos.end(),
-                               [obj] (e8::if_geometry* geo) {
+                               [obj] (std::unique_ptr<e8::if_geometry> const& geo) {
                                 return obj->id() == geo->id();
                                });
         if (it != m_geos.end()) {
@@ -56,10 +56,10 @@ test_geo_manger::unload(e8::if_obj const* obj)
         }
 }
 
-e8::obj_type
+e8::obj_protocol
 test_geo_manger::support() const
 {
-        return e8::obj_type::obj_type_geometry;
+        return e8::obj_protocol::obj_protocol_geometry;
 }
 
 unsigned
@@ -73,7 +73,7 @@ test_geo_manger::find(std::string const& name) const
 {
         auto it = std::find_if(m_geos.begin(),
                                m_geos.end(),
-                               [&name] (e8::if_geometry* geo) {
+                               [&name] (std::unique_ptr<e8::if_geometry> const& geo) {
                                 return geo->name() == name;
                                });
         if (it != m_geos.end()) {
@@ -88,7 +88,7 @@ test_geo_manger::find(e8::obj_id_t const& id) const
 {
         auto it = std::find_if(m_geos.begin(),
                                        m_geos.end(),
-                                       [&id] (e8::if_geometry* geo) {
+                                       [&id] (std::unique_ptr<e8::if_geometry> const& geo) {
                                         return geo->id() == id;
                                        });
         if (it != m_geos.end()) {
@@ -128,7 +128,7 @@ test::test_objdb::run() const
         db.push_updates();
 
         test_geo_manger* mgr = static_cast<test_geo_manger*>(
-                                db.manager_for(e8::obj_type::obj_type_geometry));
+                                db.manager_for(e8::obj_protocol::obj_protocol_geometry));
         assert(mgr->num_geos() == 2);
         e8::if_geometry* t_root_id = mgr->find(root->id());
         e8::if_geometry* t_child_id = mgr->find(child->id());
