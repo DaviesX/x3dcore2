@@ -46,33 +46,33 @@ public:
         virtual bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const = 0;
         virtual batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const = 0;
         virtual std::vector<if_light const*>    get_relevant_lights(e8util::frustum const& frustum) const = 0;
-        virtual if_light const*                 sample_light(e8util::rng& rng, float& pdf) const = 0;
 
-        void                                    add_geometry(if_geometry const* geometry);
-        void                                    add_light(if_light const* light);
-        void                                    bind(if_geometry const* geometry, if_material const* mat);
-        void                                    bind(if_geometry const* geometry, if_light const* light);
+//        void                                    add_geometry(std::unique_ptr<if_geometry>& geometry);
+//        void                                    bind(if_geometry const* geometry, if_material const* mat);
+//        void                                    bind(if_geometry const* geometry, if_light const* light);
         e8util::aabb                            aabb() const;
 
-        void                                    load(e8util::if_resource* res);
         void                                    load(if_obj const* obj, e8util::mat44 const& trans) override;
         obj_type                                support() const override;
         void                                    unload(if_obj const* obj) override;
 protected:
         struct binded_geometry
         {
-                binded_geometry(if_geometry const* geometry, if_material const* mat, if_light const* light):
-                        geometry(geometry), mat(mat), light(light)
+                binded_geometry(std::unique_ptr<if_geometry const>& geometry,
+                                std::unique_ptr<if_material const>& mat,
+                                std::unique_ptr<if_light const>& light):
+                        geometry(std::move(geometry)),
+                        mat(std::move(mat)),
+                        light(std::move(light))
                 {
                 }
 
-                if_geometry const*      geometry;
-                if_material const*      mat;
-                if_light const*         light;
+                std::unique_ptr<if_geometry const>    geometry;
+                std::unique_ptr<if_material const>    mat;
+                std::unique_ptr<if_light const>       light;
         };
 
         std::map<obj_id_t, binded_geometry>             m_geometries;
-        std::set<if_light const*>                       m_lights;
         e8util::aabb                                    m_bound;
 };
 
@@ -89,11 +89,6 @@ public:
         virtual bool                            has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const override;
         virtual batched_geometry                get_relevant_geometries(e8util::frustum const& frustum) const override;
         virtual std::vector<if_light const*>    get_relevant_lights(e8util::frustum const& frustum) const override;
-        virtual if_light const*                 sample_light(e8util::rng& rng, float& pdf) const override;
-private:
-        std::vector<if_light const*>    m_light_list;
-        std::vector<float>              m_cum_power;
-        float                           m_total_power;
 };
 
 
@@ -127,7 +122,11 @@ private:
 
         struct primitive_details: public primitive
         {
-                primitive_details(triangle const& tri, e8::if_geometry const* geo, unsigned i_geo, unsigned short i_mat, unsigned short i_light):
+                primitive_details(triangle const& tri,
+                                  e8::if_geometry const* geo,
+                                  unsigned i_geo,
+                                  unsigned short i_mat,
+                                  unsigned short i_light):
                         primitive(tri, i_geo, i_mat, i_light)
                 {
                         std::vector<e8util::vec3> const& verts = geo->vertices();

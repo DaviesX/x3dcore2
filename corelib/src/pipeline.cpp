@@ -105,7 +105,9 @@ e8::pt_render_pipeline::render_frame()
                                 m_objdb.manager_for(obj_type::obj_type_geometry));
         if_camera* cur_cam = cinematics->main_cam();
         if (cur_cam != nullptr) {
-                m_renderer->render(path_space, cur_cam, m_com);
+                for (unsigned i = 0; i < m_samps_per_frame; i ++) {
+                        m_renderer->render(path_space, cur_cam, m_com);
+                }
         }
         m_com->commit(m_frame);
         m_frame->commit();
@@ -132,6 +134,7 @@ e8::pt_render_pipeline::config_protocol() const
         config.bool_val["auto_exposure"] = false;
         config.float_val["exposure"] = 1.0f;
         config.int_val["super_samples"] = 16;
+        config.int_val["samples_per_frame"] = 1;
         return config;
 }
 
@@ -183,5 +186,9 @@ e8::pt_render_pipeline::update_pipeline(e8util::flex_config const& diff)
         });
         diff.find_float("exposure", [this] (float const& val) {
                 m_com->exposure(val);
+        });
+
+        diff.find_int("samples_per_frame", [this] (int const& val) {
+                m_samps_per_frame = static_cast<unsigned>(val);
         });
 }

@@ -118,10 +118,16 @@ e8::trimesh::aabb() const
         return m_aabb;
 }
 
-e8::trimesh*
+std::unique_ptr<e8::if_geometry>
+e8::trimesh::copy() const
+{
+        return std::make_unique<trimesh>(*this);
+}
+
+std::unique_ptr<e8::if_geometry>
 e8::trimesh::transform(e8util::mat44 const& trans) const
 {
-        trimesh* transformed = new trimesh(*this);
+        std::unique_ptr<trimesh> transformed = std::make_unique<trimesh>(*this);
         for (unsigned i = 0; i < transformed->m_verts.size(); i ++) {
                 transformed->m_verts[i] = (trans*transformed->m_verts[i].homo(1.0f)).cart();
         }

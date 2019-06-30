@@ -26,6 +26,8 @@ public:
         virtual void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const = 0;
         virtual float                                   surface_area() const = 0;
         virtual e8util::aabb                            aabb() const = 0;
+        virtual std::unique_ptr<if_geometry>            copy() const override = 0;
+        virtual std::unique_ptr<if_geometry>            transform(e8util::mat44 const& trans) const override = 0;
 protected:
         if_geometry(obj_id_t id, std::string const& name);
 private:
@@ -47,7 +49,8 @@ public:
         void                                    sample(e8util::rng& rng, e8util::vec3& p, e8util::vec3& n, float& pdf) const override;
         float                                   surface_area() const override;
         virtual e8util::aabb                    aabb() const override;
-        trimesh*                                transform(e8util::mat44 const& trans) const override;
+        std::unique_ptr<if_geometry>            copy() const override;
+        std::unique_ptr<if_geometry>            transform(e8util::mat44 const& trans) const override;
 
         void                                    vertices(std::vector<e8util::vec3> const& v);
         void                                    normals(std::vector<e8util::vec3> const& n);

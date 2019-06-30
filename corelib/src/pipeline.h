@@ -62,6 +62,7 @@ public:
 private:
         e8::pt_image_renderer*  m_renderer = nullptr;
         e8::aces_compositor*    m_com = nullptr;
+        unsigned                m_samps_per_frame = 1;
 };
 
 }

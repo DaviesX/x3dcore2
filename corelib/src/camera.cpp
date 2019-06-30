@@ -72,6 +72,12 @@ e8::pinhole_camera::~pinhole_camera()
 {
 }
 
+std::unique_ptr<e8::if_camera>
+e8::pinhole_camera::copy() const
+{
+        return std::make_unique<pinhole_camera>(*this);
+}
+
 e8util::ray
 e8::pinhole_camera::sample(e8util::rng&, unsigned x, unsigned y, unsigned w, unsigned h, float& pdf) const
 {
@@ -105,10 +111,10 @@ e8::pinhole_camera::update_proj_mat()
 }
 
 // TODO: transform needs to be more robust (i.e. handle arbitary linear transformations).
-e8::pinhole_camera*
+std::unique_ptr<e8::if_camera>
 e8::pinhole_camera::transform(e8util::mat44 const& trans) const
 {
-        pinhole_camera* new_cam = new pinhole_camera(*this);
+        std::unique_ptr<pinhole_camera> new_cam = std::make_unique<pinhole_camera>(*this);
         new_cam->m_t = e8util::vec3 {trans(0,3), trans(1,3), trans(2,3)};
         new_cam->m_r = e8util::mat44 {trans(0,0), trans(1,0), trans(2,0), 0.0f,
                                       trans(0,1), trans(1,1), trans(2,1), 0.0f,

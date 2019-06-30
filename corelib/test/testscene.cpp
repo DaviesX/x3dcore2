@@ -27,7 +27,7 @@ test::test_path_space::run() const
         e8::pt_image_renderer r(new e8::pathtracer_factory(e8::pathtracer_factory::pt_type::normal,
                                                            e8::pathtracer_factory::options()));
 
-        e8util::if_resource* res = new e8util::cornell_scene();
+        e8util::cornell_scene* res = new e8util::cornell_scene();
         e8::if_camera* cam = res->load_camera();
 
         //e8::linear_scene_layout scene;

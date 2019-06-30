@@ -52,7 +52,7 @@ e8::if_camera*
 e8::stationary_cam_controller::main_cam() const
 {
         if (!m_cams.empty()) {
-                return m_cams.begin()->second;
+                return m_cams.begin()->second.get();
         } else {
                 return nullptr;
         }

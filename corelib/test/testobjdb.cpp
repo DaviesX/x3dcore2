@@ -28,14 +28,11 @@ public:
         e8::if_geometry*        find(std::string const& name) const;
         e8::if_geometry*        find(e8::obj_id_t const& id) const;
 private:
-        std::vector<e8::if_geometry*>   m_geos;
+        std::vector<std::unique_ptr<e8::if_geometry>>   m_geos;
 };
 
 test_geo_manger::~test_geo_manger()
 {
-        for (e8::if_geometry* geo: m_geos) {
-                delete geo;
-        }
 }
 
 void
@@ -80,7 +77,7 @@ test_geo_manger::find(std::string const& name) const
                                 return geo->name() == name;
                                });
         if (it != m_geos.end()) {
-                return *it;
+                return it->get();
         } else {
                 return nullptr;
         }
@@ -95,7 +92,7 @@ test_geo_manger::find(e8::obj_id_t const& id) const
                                         return geo->id() == id;
                                        });
         if (it != m_geos.end()) {
-                return *it;
+                return it->get();
         } else {
                 return nullptr;
         }

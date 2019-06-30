@@ -28,14 +28,6 @@ class if_resource
 public:
         if_resource();
         virtual ~if_resource();
-
-        virtual std::vector<e8::if_geometry*>           load_geometries() const;
-        virtual std::vector<e8::if_material*>           load_materials() const;
-        virtual std::vector<e8::if_light*>              load_lights() const;
-        virtual std::vector<e8::if_light*>              load_virtual_lights() const;
-        virtual e8::if_camera*                          load_camera() const;
-        virtual bool                                    save_geometries(std::vector<e8::if_geometry*> const& geometries);
-
         virtual std::vector<e8::if_obj*>                load_roots();
         virtual void                                    save_roots(std::vector<e8::if_obj*> const& roots);
 };
@@ -60,11 +52,11 @@ public:
         cornell_scene();
         std::vector<e8::if_obj*>        load_roots() override;
 
-        std::vector<e8::if_geometry*>   load_geometries() const override;
-        std::vector<e8::if_material*>   load_materials() const override;
-        std::vector<e8::if_light*>      load_lights() const override;
-        std::vector<e8::if_light*>      load_virtual_lights() const override;
-        e8::if_camera*                  load_camera() const override;
+        std::vector<e8::if_geometry*>   load_geometries() const;
+        std::vector<e8::if_material*>   load_materials() const;
+        std::vector<e8::if_light*>      load_lights() const;
+        std::vector<e8::if_light*>      load_virtual_lights() const;
+        e8::if_camera*                  load_camera() const;
 };
 
 class gltf_scene_internal;
@@ -103,11 +95,11 @@ public:
         gltf_scene(std::string const& location);
         ~gltf_scene() override;
 
-        std::vector<e8::if_geometry*>   load_geometries() const override;
-        std::vector<e8::if_material*>   load_materials() const override;
-        std::vector<e8::if_light*>      load_lights() const override;
-        std::vector<e8::if_light*>      load_virtual_lights() const override;
-        e8::if_camera*                  load_camera() const override;
+        std::vector<e8::if_geometry*>   load_geometries() const;
+        std::vector<e8::if_material*>   load_materials() const;
+        std::vector<e8::if_light*>      load_lights() const;
+        std::vector<e8::if_light*>      load_virtual_lights() const;
+        e8::if_camera*                  load_camera() const;
 
         std::vector<e8::if_obj*>        load_roots() override;
 private:

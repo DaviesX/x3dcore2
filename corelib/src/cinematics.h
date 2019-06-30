@@ -24,8 +24,8 @@ public:
         std::string             name() const;
 
 protected:
-        std::string                     m_name;
-        std::map<obj_id_t, if_camera*>  m_cams;
+        std::string                                     m_name;
+        std::map<obj_id_t, std::unique_ptr<if_camera>>  m_cams;
 };
 
 

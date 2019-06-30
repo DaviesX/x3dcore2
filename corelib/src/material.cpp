@@ -1,7 +1,14 @@
+#include <memory>
 #include "material.h"
 
 
 e8::if_material::if_material(std::string const& name):
+        m_name(name)
+{
+}
+
+e8::if_material::if_material(obj_id_t id, std::string const& name):
+        if_copyable_obj<e8::if_material> (id),
         m_name(name)
 {
 }
@@ -27,6 +34,18 @@ e8::mat_fail_safe::mat_fail_safe(std::string const& name):
         if_material(name),
         m_albedo { 0.8f, 0.8f, 0.8f}
 {
+}
+
+e8::mat_fail_safe::mat_fail_safe(mat_fail_safe const& other):
+        if_material(other.id(), other.name()),
+        m_albedo(other.m_albedo)
+{
+}
+
+std::unique_ptr<e8::if_material>
+e8::mat_fail_safe::copy() const
+{
+        return std::static_pointer_cast<if_material>(std::make_unique<mat_fail_safe>());
 }
 
 e8util::vec3
@@ -67,6 +86,21 @@ e8::oren_nayar::oren_nayar(e8util::vec3 const& albedo,
                    albedo,
                    roughness)
 {
+}
+
+e8::oren_nayar::oren_nayar(oren_nayar const& other):
+        if_material(other.id(), other.name()),
+        m_albedo(other.m_albedo),
+        m_sigma(other.m_sigma),
+        A(other.A),
+        B(other.B)
+{
+}
+
+std::unique_ptr<e8::if_material>
+e8::oren_nayar::copy() const
+{
+        return std::make_unique<oren_nayar>(*this);
 }
 
 e8util::vec3
@@ -126,6 +160,20 @@ e8::cook_torr::cook_torr(e8util::vec3 const& albedo, float beta, float ior):
         cook_torr("Unknown_Cook_Torr_Material_Name",
                   albedo, beta, ior)
 {
+}
+
+e8::cook_torr::cook_torr(cook_torr const& other):
+        if_material(other.id(), other.name()),
+        m_albedo(other.m_albedo),
+        m_beta2(other.m_beta2),
+        m_ior2(other.m_ior2)
+{
+}
+
+std::unique_ptr<e8::if_material>
+e8::cook_torr::copy() const
+{
+        return std::make_unique<cook_torr>(*this);
 }
 
 float

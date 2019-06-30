@@ -17,13 +17,15 @@ public:
         if_camera(std::string const& name);
         virtual ~if_camera() override;
 
-        virtual e8util::ray             sample(e8util::rng& rng,
-                                               unsigned x,
-                                               unsigned y,
-                                               unsigned w,
-                                               unsigned h,
-                                               float& pdf) const = 0;
-        virtual e8util::mat44           projection() const = 0;
+        virtual e8util::ray                     sample(e8util::rng& rng,
+                                                       unsigned x,
+                                                       unsigned y,
+                                                       unsigned w,
+                                                       unsigned h,
+                                                       float& pdf) const = 0;
+        virtual e8util::mat44                   projection() const = 0;
+        virtual std::unique_ptr<if_camera>      copy() const override = 0;
+        virtual std::unique_ptr<if_camera>      transform(e8util::mat44 const& trans) const override = 0;
 
         std::string                     name() const;
         obj_type                        interface() const override;
@@ -52,7 +54,8 @@ public:
                                                unsigned h,
                                                float& pdf) const override;
         e8util::mat44                   projection() const override;
-        pinhole_camera*                 transform(e8util::mat44 const& trans) const override;
+        std::unique_ptr<if_camera>      copy() const override;
+        std::unique_ptr<if_camera>      transform(e8util::mat44 const& trans) const override;
 private:
         void                            update_proj_mat();
 

@@ -1,7 +1,7 @@
 #ifndef OBJ_H
 #define OBJ_H
 
-
+#include <memory>
 #include <set>
 #include <queue>
 #include <vector>
@@ -84,6 +84,16 @@ private:
         char                            m_padding[7];
 };
 
+template<class T>
+class if_copyable_obj: public if_obj
+{
+public:
+        if_copyable_obj() {}
+        if_copyable_obj(obj_id_t id): if_obj(id) {}
+        virtual ~if_copyable_obj() {}
+        virtual std::unique_ptr<T>      copy() const = 0;
+};
+
 class null_obj: public if_obj
 {
 public:
@@ -91,14 +101,15 @@ public:
 };
 
 template<class T>
-class if_operable_obj: public if_obj
+class if_operable_obj: public if_copyable_obj<T>
 {
 public:
         if_operable_obj() {}
-        if_operable_obj(obj_id_t id): if_obj(id) {}
+        if_operable_obj(obj_id_t id): if_copyable_obj<T>(id) {}
         virtual ~if_operable_obj() {}
 
-        virtual T*      transform(e8util::mat44 const& trans) const = 0;
+        virtual std::unique_ptr<T>      copy() const override = 0;
+        virtual std::unique_ptr<T>      transform(e8util::mat44 const& trans) const = 0;
 };
 
 struct obj_visitor

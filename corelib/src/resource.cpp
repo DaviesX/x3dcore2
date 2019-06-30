@@ -45,42 +45,6 @@ e8util::if_resource::~if_resource()
 {
 }
 
-std::vector<e8::if_geometry*>
-e8util::if_resource::load_geometries() const
-{
-        throw std::string("resource doesn't support load_geometries");
-}
-
-std::vector<e8::if_material*>
-e8util::if_resource::load_materials() const
-{
-        throw std::string("resource doesn't support load_materials");
-}
-
-std::vector<e8::if_light*>
-e8util::if_resource::load_lights() const
-{
-        throw std::string("resource doesn't support load_lights");
-}
-
-std::vector<e8::if_light*>
-e8util::if_resource::load_virtual_lights() const
-{
-        throw std::string("resource doesn't support load_virtual_lights");
-}
-
-e8::if_camera*
-e8util::if_resource::load_camera() const
-{
-        throw std::string("resource doesn't support load_camera");
-}
-
-bool
-e8util::if_resource::save_geometries(std::vector<e8::if_geometry*> const&)
-{
-        throw std::string("resource doesn't support save_geometries");
-}
-
 std::vector<e8::if_obj*>
 e8util::if_resource::load_roots()
 {

@@ -10,45 +10,28 @@ e8::if_path_space::if_path_space()
 
 e8::if_path_space::~if_path_space()
 {
-        std::set<if_material const*> mats;
-        for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
-                mats.insert(p.second.mat);
-                delete p.second.geometry;
-        }
-        for (if_material const* mat: mats) {
-                delete mat;
-        }
-        for (if_light const* light: m_lights) {
-                delete light;
-        }
 }
 
-void
-e8::if_path_space::add_geometry(if_geometry const* geometry)
-{
-        if (m_geometries.find(geometry->id()) == m_geometries.end())
-                m_bound = m_bound + geometry->aabb();
-        m_geometries.insert(std::make_pair(geometry->id(),
-                                           if_path_space::binded_geometry(geometry, nullptr, nullptr)));
-}
+//void
+//e8::if_path_space::add_geometry(std::unique_ptr<if_geometry>& geometry)
+//{
+//        if (m_geometries.find(geometry->id()) == m_geometries.end())
+//                m_bound = m_bound + geometry->aabb();
+//        m_geometries.insert(std::make_pair(geometry->id(),
+//                                           if_path_space::binded_geometry(geometry, nullptr, nullptr)));
+//}
 
-void
-e8::if_path_space::add_light(if_light const* light)
-{
-        m_lights.insert(light);
-}
+//void
+//e8::if_path_space::bind(if_geometry const* geometry, if_material const* mat)
+//{
+//        m_geometries.at(geometry->id()).mat = mat;
+//}
 
-void
-e8::if_path_space::bind(if_geometry const* geometry, if_material const* mat)
-{
-        m_geometries.at(geometry->id()).mat = mat;
-}
-
-void
-e8::if_path_space::bind(if_geometry const* geometry, if_light const* light)
-{
-        m_geometries.at(geometry->id()).light = light;
-}
+//void
+//e8::if_path_space::bind(if_geometry const* geometry, if_light const* light)
+//{
+//        m_geometries.at(geometry->id()).light = light;
+//}
 
 e8util::aabb
 e8::if_path_space::aabb() const
@@ -57,50 +40,24 @@ e8::if_path_space::aabb() const
 }
 
 void
-e8::if_path_space::load(e8util::if_resource* res)
-{
-        std::vector<if_geometry*> const& geos = res->load_geometries();
-        std::vector<if_material*> const& mats = res->load_materials();
-        std::vector<if_light*> const& lights = res->load_lights();
-        std::vector<if_light*> const& v_lights = res->load_virtual_lights();
-
-        for (if_geometry* geo: geos)
-                add_geometry(geo);
-        for (unsigned i = 0; i < mats.size(); i ++) {
-                if (mats[i]) {
-                        bind(geos[i], mats[i]);
-                }
-        }
-        for (unsigned i = 0; i < lights.size(); i ++) {
-                if (lights[i]) {
-                        lights[i]->set_scene_boundary(m_bound);
-                        add_light(lights[i]);
-                        bind(geos[i], lights[i]);
-                }
-        }
-        for (unsigned i = 0; i < v_lights.size(); i ++) {
-                if (v_lights[i]) {
-                        v_lights[i]->set_scene_boundary(m_bound);
-                        add_light(v_lights[i]);
-                }
-        }
-}
-
-void
 e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
 {
-        if_geometry const* geo = static_cast<if_geometry const*>(obj)->transform(trans);
+        std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const*>(obj)->transform(trans);
         std::vector<if_obj*> mats = obj->get_children(obj_type::obj_type_material);
         std::vector<if_obj*> lights = obj->get_children(obj_type::obj_type_light);
 
-        add_geometry(geo);
         assert(mats.size() == 1);
-        bind(geo, static_cast<if_material*>(mats[0]));
+        std::unique_ptr<if_material const> mat = static_cast<if_material*>(mats[0])->copy();
+
+        std::unique_ptr<if_light const> light;
         if (!lights.empty()) {
                 assert(lights.size() == 1);
-                bind(geo, static_cast<if_light*>(lights[0]));
-                m_lights.insert(static_cast<if_light*>(lights[0]));
+                light = static_cast<if_light*>(lights[0])->copy();
         }
+
+        m_bound = m_bound + geo->aabb();
+        m_geometries.insert(std::make_pair(geo->id(),
+                                           binded_geometry(geo, mat, light)));
 }
 
 void
@@ -130,17 +87,6 @@ e8::linear_path_space_layout::~linear_path_space_layout()
 void
 e8::linear_path_space_layout::commit()
 {
-        m_cum_power.resize(m_lights.size());
-        m_light_list.resize(m_lights.size());
-
-        unsigned i = 0;
-        m_total_power = 0;
-        for (if_light const* light: m_lights) {
-                m_total_power += light->power().norm();
-                m_cum_power[i] = m_total_power;
-                m_light_list[i] = light;
-                i ++;
-        }
 }
 
 e8::intersect_info
@@ -155,7 +101,7 @@ e8::linear_path_space_layout::intersect(e8util::ray const& r) const
         e8util::vec3            hit_b;
 
         for (auto it = m_geometries.begin(); it != m_geometries.end(); ++it) {
-                if_geometry const* geo = it->second.geometry;
+                if_geometry const* geo = it->second.geometry.get();
 
                 std::vector<e8util::vec3> const&        verts = geo->vertices();
                 std::vector<triangle> const&            tris = geo->triangles();
@@ -188,7 +134,7 @@ e8::linear_path_space_layout::intersect(e8util::ray const& r) const
                 e8util::vec3 const& n1 = normals[(*hit_tri)(1)];
                 e8util::vec3 const& n2 = normals[(*hit_tri)(2)];
                 e8util::vec3 const& normal = (hit_b(0)*n0 + hit_b(1)*n1 + hit_b(2)*n2).normalize();
-                return intersect_info(t, vertex, normal, hit_geo->mat, hit_geo->light);
+                return intersect_info(t, vertex, normal, hit_geo->mat.get(), hit_geo->light.get());
         } else {
                 return intersect_info();
         }
@@ -197,8 +143,8 @@ e8::linear_path_space_layout::intersect(e8util::ray const& r) const
 bool
 e8::linear_path_space_layout::has_intersect(e8util::ray const& r, float t_min, float t_max, float& t) const
 {
-        for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
-                if_geometry const* geo = p.second.geometry;
+        for (std::pair<obj_id_t const, binded_geometry> const& p: m_geometries) {
+                if_geometry const* geo = p.second.geometry.get();
 
                 std::vector<e8util::vec3> const&        verts = geo->vertices();
                 std::vector<triangle> const&            tris = geo->triangles();
@@ -227,24 +173,6 @@ std::vector<e8::if_light const*>
 e8::linear_path_space_layout::get_relevant_lights(e8util::frustum const&) const
 {
         throw std::string("Not implemented yet.");
-}
-
-e8::if_light const*
-e8::linear_path_space_layout::sample_light(e8util::rng& rng, float& pdf) const
-{
-        assert(!m_light_list.empty());
-        float e = rng.draw()*m_total_power;
-        unsigned lo = 0;
-        unsigned hi = static_cast<unsigned>(m_cum_power.size());
-        while (lo < hi) {
-                unsigned mi = (lo + hi) >> 1;
-                if (m_cum_power[mi] < e)
-                        lo = mi + 1;
-                else
-                        hi = mi;
-        }
-        pdf = m_light_list[lo]->power().norm()/m_total_power;
-        return m_light_list[lo];
 }
 
 
@@ -443,35 +371,36 @@ e8::bvh_path_space_layout::commit()
         m_bvh.clear();
 
         // construct geometry, light and material mapping.
-        std::map<if_geometry const*, unsigned int> geo_map;
-        std::map<if_material const*, unsigned short> mat_map;
-        std::map<if_light const*, unsigned short> light_map;
-        for (std::pair<obj_id_t, binded_geometry> geo: m_geometries) {
-                geo_map.insert(std::make_pair(geo.second.geometry, m_geo_list.size()));
-                m_geo_list.push_back(geo.second.geometry);
+        std::map<if_geometry const*, unsigned int> geo2ind;
+        std::map<if_material const*, unsigned short> mat2ind;
+        std::map<if_light const*, unsigned short> light2ind;
+        for (std::pair<obj_id_t const, binded_geometry> const& geo: m_geometries) {
+                geo2ind.insert(std::make_pair(geo.second.geometry.get(), m_geo_list.size()));
+                m_geo_list.push_back(geo.second.geometry.get());
 
-                auto it = mat_map.find(geo.second.mat);
-                if (it == mat_map.end()) {
-                        mat_map.insert(std::make_pair(geo.second.mat, m_mat_list.size()));
-                        m_mat_list.push_back(geo.second.mat);
+                auto mat_it = mat2ind.find(geo.second.mat.get());
+                if (mat_it == mat2ind.end()) {
+                        mat2ind.insert(std::make_pair(geo.second.mat.get(), m_mat_list.size()));
+                        m_mat_list.push_back(geo.second.mat.get());
+                }
+
+                auto light_it = light2ind.find(geo.second.light.get());
+                if (light_it == light2ind.end()) {
+                        light2ind.insert(std::make_pair(geo.second.light.get(), m_mat_list.size()));
+                        m_light_list.push_back(geo.second.light.get());
                 }
         }
-        mat_map.insert(std::make_pair(nullptr, 0xFFFF));
-
-        for (if_light const* light: m_lights) {
-                light_map.insert(std::make_pair(light, m_light_list.size()));
-                m_light_list.push_back(light);
-        }
-        light_map.insert(std::make_pair(nullptr, 0xFFFF));
+        mat2ind.insert(std::make_pair(nullptr, 0xFFFF));
+        light2ind.insert(std::make_pair(nullptr, 0xFFFF));
 
         // construct primitive list.
         std::vector<primitive_details> prims;
-        for (std::pair<obj_id_t, binded_geometry> p: m_geometries) {
+        for (std::pair<obj_id_t const, binded_geometry> const& p: m_geometries) {
                 for (triangle const& tri: p.second.geometry->triangles()) {
-                        prims.push_back(primitive_details(tri, p.second.geometry,
-                                                          geo_map[p.second.geometry],
-                                        mat_map[p.second.mat],
-                                        light_map[p.second.light]));
+                        prims.push_back(primitive_details(tri, p.second.geometry.get(),
+                                                          geo2ind[p.second.geometry.get()],
+                                        mat2ind[p.second.mat.get()],
+                                        light2ind[p.second.light.get()]));
                 }
         }
 

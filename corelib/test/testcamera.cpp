@@ -27,7 +27,7 @@ test::test_camera::run() const
         cam.init_blueprint({"rotation", "translation"});
         cam.update_stage(std::make_pair("rotation", rot));
         cam.update_stage(std::make_pair("translation", trans));
-        e8::pinhole_camera* trans_cam = cam.transform(cam.blueprint_to_transform());
+        std::unique_ptr<e8::if_camera> trans_cam = cam.transform(cam.blueprint_to_transform());
 
         unsigned const resx = 1025;
         unsigned const resy = 769;

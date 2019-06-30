@@ -8,19 +8,21 @@
 namespace e8
 {
 
-class if_light: public if_obj
+class if_light: public if_operable_obj<if_light>
 {
 public:
         if_light(std::string const& name);
         virtual ~if_light() override;
 
-        virtual void            set_scene_boundary(e8util::aabb const& bbox);
-        virtual void            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
-                                       e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const = 0;
-        virtual void            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const = 0;
-        virtual e8util::vec3    eval(e8util::vec3 const& i, e8util::vec3 const& n) const = 0;
-        virtual e8util::vec3    emission(e8util::vec3 const& w, e8util::vec3 const& n) const = 0;
-        virtual e8util::vec3    power() const = 0;
+        virtual void                            set_scene_boundary(e8util::aabb const& bbox);
+        virtual void                            sample(e8util::rng& rng, float& p_pdf, float& w_pdf,
+                                                       e8util::vec3& p, e8util::vec3& n, e8util::vec3& w) const = 0;
+        virtual void                            sample(e8util::rng& rng, float& pdf, e8util::vec3& p, e8util::vec3& n) const = 0;
+        virtual e8util::vec3                    eval(e8util::vec3 const& i, e8util::vec3 const& n) const = 0;
+        virtual e8util::vec3                    emission(e8util::vec3 const& w, e8util::vec3 const& n) const = 0;
+        virtual e8util::vec3                    power() const = 0;
+        virtual std::unique_ptr<if_light>       copy() const override = 0;
+        virtual std::unique_ptr<if_light>       transform(e8util::mat44 const& trans) const override = 0;
 
         std::string             name() const;
         obj_type                interface() const override;
