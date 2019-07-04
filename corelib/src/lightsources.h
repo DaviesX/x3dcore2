@@ -14,8 +14,8 @@ public:
         if_light_sources();
         virtual ~if_light_sources() override;
 
-        void                            load(if_obj const* obj, e8util::mat44 const& trans) override;
-        void                            unload(if_obj const* obj) override;
+        void                            load(if_obj const& obj, e8util::mat44 const& trans) override;
+        void                            unload(if_obj const& obj) override;
         obj_protocol                    support() const override;
         virtual void                    commit() override = 0;
         virtual if_light const*         sample_light(e8util::rng& rng, float& pdf) const = 0;

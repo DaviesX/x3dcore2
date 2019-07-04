@@ -10,17 +10,17 @@ e8::if_light_sources::~if_light_sources()
 }
 
 void
-e8::if_light_sources::load(if_obj const* obj, e8util::mat44 const& trans)
+e8::if_light_sources::load(if_obj const& obj, e8util::mat44 const& trans)
 {
-        if_light const* light = static_cast<if_light const*>(obj);
-        m_lights.insert(std::make_pair(obj->id(),
-                                       light->transform(trans)));
+        if_light const& light = static_cast<if_light const&>(obj);
+        m_lights.insert(std::make_pair(obj.id(),
+                                       light.transform(trans)));
 }
 
 void
-e8::if_light_sources::unload(if_obj const* obj)
+e8::if_light_sources::unload(if_obj const& obj)
 {
-        auto it = m_lights.find(obj->id());
+        auto it = m_lights.find(obj.id());
         if (it != m_lights.end()) {
                 m_lights.erase(it);
         }

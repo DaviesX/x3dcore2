@@ -53,7 +53,6 @@ e8::if_obj::if_obj():
 
 e8::if_obj::if_obj(obj_id_t id):
         m_id(id),
-        m_parent(nullptr),
         m_dirty(true)
 {
 }
@@ -128,11 +127,10 @@ e8::if_obj::dirty() const
 }
 
 bool
-e8::if_obj::add_child(if_obj* child)
+e8::if_obj::add_child(std::shared_ptr<if_obj> const& child)
 {
         auto it = m_children.find(child);
         if (it == m_children.end()) {
-                child->m_parent = this;
                 m_children.insert(child);
                 return true;
         } else {
@@ -141,11 +139,10 @@ e8::if_obj::add_child(if_obj* child)
 }
 
 bool
-e8::if_obj::remove_child(if_obj* child)
+e8::if_obj::remove_child(std::shared_ptr<if_obj> const& child)
 {
         auto it = m_children.find(child);
         if (it != m_children.end()) {
-                child->m_parent = nullptr;
                 m_children.erase(it);
                 return true;
         } else {
@@ -158,15 +155,15 @@ std::vector<e8::if_obj*>
 e8::if_obj::get_children(obj_protocol const& interface_type) const
 {
         std::vector<e8::if_obj*> result;
-        for (if_obj* obj: m_children) {
+        for (std::shared_ptr<if_obj> const& obj: m_children) {
                 if (obj->protocol() == interface_type) {
-                        result.push_back(obj);
+                        result.push_back(obj.get());
                 }
         }
         return result;
 }
 
-std::set<e8::if_obj*>
+std::set<std::shared_ptr<e8::if_obj>>
 e8::if_obj::get_children() const
 {
         return m_children;

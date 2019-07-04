@@ -32,7 +32,7 @@ test::test_path_space::run() const
         e8::bvh_path_space_layout* scene = static_cast<e8::bvh_path_space_layout*>(
                                 pipeline.
                                 objdb().
-                                manager_for(e8::obj_protocol::obj_protocol_geometry));
+                                manager_of(e8::obj_protocol::obj_protocol_geometry));
         std::cout << "max_depth: " << scene->max_depth() << std::endl;
         std::cout << "avg_depth: " << scene->avg_depth() << std::endl;
         std::cout << "dev_depth: " << scene->dev_depth() << std::endl;

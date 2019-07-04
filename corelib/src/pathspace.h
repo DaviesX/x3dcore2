@@ -52,9 +52,9 @@ public:
 //        void                                    bind(if_geometry const* geometry, if_light const* light);
         e8util::aabb                            aabb() const;
 
-        void                                    load(if_obj const* obj, e8util::mat44 const& trans) override;
+        void                                    load(if_obj const& obj, e8util::mat44 const& trans) override;
         obj_protocol                            support() const override;
-        void                                    unload(if_obj const* obj) override;
+        void                                    unload(if_obj const& obj) override;
 protected:
         struct binded_geometry
         {

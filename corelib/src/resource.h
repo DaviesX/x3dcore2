@@ -28,8 +28,8 @@ class if_resource
 public:
         if_resource();
         virtual ~if_resource();
-        virtual std::vector<e8::if_obj*>                load_roots();
-        virtual void                                    save_roots(std::vector<e8::if_obj*> const& roots);
+        virtual std::vector<std::shared_ptr<e8::if_obj>>        load_roots();
+        virtual void                                            save_roots(std::vector<std::shared_ptr<e8::if_obj>> const& roots);
 };
 
 class wavefront_obj: public if_resource
@@ -38,10 +38,10 @@ public:
         wavefront_obj(std::string const& location);
         ~wavefront_obj() override;
 
-        std::vector<e8::if_obj*>        load_roots() override;
-        void                            save_roots(std::vector<e8::if_obj*> const& roots) override;
-        e8::if_geometry*                load_geometry() const;
-        bool                            save_geometry(e8::if_geometry const* geo);
+        std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
+        void                                            save_roots(std::vector<std::shared_ptr<e8::if_obj>> const& roots) override;
+        std::shared_ptr<e8::if_geometry>                load_geometry() const;
+        bool                                            save_geometry(e8::if_geometry const* geo);
 private:
         std::string     m_location;
 };
@@ -50,13 +50,13 @@ class cornell_scene: public if_resource
 {
 public:
         cornell_scene();
-        std::vector<e8::if_obj*>        load_roots() override;
+        std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
 
-        std::vector<e8::if_geometry*>   load_geometries() const;
-        std::vector<e8::if_material*>   load_materials() const;
-        std::vector<e8::if_light*>      load_lights() const;
-        std::vector<e8::if_light*>      load_virtual_lights() const;
-        e8::if_camera*                  load_camera() const;
+        std::vector<std::shared_ptr<e8::if_geometry>>   load_geometries() const;
+        std::vector<std::shared_ptr<e8::if_material>>   load_materials() const;
+        std::vector<std::shared_ptr<e8::if_light>>      load_lights() const;
+        std::vector<std::shared_ptr<e8::if_light>>      load_virtual_lights() const;
+        std::shared_ptr<e8::if_camera>                  load_camera() const;
 };
 
 class gltf_scene_internal;
@@ -95,15 +95,13 @@ public:
         gltf_scene(std::string const& location);
         ~gltf_scene() override;
 
-        std::vector<e8::if_geometry*>   load_geometries() const;
-        std::vector<e8::if_material*>   load_materials() const;
-        std::vector<e8::if_light*>      load_lights() const;
-        std::vector<e8::if_light*>      load_virtual_lights() const;
-        e8::if_camera*                  load_camera() const;
+        std::vector<std::shared_ptr<e8::if_material>>   load_materials() const;
+        std::vector<std::shared_ptr<e8::if_light>>      load_lights() const;
+        std::vector<std::shared_ptr<e8::if_light>>      load_virtual_lights() const;
 
-        std::vector<e8::if_obj*>        load_roots() override;
+        std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
 private:
-        gltf_scene_internal*    m_pimpl;
+        std::unique_ptr<gltf_scene_internal>            m_pimpl;
 };
 
 

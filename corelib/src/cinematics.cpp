@@ -11,16 +11,16 @@ e8::if_cinematics::~if_cinematics()
 }
 
 void
-e8::if_cinematics::load(if_obj const* obj, e8util::mat44 const& trans)
+e8::if_cinematics::load(if_obj const& obj, e8util::mat44 const& trans)
 {
-        if_camera const* cam = static_cast<if_camera const*>(obj);
-        m_cams[obj->id()] = cam->transform(trans);
+        if_camera const& cam = static_cast<if_camera const&>(obj);
+        m_cams[obj.id()] = cam.transform(trans);
 }
 
 void
-e8::if_cinematics::unload(if_obj const* obj)
+e8::if_cinematics::unload(if_obj const& obj)
 {
-        auto it = m_cams.find(obj->id());
+        auto it = m_cams.find(obj.id());
         if (it != m_cams.end()) {
                 m_cams.erase(it);
         }

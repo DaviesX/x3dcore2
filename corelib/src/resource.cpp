@@ -45,14 +45,14 @@ e8util::if_resource::~if_resource()
 {
 }
 
-std::vector<e8::if_obj*>
+std::vector<std::shared_ptr<e8::if_obj>>
 e8util::if_resource::load_roots()
 {
         throw std::string("resource doesn't support load_roots");
 }
 
 void
-e8util::if_resource::save_roots(std::vector<e8::if_obj*> const& /* roots */)
+e8util::if_resource::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const& /* roots */)
 {
         throw std::string("resource doesn't support save_roots");
 }
@@ -63,10 +63,10 @@ e8util::cornell_scene::cornell_scene()
 {
 }
 
-std::vector<e8::if_geometry*>
+std::vector<std::shared_ptr<e8::if_geometry>>
 e8util::cornell_scene::load_geometries() const
 {
-        std::vector<e8::if_geometry*> geometries(8);
+        std::vector<std::shared_ptr<e8::if_geometry>> geometries(8);
         geometries[0] = wavefront_obj("res/cornellbox/left_wall.obj").load_geometry();
         geometries[1] = wavefront_obj("res/cornellbox/right_wall.obj").load_geometry();
         geometries[2] = wavefront_obj("res/cornellbox/ceiling.obj").load_geometry();
@@ -78,32 +78,32 @@ e8util::cornell_scene::load_geometries() const
         return geometries;
 }
 
-std::vector<e8::if_material*>
+std::vector<std::shared_ptr<e8::if_material>>
 e8util::cornell_scene::load_materials() const
 {
-        e8::if_material* white = new e8::oren_nayar(e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
-        e8::if_material* red = new e8::oren_nayar(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
-        e8::if_material* green = new e8::oren_nayar(e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
-        e8::if_material* glossy = new e8::cook_torr(e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
-        e8::if_material* light = new e8::oren_nayar(e8util::vec3({0, 0, 0}), 0.078f);
-        return std::vector<e8::if_material*>({red, green, white, white, white, glossy, white, light});
+        std::shared_ptr<e8::if_material> white = std::make_shared<e8::oren_nayar>(e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
+        std::shared_ptr<e8::if_material> red = std::make_shared<e8::oren_nayar>(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
+        std::shared_ptr<e8::if_material> green = std::make_shared<e8::oren_nayar>(e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
+        std::shared_ptr<e8::if_material> glossy = std::make_shared<e8::cook_torr>(e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
+        std::shared_ptr<e8::if_material> light = std::make_shared<e8::oren_nayar>(e8util::vec3({0, 0, 0}), 0.078f);
+        return std::vector<std::shared_ptr<e8::if_material>>({red, green, white, white, white, glossy, white, light});
 }
 
-std::vector<e8::if_light*>
+std::vector<std::shared_ptr<e8::if_light>>
 e8util::cornell_scene::load_lights() const
 {
-        return std::vector<e8::if_light*>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                                                  new e8::area_light(*wavefront_obj("res/cornellbox/light.obj").load_geometry(),
+        return std::vector<std::shared_ptr<e8::if_light>>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+                                                  std::make_shared<e8::area_light>(*wavefront_obj("res/cornellbox/light.obj").load_geometry(),
                                                               e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)});
 }
 
-std::vector<e8::if_light*>
+std::vector<std::shared_ptr<e8::if_light>>
 e8util::cornell_scene::load_virtual_lights() const
 {
-        return std::vector<e8::if_light*>();
+        return std::vector<std::shared_ptr<e8::if_light>>();
 }
 
-e8::if_camera*
+std::shared_ptr<e8::if_camera>
 e8util::cornell_scene::load_camera() const
 {
         /*return new e8::pinhole_camera(e8util::vec3({0.0f, -3.4f, 0.795f}),
@@ -111,21 +111,22 @@ e8util::cornell_scene::load_camera() const
                                       0.032f, 0.035f, 4.0f/3.0f);*/
         e8util::mat44 trans = e8util::mat44_translate({0.0f, 0.795f, 3.4f});
         e8util::mat44 rot = e8util::mat44_rotate(0.0f, {0, 0, 1});
-        e8::if_camera* cam = new e8::pinhole_camera("cornell_cam", 0.032f, 0.035f, 4.0f/3.0f);
+        std::shared_ptr<e8::if_camera> cam =
+                        std::make_shared<e8::pinhole_camera>("cornell_cam", 0.032f, 0.035f, 4.0f/3.0f);
         cam->init_blueprint({"rotation", "translation"});
         cam->update_stage(std::make_pair("rotation", rot));
         cam->update_stage(std::make_pair("translation", trans));
         return cam;
 }
 
-std::vector<e8::if_obj*>
+std::vector<std::shared_ptr<e8::if_obj>>
 e8util::cornell_scene::load_roots()
 {
-        std::vector<e8::if_geometry*> geometries = load_geometries();
-        std::vector<e8::if_material*> mats = load_materials();
-        std::vector<e8::if_light*> obj_lights = load_lights();
-        e8::if_camera* cams = load_camera();
-        std::vector<e8::if_obj*> roots;
+        std::vector<std::shared_ptr<e8::if_geometry>> geometries = load_geometries();
+        std::vector<std::shared_ptr<e8::if_material>> mats = load_materials();
+        std::vector<std::shared_ptr<e8::if_light>> obj_lights = load_lights();
+        std::shared_ptr<e8::if_camera> cams = load_camera();
+        std::vector<std::shared_ptr<e8::if_obj>> roots;
         roots.push_back(cams);
         for (unsigned i = 0; i < geometries.size(); i ++) {
                 geometries[i]->add_child(mats[i]);
@@ -134,7 +135,7 @@ e8util::cornell_scene::load_roots()
                 }
                 roots.push_back(geometries[i]);
         }
-        std::vector<e8::if_light*> virtual_lights = load_virtual_lights();
+        std::vector<std::shared_ptr<e8::if_light>> virtual_lights = load_virtual_lights();
         for (unsigned i = 0; i < virtual_lights.size(); i ++) {
                 roots.push_back(virtual_lights[i]);
         }
@@ -163,7 +164,7 @@ split(std::string const& s, char delim)
         return parts;
 }
 
-e8::if_geometry*
+std::shared_ptr<e8::if_geometry>
 e8util::wavefront_obj::load_geometry() const
 {
         std::ifstream file(m_location);
@@ -261,7 +262,7 @@ e8util::wavefront_obj::load_geometry() const
                 throw std::string("The mesh doesn't contain vertex data");
 
         // Fill up the mesh.
-        e8::trimesh* mesh = new e8::trimesh();
+        std::shared_ptr<e8::trimesh> mesh = std::make_shared<e8::trimesh>();
 
         // Vertices are already in the right place.
         mesh->vertices(vertices);
@@ -329,14 +330,14 @@ e8util::wavefront_obj::save_geometry(e8::if_geometry const* geo)
         return true;
 }
 
-std::vector<e8::if_obj*>
+std::vector<std::shared_ptr<e8::if_obj>>
 e8util::wavefront_obj::load_roots()
 {
-        return std::vector<e8::if_obj*> { load_geometry() };
+        return std::vector<std::shared_ptr<e8::if_obj>> { load_geometry() };
 }
 
 void
-e8util::wavefront_obj::save_roots(std::vector<e8::if_obj*> const& roots)
+e8util::wavefront_obj::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const& roots)
 {
         e8::visit_all_filtered(roots.begin(),
                                roots.end(),
@@ -425,13 +426,12 @@ e8util::gltf_scene_internal::get_model() const
 }
 
 e8util::gltf_scene::gltf_scene(std::string const& location):
-        m_pimpl(new gltf_scene_internal(location))
+        m_pimpl(std::make_unique<gltf_scene_internal>(location))
 {
 }
 
 e8util::gltf_scene::~gltf_scene()
 {
-        delete m_pimpl;
 }
 
 
@@ -486,11 +486,10 @@ gltf_vec2_get(unsigned char const* idx_data, unsigned stride, unsigned i)
 }
 
 
-static e8::if_geometry*
+static std::shared_ptr<e8::if_geometry>
 load_geometry(tinygltf::Mesh const& mesh, tinygltf::Model const& model)
 {
-
-        e8::trimesh* geo = new e8::trimesh();
+        std::shared_ptr<e8::trimesh> geo = std::make_shared<e8::trimesh>();
 
         std::vector<e8::triangle> tris;
         std::vector<e8util::vec3> verts;
@@ -549,19 +548,15 @@ load_geometry(tinygltf::Mesh const& mesh, tinygltf::Model const& model)
         return geo;
 }
 
-std::vector<e8::if_geometry*>
-e8util::gltf_scene::load_geometries() const
-{
-        return std::vector<e8::if_geometry*>();
-}
 
-std::vector<e8::if_material*>
+std::vector<std::shared_ptr<e8::if_material>>
 e8util::gltf_scene::load_materials() const
 {
-        std::vector<e8::if_material*> mats;
+        std::vector<std::shared_ptr<e8::if_material>> mats;
 
         // TODO: cannot implement material loading with current e8::materials.
-        e8::if_material* mat = new e8::oren_nayar(e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
+        std::shared_ptr<e8::if_material> mat =
+                        std::make_shared<e8::oren_nayar>(e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
 
         tinygltf::Model const& model = m_pimpl->get_model();
         for (size_t i = 0; i < model.materials.size(); i ++) {
@@ -571,43 +566,38 @@ e8util::gltf_scene::load_materials() const
                 }
         }
 
-        std::vector<e8::if_material*> geo_mats;
+        std::vector<std::shared_ptr<e8::if_material>> geo_mats;
         for (size_t i = 0; i < model.meshes.size(); i ++) {
                 geo_mats.push_back(mat);
         }
         return geo_mats;
 }
 
-std::vector<e8::if_light*>
+std::vector<std::shared_ptr<e8::if_light>>
 e8util::gltf_scene::load_lights() const
 {
         // Lights are not handled by glTF 2.0 as of now.
-        return std::vector<e8::if_light*>();
+        return std::vector<std::shared_ptr<e8::if_light>>();
 }
 
-std::vector<e8::if_light*>
+std::vector<std::shared_ptr<e8::if_light>>
 e8util::gltf_scene::load_virtual_lights() const
 {
         // Lights are not handled by glTF 2.0 as of now.
         // return as least one default light.
-        return std::vector<e8::if_light*>{new e8::sky_light(e8util::vec3{.529f, .808f, .922f})};
+        return std::vector<std::shared_ptr<e8::if_light>>{std::make_shared<e8::sky_light>(e8util::vec3{.529f, .808f, .922f})};
 }
 
-e8::if_camera*
-e8util::gltf_scene::load_camera() const
-{
-        return nullptr;
-}
-
-static e8::if_camera*
+static std::shared_ptr<e8::if_camera>
 load_camera(tinygltf::Camera const& gltfcam)
 {
         if (gltfcam.type == "perspective") {
                 // gltfcam.perspective.
-                e8::pinhole_camera* cam = new e8::pinhole_camera(gltfcam.name,
-                                                                 static_cast<float>(2*gltfcam.perspective.znear*std::tan(gltfcam.perspective.yfov)),
-                                                                 static_cast<float>(gltfcam.perspective.znear/std::tan(gltfcam.perspective.yfov)),
-                                                                 static_cast<float>(gltfcam.perspective.aspectRatio));
+                std::shared_ptr<e8::pinhole_camera> cam =
+                                std::make_shared<e8::pinhole_camera>(gltfcam.name,
+                                                                     static_cast<float>(2*gltfcam.perspective.znear*std::tan(gltfcam.perspective.yfov)),
+                                                                     static_cast<float>(gltfcam.perspective.znear/std::tan(gltfcam.perspective.yfov)),
+                                                                     static_cast<float>(gltfcam.perspective.aspectRatio));
                 return cam;
         } else if (gltfcam.type == "orthographic") {
                 // TODO: need to support orthographic camera.
@@ -617,11 +607,11 @@ load_camera(tinygltf::Camera const& gltfcam)
         }
 }
 
-static e8::if_obj*
+static std::shared_ptr<e8::if_obj>
 load_node(tinygltf::Node const& node, tinygltf::Model const& model)
 {
         // Create current node with metadata loaded in.
-        e8::if_obj* node_obj = nullptr;
+        std::shared_ptr<e8::if_obj> node_obj = nullptr;
         if (node.mesh >= 0) {
                 node_obj = load_geometry(model.meshes[static_cast<unsigned>(node.mesh)], model);
         } else if (node.camera >= 0) {
@@ -629,15 +619,20 @@ load_node(tinygltf::Node const& node, tinygltf::Model const& model)
         }
 
         if (node_obj == nullptr) {
-                node_obj = new e8::null_obj();
+                node_obj = std::make_shared<e8::null_obj>();
         }
 
         // Load in transformation.
         e8util::mat44 transform;
-        for (unsigned i = 0; i < 2; i ++) {
-                for (unsigned j = 0; j < 2; j ++) {
-                        transform(j, i) = static_cast<float>(node.matrix[j + i*2]);
+        if (!node.matrix.empty()) {
+                assert(node.matrix.size() == 16);
+                for (unsigned i = 0; i < 4; i ++) {
+                        for (unsigned j = 0; j < 4; j ++) {
+                                transform(j, i) = static_cast<float>(node.matrix[j + i*2]);
+                        }
                 }
+        } else {
+                transform = e8util::mat44_scale(1.0f);
         }
         node_obj->init_blueprint(std::vector<e8::transform_stage_name_t>{"GLTF_DEFAULT"});
         node_obj->update_stage(std::make_pair("GLTF_DEFAULT", transform));
@@ -649,10 +644,10 @@ load_node(tinygltf::Node const& node, tinygltf::Model const& model)
         return node_obj;
 }
 
-std::vector<e8::if_obj*>
+std::vector<std::shared_ptr<e8::if_obj>>
 e8util::gltf_scene::load_roots()
 {
-        std::vector<e8::if_obj*> roots;
+        std::vector<std::shared_ptr<e8::if_obj>> roots;
         tinygltf::Model model = m_pimpl->get_model();
         std::vector<tinygltf::Node> nodes = model.nodes;
         if (!model.scenes.empty()) {
@@ -667,7 +662,7 @@ e8util::gltf_scene::load_roots()
                                roots.end(),
                                [] (e8::if_obj* obj) {
                                 if (obj->get_children(e8::obj_protocol::obj_protocol_material).empty()) {
-                                        obj->add_child(new e8::mat_fail_safe("gltf_fail_safe"));
+                                        obj->add_child(std::make_shared<e8::mat_fail_safe>("gltf_fail_safe"));
                                 }
                                },
                                std::set<e8::obj_protocol> { e8::obj_protocol::obj_protocol_geometry });

@@ -18,9 +18,9 @@ public:
 
         void                    register_manager(std::unique_ptr<if_obj_manager> mgr);
         void                    unregister_manager_for(obj_protocol type);
-        if_obj_manager*         manager_for(obj_protocol type) const;
-        if_obj*                 manage_root(if_obj* root);
-        std::vector<if_obj*>    manage_roots(std::vector<if_obj*> const& roots);
+        if_obj_manager*         manager_of(obj_protocol type) const;
+        if_obj*                 manage_root(std::shared_ptr<if_obj> const& root);
+        std::vector<if_obj*>    manage_roots(std::vector<std::shared_ptr<if_obj>> const& roots);
         void                    push_updates();
         void                    clear();
 
@@ -28,10 +28,9 @@ private:
         void                    push_updates(if_obj* obj,
                                              e8util::mat44 const& global_trans,
                                              bool is_dirty_anyway);
-        void                    clear(if_obj* obj);
 
-        std::set<if_obj*>                                       m_roots;
-        std::map<obj_protocol, std::unique_ptr<if_obj_manager>>     m_mgrs;
+        std::set<std::shared_ptr<if_obj>>                       m_roots;
+        std::map<obj_protocol, std::unique_ptr<if_obj_manager>> m_mgrs;
 };
 
 }

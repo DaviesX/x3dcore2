@@ -40,9 +40,9 @@ public:
         if_obj_manager();
         virtual ~if_obj_manager();
 
-        virtual void                    load(if_obj const* obj, e8util::mat44 const& trans) = 0;
-        virtual void                    unload(if_obj const* obj) = 0;
-        virtual obj_protocol                support() const = 0;
+        virtual void                    load(if_obj const& obj, e8util::mat44 const& trans) = 0;
+        virtual void                    unload(if_obj const& obj) = 0;
+        virtual obj_protocol            support() const = 0;
         virtual void                    commit() = 0;
 };
 
@@ -57,31 +57,30 @@ class if_obj
 public:
         virtual ~if_obj();
 
-        virtual obj_protocol                protocol() const = 0;
+        virtual obj_protocol                    protocol() const = 0;
 
-        obj_id_t                        id() const;
-        bool                            dirty() const;
+        obj_id_t                                id() const;
+        bool                                    dirty() const;
 
-        void                            init_blueprint(std::vector<transform_stage_name_t> const& stages);
-        bool                            update_stage(transform_stage_t const& stage);
-        e8util::mat44                   blueprint_to_transform() const;
+        void                                    init_blueprint(std::vector<transform_stage_name_t> const& stages);
+        bool                                    update_stage(transform_stage_t const& stage);
+        e8util::mat44                           blueprint_to_transform() const;
 
-        bool                            add_child(if_obj* child);
-        bool                            remove_child(if_obj* child);
-        std::vector<if_obj*>            get_children(obj_protocol const& interface_type) const;
-        std::set<if_obj*>               get_children() const;
+        bool                                    add_child(std::shared_ptr<if_obj> const& child);
+        bool                                    remove_child(std::shared_ptr<if_obj> const& child);
+        std::vector<if_obj*>                    get_children(obj_protocol const& interface_type) const;
+        std::set<std::shared_ptr<if_obj>>       get_children() const;
 protected:
         if_obj();
         if_obj(obj_id_t id);
         void                    mark_dirty();
         void                    mark_clean();
 private:
-        obj_id_t                        m_id;
-        transform_blueprint_t           m_blueprint;
-        if_obj*                         m_parent;
-        std::set<if_obj*>               m_children;
-        bool                            m_dirty;
-        char                            m_padding[7];
+        obj_id_t                                m_id;
+        transform_blueprint_t                   m_blueprint;
+        std::set<std::shared_ptr<if_obj>>       m_children;
+        bool                                    m_dirty;
+        char                                    m_padding[7];
 };
 
 template<class T>
@@ -92,7 +91,7 @@ public:
         if_copyable_obj(obj_id_t id): if_obj(id) {}
         virtual ~if_copyable_obj() {}
 
-        virtual obj_protocol                protocol() const override = 0;
+        virtual obj_protocol            protocol() const override = 0;
         virtual std::unique_ptr<T>      copy() const = 0;
 };
 
@@ -110,7 +109,7 @@ public:
         if_operable_obj(obj_id_t id): if_copyable_obj<T>(id) {}
         virtual ~if_operable_obj() {}
 
-        virtual obj_protocol                protocol() const override = 0;
+        virtual obj_protocol            protocol() const override = 0;
         virtual std::unique_ptr<T>      copy() const override = 0;
         virtual std::unique_ptr<T>      transform(e8util::mat44 const& trans) const = 0;
 };
@@ -128,10 +127,10 @@ visit_filtered(if_obj* obj,
                std::set<obj_protocol> const& protocol = std::set<obj_protocol>())
 {
         op(obj);
-        for (if_obj* child: obj->get_children()) {
+        for (std::shared_ptr<if_obj> const& child: obj->get_children()) {
                 if (protocol.empty() ||
                     protocol.find(obj->protocol()) != protocol.end()) {
-                        visit_filtered(child, op, protocol);
+                        visit_filtered(child.get(), op, protocol);
                 }
         }
 }
@@ -147,7 +146,7 @@ visit_all_filtered(Iterator const& begin,
         for (Iterator it = begin; it != end; ++ it) {
                 if (protocol.empty() ||
                     protocol.find((*it)->protocol()) != protocol.end()) {
-                        visit_filtered(*it, op, protocol);
+                        visit_filtered((*it).get(), op, protocol);
                 }
         }
 }

@@ -12,7 +12,7 @@ class if_raster
 {
 public:
         if_raster();
-        ~if_raster();
+        virtual ~if_raster();
 
         virtual void                    set_viewport_dimension(unsigned x, unsigned y, unsigned w, unsigned h) = 0;
 

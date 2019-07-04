@@ -12,27 +12,6 @@ e8::if_path_space::~if_path_space()
 {
 }
 
-//void
-//e8::if_path_space::add_geometry(std::unique_ptr<if_geometry>& geometry)
-//{
-//        if (m_geometries.find(geometry->id()) == m_geometries.end())
-//                m_bound = m_bound + geometry->aabb();
-//        m_geometries.insert(std::make_pair(geometry->id(),
-//                                           if_path_space::binded_geometry(geometry, nullptr, nullptr)));
-//}
-
-//void
-//e8::if_path_space::bind(if_geometry const* geometry, if_material const* mat)
-//{
-//        m_geometries.at(geometry->id()).mat = mat;
-//}
-
-//void
-//e8::if_path_space::bind(if_geometry const* geometry, if_light const* light)
-//{
-//        m_geometries.at(geometry->id()).light = light;
-//}
-
 e8util::aabb
 e8::if_path_space::aabb() const
 {
@@ -40,11 +19,11 @@ e8::if_path_space::aabb() const
 }
 
 void
-e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
+e8::if_path_space::load(if_obj const& obj, e8util::mat44 const& trans)
 {
-        std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const*>(obj)->transform(trans);
-        std::vector<if_obj*> mats = obj->get_children(obj_protocol::obj_protocol_material);
-        std::vector<if_obj*> lights = obj->get_children(obj_protocol::obj_protocol_light);
+        std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const&>(obj).transform(trans);
+        std::vector<if_obj*> mats = obj.get_children(obj_protocol::obj_protocol_material);
+        std::vector<if_obj*> lights = obj.get_children(obj_protocol::obj_protocol_light);
 
         assert(mats.size() == 1);
         std::unique_ptr<if_material const> mat = static_cast<if_material*>(mats[0])->copy();
@@ -56,14 +35,14 @@ e8::if_path_space::load(if_obj const* obj, e8util::mat44 const& trans)
         }
 
         m_bound = m_bound + geo->aabb();
-        m_geometries.insert(std::make_pair(obj->id(),
+        m_geometries.insert(std::make_pair(obj.id(),
                                            binded_geometry(geo, mat, light)));
 }
 
 void
-e8::if_path_space::unload(if_obj const* obj)
+e8::if_path_space::unload(if_obj const& obj)
 {
-        auto it = m_geometries.find(obj->id());
+        auto it = m_geometries.find(obj.id());
         if (it != m_geometries.end()) {
                 m_geometries.erase(it);
         }

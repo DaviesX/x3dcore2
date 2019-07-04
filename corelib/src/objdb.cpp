@@ -32,7 +32,7 @@ e8::objdb::unregister_manager_for(obj_protocol type)
 }
 
 e8::if_obj_manager*
-e8::objdb::manager_for(obj_protocol type) const
+e8::objdb::manager_of(obj_protocol type) const
 {
         auto it = m_mgrs.find(type);
         if (it != m_mgrs.end()) {
@@ -43,16 +43,16 @@ e8::objdb::manager_for(obj_protocol type) const
 }
 
 e8::if_obj*
-e8::objdb::manage_root(if_obj* root)
+e8::objdb::manage_root(std::shared_ptr<if_obj> const& root)
 {
-        return *m_roots.insert(root).first;
+        return m_roots.insert(root).first->get();
 }
 
 std::vector<e8::if_obj*>
-e8::objdb::manage_roots(std::vector<if_obj*> const& roots)
+e8::objdb::manage_roots(std::vector<std::shared_ptr<if_obj>> const& roots)
 {
         std::vector<e8::if_obj*> result;
-        for (if_obj* obj: roots) {
+        for (std::shared_ptr<if_obj> const& obj: roots) {
                 result.push_back(manage_root(obj));
         }
         return result;
@@ -61,8 +61,8 @@ e8::objdb::manage_roots(std::vector<if_obj*> const& roots)
 void
 e8::objdb::push_updates()
 {
-        for (if_obj* obj: m_roots) {
-                push_updates(obj,
+        for (std::shared_ptr<if_obj> const& obj: m_roots) {
+                push_updates(obj.get(),
                              e8util::mat44_scale(1.0f),
                              obj->dirty());
         }
@@ -78,15 +78,15 @@ e8::objdb::push_updates(if_obj* obj,
 {
         e8util::mat44 const& modified_trans = obj->blueprint_to_transform()*global_trans;
         if (obj->dirty() || is_dirty_anyway) {
-                if_obj_manager* mgr = manager_for(obj->protocol());
+                if_obj_manager* mgr = manager_of(obj->protocol());
                 if (mgr != nullptr) {
-                        mgr->unload(obj);
-                        mgr->load(obj, modified_trans);
+                        mgr->unload(*obj);
+                        mgr->load(*obj, modified_trans);
                 }
         }
 
-        for (if_obj* child: obj->m_children) {
-                push_updates(child,
+        for (std::shared_ptr<if_obj> const& child: obj->m_children) {
+                push_updates(child.get(),
                              modified_trans,
                              obj->dirty() || is_dirty_anyway);
         }
@@ -95,23 +95,7 @@ e8::objdb::push_updates(if_obj* obj,
 }
 
 void
-e8::objdb::clear(if_obj* obj)
-{
-        for (if_obj* child: obj->m_children) {
-                clear(child);
-        }
-        if_obj_manager* mgr = manager_for(obj->protocol());
-        if (mgr != nullptr) {
-                mgr->unload(obj);
-        }
-        delete obj;
-}
-
-void
 e8::objdb::clear()
 {
-        for (if_obj* root: m_roots) {
-                clear(root);
-        }
         m_roots.clear();
 }

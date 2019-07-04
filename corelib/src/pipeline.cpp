@@ -100,11 +100,11 @@ e8::pt_render_pipeline::render_frame()
         m_com->resize(m_frame->width(), m_frame->height());
         m_objdb.push_updates();
         if_cinematics* cinematics = static_cast<if_cinematics*>(
-                                m_objdb.manager_for(obj_protocol::obj_protocol_camera));
+                                m_objdb.manager_of(obj_protocol::obj_protocol_camera));
         if_path_space* path_space = static_cast<if_path_space*>(
-                                m_objdb.manager_for(obj_protocol::obj_protocol_geometry));
+                                m_objdb.manager_of(obj_protocol::obj_protocol_geometry));
         if_light_sources* light_sources = static_cast<if_light_sources*>(
-                                m_objdb.manager_for(obj_protocol::obj_protocol_light));
+                                m_objdb.manager_of(obj_protocol::obj_protocol_light));
         if_camera* cur_cam = cinematics->main_cam();
         if (cur_cam != nullptr) {
                 for (unsigned i = 0; i < m_samps_per_frame; i ++) {

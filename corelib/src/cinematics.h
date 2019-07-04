@@ -18,8 +18,8 @@ public:
         virtual if_camera*      main_cam() const = 0;
         virtual void            commit() override = 0;
 
-        void                    load(if_obj const* obj, e8util::mat44 const& trans) override;
-        void                    unload(if_obj const* obj) override;
+        void                    load(if_obj const& obj, e8util::mat44 const& trans) override;
+        void                    unload(if_obj const& obj) override;
         obj_protocol            support() const override;
         std::string             name() const;
 
