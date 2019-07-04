@@ -51,12 +51,6 @@ class cornell_scene: public if_resource
 public:
         cornell_scene();
         std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
-
-        std::vector<std::shared_ptr<e8::if_geometry>>   load_geometries() const;
-        std::vector<std::shared_ptr<e8::if_material>>   load_materials() const;
-        std::vector<std::shared_ptr<e8::if_light>>      load_lights() const;
-        std::vector<std::shared_ptr<e8::if_light>>      load_virtual_lights() const;
-        std::shared_ptr<e8::if_camera>                  load_camera() const;
 };
 
 class gltf_scene_internal;

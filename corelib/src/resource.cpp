@@ -64,22 +64,22 @@ e8util::cornell_scene::cornell_scene()
 }
 
 std::vector<std::shared_ptr<e8::if_geometry>>
-e8util::cornell_scene::load_geometries() const
+static cornell_scene_load_geometries()
 {
         std::vector<std::shared_ptr<e8::if_geometry>> geometries(8);
-        geometries[0] = wavefront_obj("res/cornellbox/left_wall.obj").load_geometry();
-        geometries[1] = wavefront_obj("res/cornellbox/right_wall.obj").load_geometry();
-        geometries[2] = wavefront_obj("res/cornellbox/ceiling.obj").load_geometry();
-        geometries[3] = wavefront_obj("res/cornellbox/floor.obj").load_geometry();
-        geometries[4] = wavefront_obj("res/cornellbox/back_wall.obj").load_geometry();
-        geometries[5] = wavefront_obj("res/cornellbox/left_sphere.obj").load_geometry();
-        geometries[6] = wavefront_obj("res/cornellbox/right_sphere.obj").load_geometry();
-        geometries[7] = wavefront_obj("res/cornellbox/light.obj").load_geometry();
+        geometries[0] = e8util::wavefront_obj("res/cornellbox/left_wall.obj").load_geometry();
+        geometries[1] = e8util::wavefront_obj("res/cornellbox/right_wall.obj").load_geometry();
+        geometries[2] = e8util::wavefront_obj("res/cornellbox/ceiling.obj").load_geometry();
+        geometries[3] = e8util::wavefront_obj("res/cornellbox/floor.obj").load_geometry();
+        geometries[4] = e8util::wavefront_obj("res/cornellbox/back_wall.obj").load_geometry();
+        geometries[5] = e8util::wavefront_obj("res/cornellbox/left_sphere.obj").load_geometry();
+        geometries[6] = e8util::wavefront_obj("res/cornellbox/right_sphere.obj").load_geometry();
+        geometries[7] = e8util::wavefront_obj("res/cornellbox/light.obj").load_geometry();
         return geometries;
 }
 
 std::vector<std::shared_ptr<e8::if_material>>
-e8util::cornell_scene::load_materials() const
+static cornell_scene_load_materials()
 {
         std::shared_ptr<e8::if_material> white = std::make_shared<e8::oren_nayar>(e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
         std::shared_ptr<e8::if_material> red = std::make_shared<e8::oren_nayar>(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
@@ -90,21 +90,29 @@ e8util::cornell_scene::load_materials() const
 }
 
 std::vector<std::shared_ptr<e8::if_light>>
-e8util::cornell_scene::load_lights() const
+static cornell_scene_load_lights(e8::if_geometry const& light_geo)
 {
-        return std::vector<std::shared_ptr<e8::if_light>>({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                                                  std::make_shared<e8::area_light>(*wavefront_obj("res/cornellbox/light.obj").load_geometry(),
-                                                              e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)});
+        return std::vector<std::shared_ptr<e8::if_light>>({nullptr,
+                                                           nullptr,
+                                                           nullptr,
+                                                           nullptr,
+                                                           nullptr,
+                                                           nullptr,
+                                                           nullptr,
+                                                         std::make_shared<e8::area_light>(
+                                                           light_geo,
+                                                           e8util::vec3({0.911f, 0.660f, 0.345f})*15.0f)
+                                                          });
 }
 
 std::vector<std::shared_ptr<e8::if_light>>
-e8util::cornell_scene::load_virtual_lights() const
+static cornell_scene_load_virtual_lights()
 {
         return std::vector<std::shared_ptr<e8::if_light>>();
 }
 
 std::shared_ptr<e8::if_camera>
-e8util::cornell_scene::load_camera() const
+static cornell_scene_load_camera()
 {
         /*return new e8::pinhole_camera(e8util::vec3({0.0f, -3.4f, 0.795f}),
                                       e8util::mat44_rotate(M_PI/2.0f, e8util::vec3({1, 0, 0})),
@@ -122,10 +130,10 @@ e8util::cornell_scene::load_camera() const
 std::vector<std::shared_ptr<e8::if_obj>>
 e8util::cornell_scene::load_roots()
 {
-        std::vector<std::shared_ptr<e8::if_geometry>> geometries = load_geometries();
-        std::vector<std::shared_ptr<e8::if_material>> mats = load_materials();
-        std::vector<std::shared_ptr<e8::if_light>> obj_lights = load_lights();
-        std::shared_ptr<e8::if_camera> cams = load_camera();
+        std::vector<std::shared_ptr<e8::if_geometry>> geometries = cornell_scene_load_geometries();
+        std::vector<std::shared_ptr<e8::if_material>> mats = cornell_scene_load_materials();
+        std::vector<std::shared_ptr<e8::if_light>> obj_lights = cornell_scene_load_lights(*geometries[7]);
+        std::shared_ptr<e8::if_camera> cams = cornell_scene_load_camera();
         std::vector<std::shared_ptr<e8::if_obj>> roots;
         roots.push_back(cams);
         for (unsigned i = 0; i < geometries.size(); i ++) {
@@ -135,7 +143,7 @@ e8util::cornell_scene::load_roots()
                 }
                 roots.push_back(geometries[i]);
         }
-        std::vector<std::shared_ptr<e8::if_light>> virtual_lights = load_virtual_lights();
+        std::vector<std::shared_ptr<e8::if_light>> virtual_lights = cornell_scene_load_virtual_lights();
         for (unsigned i = 0; i < virtual_lights.size(); i ++) {
                 roots.push_back(virtual_lights[i]);
         }
