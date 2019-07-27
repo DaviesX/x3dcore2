@@ -18,7 +18,7 @@ test::test_bidirect_mis_renderer::run() const
         unsigned const width = 800;
         unsigned const height = 600;
 
-        e8::img_file_frame img("test_bidirect.png", width, height);
+        e8::img_file_frame img("test_bidirect_mis.png", width, height);
         e8::pt_render_pipeline pipeline(&img);
 
         e8util::flex_config config = pipeline.config_protocol();

@@ -108,10 +108,20 @@ public:
                                                if_light_sources const& light_sources,
                                                unsigned n) const override;
 protected:
+        /**
+         * @brief The sampled_pathlet struct
+         * Element of the smallest parition of a path.
+         */
         struct sampled_pathlet
         {
+                // The path vector.
                 e8util::vec3 o;
+
+                // The vertex to anchor the vector in space.
+                // Note that, the end of the vector is anchored rather than the beginning.
                 e8::intersect_info vert;
+
+                // The density which this pathlet is being selected, conditioned on all previous pathlets.
                 float dens;
 
                 sampled_pathlet()
@@ -126,8 +136,19 @@ protected:
                         dens(dens)
                 {
                 }
+
+                sampled_pathlet(sampled_pathlet const& other) = default;
         };
 
+        /**
+         * @brief sample_path sample a path x conditioned on x0 = r0 and max_depth.
+         * @param rng random number generator.
+         * @param sampled_path result, path sample.
+         * @param r0 the bootstrap path to condition on.
+         * @param dens0 the density of the pathlet r0.
+         * @param path_space the path space to sample from.
+         * @param max_depth maximum path length condition.
+         */
         unsigned                        sample_path(e8util::rng& rng,
                                                     sampled_pathlet* sampled_path,
                                                     e8util::ray const& r0,
@@ -224,6 +245,15 @@ protected:
                                                             float pdf_light_p_dens,
                                                             if_light const& light,
                                                             if_path_space const& path_space) const;
+        e8util::vec3                    sample_all_subpaths_opti(sampled_pathlet const* cam_path,
+                                                                 unsigned cam_path_len,
+                                                                 sampled_pathlet const* light_path,
+                                                                 unsigned light_path_len,
+                                                                 e8util::vec3 const& light_p,
+                                                                 e8util::vec3 const& light_n,
+                                                                 float pdf_light_p_dens,
+                                                                 if_light const& light,
+                                                                 if_path_space const& path_space) const;
 private:
         static unsigned const           m_max_path_len = 4;
 };
