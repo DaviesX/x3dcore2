@@ -597,87 +597,90 @@ e8::bidirect_mis_pathtracer::sample_all_subpaths_opti(sampled_pathlet const* cam
                 return 0.0f;
         }
 
-        e8util::vec3 paritition_rad_sum;
+        e8util::vec3 rad;
 
         // sweep all path lengths and strategies by pairing camera and light subpaths.
         // no camera vertex generation, yet. both cam_plen, light_plen are one-offset path lengths.
         for (unsigned plen = 1; plen <= max_cam_path_len + max_light_path_len + 1; plen ++) {
-                unsigned cam_plen = plen - 1;
-                unsigned light_plen = 0;
+                unsigned cam_plen = std::min(plen - 1, max_cam_path_len);
+                unsigned light_plen = plen - 1 - cam_plen;
 
-                while (light_plen < plen) {
-                        if (cam_plen <= max_cam_path_len &&
-                            light_plen <= max_light_path_len) {
-                                e8util::vec3 path_rad;
+                unsigned num_valid_samps = 0;
+                e8util::vec3 paritition_rad_sum;
+                while (light_plen < plen && light_plen <= max_light_path_len) {
+                        e8util::vec3 path_rad;
 
-                                if (light_plen == 0 && cam_plen == 0) {
-                                        // We have only the connection path, if it exists, which connects
-                                        // one vertex from the camera and one vertex from the light.
-                                        if (cam_path[0].vert.light != nullptr) {
-                                                path_rad = cam_path[0].vert.light->emission(-cam_path[0].o, cam_path[0].vert.normal);
-                                        }
-                                } else if (light_plen == 0) {
-                                        float dens = pdf_light_p_dens;          // direction was not chosen by random process.
-                                        e8util::vec3 transported_light_illum = transport_illum_source(light,
-                                                                                                      light_p,
-                                                                                                      light_n,
-                                                                                                      cam_path[cam_plen - 1].vert,
-                                                                                                      -cam_path[cam_plen - 1].o,
-                                                                                                      path_space)/dens;
+                        if (light_plen == 0 && cam_plen == 0) {
+                                // We have only the connection path, if it exists, which connects
+                                // one vertex from the camera and one vertex from the light.
+                                if (cam_path[0].vert.light != nullptr) {
+                                        path_rad = cam_path[0].vert.light->emission(-cam_path[0].o, cam_path[0].vert.normal);
+                                        num_valid_samps ++;
+                                }
+                        } else if (light_plen == 0) {
+                                float dens = pdf_light_p_dens;          // direction was not chosen by random process.
+                                e8util::vec3 transported_light_illum = transport_illum_source(light,
+                                                                                              light_p,
+                                                                                              light_n,
+                                                                                              cam_path[cam_plen - 1].vert,
+                                                                                              -cam_path[cam_plen - 1].o,
+                                                                                              path_space)/dens;
+
+                                // compute light transportation for camera subpath.
+                                path_rad = transport_subpath(transported_light_illum,
+                                                             cam_path[cam_plen - 1].o,
+                                                             cam_path[cam_plen - 1].dens,
+                                                             cam_path,
+                                                             cam_plen - 1,
+                                                             false)/cam_path[0].dens;
+                                num_valid_samps ++;
+                        } else if (cam_plen == 0) {
+                                path_rad = 0.0f;
+                        } else {
+                                e8util::vec3 join_path = cam_path[cam_plen - 1].vert.vertex - light_path[light_plen - 1].vert.vertex;
+                                float distance = join_path.norm();
+                                join_path = join_path/distance;
+                                e8util::ray join_ray(cam_path[cam_plen - 1].vert.vertex, join_path);
+                                float cos_w2 = light_path[light_plen].vert.normal.inner(-light_path[light_plen - 1].o);
+                                float cos_wo = light_path[light_plen].vert.normal.inner(join_path);
+                                float cos_wi = cam_path[light_plen - 1].vert.normal.inner(-join_path);
+                                float t;
+                                if (cos_wo > 0.0f &&
+                                                cos_wi > 0.0f &&
+                                                cos_w2 > 0.0f &&
+                                                !path_space.has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
+                                        // compute light transportation for light subpath.
+                                        e8util::vec3 light_illum = light.emission(light_path[0].o, light_n)/(light_path[0].dens*pdf_light_p_dens);
+                                        e8util::vec3 light_subpath_rad = transport_subpath(light_illum,
+                                                                                           join_path,
+                                                                                           1.0f,
+                                                                                           light_path,
+                                                                                           light_plen,
+                                                                                           true);
+
+                                        // transport light for the join path.
+                                        e8util::vec3 transported_light_illum = light_subpath_rad*cos_wo/(distance*distance);
 
                                         // compute light transportation for camera subpath.
                                         path_rad = transport_subpath(transported_light_illum,
-                                                                     cam_path[cam_plen - 1].o,
-                                                                     cam_path[cam_plen - 1].dens,
+                                                                     -join_path,
+                                                                     1.0f,
                                                                      cam_path,
-                                                                     cam_plen - 1,
+                                                                     cam_plen,
                                                                      false)/cam_path[0].dens;
-                                } else if (cam_plen == 0) {
-                                        path_rad = 0.0f;
-                                } else {
-                                        e8util::vec3 join_path = cam_path[cam_plen - 1].vert.vertex - light_path[light_plen - 1].vert.vertex;
-                                        float distance = join_path.norm();
-                                        join_path = join_path/distance;
-                                        e8util::ray join_ray(cam_path[cam_plen - 1].vert.vertex, join_path);
-                                        float cos_w2 = light_path[light_plen].vert.normal.inner(-light_path[light_plen - 1].o);
-                                        float cos_wo = light_path[light_plen].vert.normal.inner(join_path);
-                                        float cos_wi = cam_path[light_plen - 1].vert.normal.inner(-join_path);
-                                        float t;
-                                        if (cos_wo > 0.0f &&
-                                                        cos_wi > 0.0f &&
-                                                        cos_w2 > 0.0f &&
-                                                        !path_space.has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
-                                                // compute light transportation for light subpath.
-                                                e8util::vec3 light_illum = light.emission(light_path[0].o, light_n)/(light_path[0].dens*pdf_light_p_dens);
-                                                e8util::vec3 light_subpath_rad = transport_subpath(light_illum,
-                                                                                                   join_path,
-                                                                                                   1.0f,
-                                                                                                   light_path,
-                                                                                                   light_plen,
-                                                                                                   true);
-
-                                                // transport light for the join path.
-                                                e8util::vec3 transported_light_illum = light_subpath_rad*cos_wo/(distance*distance);
-
-                                                // compute light transportation for camera subpath.
-                                                path_rad = transport_subpath(transported_light_illum,
-                                                                             -join_path,
-                                                                             1.0f,
-                                                                             cam_path,
-                                                                             cam_plen,
-                                                                             false)/cam_path[0].dens;
-                                        }
+                                        num_valid_samps ++;
                                 }
-
-                                paritition_rad_sum += path_rad;
                         }
 
+                        paritition_rad_sum += path_rad;
                         light_plen ++;
                         cam_plen --;
                 }
-        }
 
-        return paritition_rad_sum/(max_cam_path_len + max_light_path_len + 1);
+                if (num_valid_samps > 0)
+                        rad += paritition_rad_sum/num_valid_samps;
+        }
+        return rad;
 }
 
 std::vector<e8util::vec3>
