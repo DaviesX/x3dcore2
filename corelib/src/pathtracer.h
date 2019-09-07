@@ -78,6 +78,17 @@ protected:
                                                                     float& density,
                                                                     e8::intersect_info const& target_vert,
                                                                     if_light_sources const& light_sources) const;
+        /**
+         * @brief transport_illum_source Connect a p_illum from the light source to the
+         * target_vertex, then compute the light transport of the connection.
+         * @param light The light source definition where p_illum is on.
+         * @param p_illum A spatial point on the light source.
+         * @param n_illum The normal at p_illum.
+         * @param target_vert The target where p_illum is connecting to.
+         * @param target_o_ray The reflected light ray at target_vert.
+         * @param path_space Path space container.
+         * @return The amount of radiance transported.
+         */
         e8util::vec3                            transport_illum_source(if_light const& light,
                                                                        e8util::vec3 const& p_illum,
                                                                        e8util::vec3 const& n_illum,
