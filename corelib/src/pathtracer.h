@@ -80,16 +80,16 @@ protected:
                                         e8::intersect_info const &target_vert,
                                         if_light_sources const &light_sources) const;
     /**
-         * @brief transport_illum_source Connect a p_illum from the light source to the
-         * target_vertex, then compute the light transport of the connection.
-         * @param light The light source definition where p_illum is on.
-         * @param p_illum A spatial point on the light source.
-         * @param n_illum The normal at p_illum.
-         * @param target_vert The target where p_illum is connecting to.
-         * @param target_o_ray The reflected light ray at target_vert.
-         * @param path_space Path space container.
-         * @return The amount of radiance transported.
-         */
+     * @brief transport_illum_source Connect a p_illum from the light source to the
+     * target_vertex, then compute the light transport of the connection.
+     * @param light The light source definition where p_illum is on.
+     * @param p_illum A spatial point on the light source.
+     * @param n_illum The normal at p_illum.
+     * @param target_vert The target where p_illum is connecting to.
+     * @param target_o_ray The reflected light ray at target_vert.
+     * @param path_space Path space container.
+     * @return The amount of radiance transported.
+     */
     e8util::vec3 transport_illum_source(if_light const &light,
                                         e8util::vec3 const &p_illum,
                                         e8util::vec3 const &n_illum,
@@ -122,9 +122,9 @@ public:
 
 protected:
     /**
-         * @brief The sampled_pathlet struct
-         * Element of the smallest parition of a path.
-         */
+     * @brief The sampled_pathlet struct
+     * Element of the smallest parition of a path.
+     */
     struct sampled_pathlet
     {
         // The path vector.
@@ -146,21 +146,40 @@ protected:
         sampled_pathlet(sampled_pathlet const &other) = default;
     };
 
+    class pahtlet_transporter
+    {
+    public:
+        pahtlet_transporter(sampled_pathlet const *path, unsigned len);
+    };
+
     /**
-         * @brief sample_path sample a path x conditioned on x0 = r0 and max_depth.
-         * @param rng random number generator.
-         * @param sampled_path result, path sample.
-         * @param r0 the bootstrap path to condition on.
-         * @param dens0 the density of the pathlet r0.
-         * @param path_space the path space to sample from.
-         * @param max_depth maximum path length condition.
-         */
+     * @brief sample_path Sample a path X conditioned on X0 = r0 and max_depth.
+     * @param rng Random number generator.
+     * @param sampled_path Result, path sample.
+     * @param r0 The bootstrap path to condition on.
+     * @param dens0 The density of the pathlet r0.
+     * @param path_space The path space to sample from.
+     * @param max_depth Maximum path length condition.
+     * @return Actual path length of the sampled_path. It may not be max_depth in the case when the
+     * light escapes out of the path_space during sampling.
+     */
     unsigned sample_path(e8util::rng &rng,
                          sampled_pathlet *sampled_path,
                          e8util::ray const &r0,
                          float dens0,
                          if_path_space const &path_space,
                          unsigned max_depth) const;
+
+    /**
+     * @brief transport_subpath Compute a light transport sample over the sampled_path.
+     * @param src_rad Source radiance to transport.
+     * @param appending_ray Append a pathlet vector to the ending of the sampled_path.
+     * @param appending_ray_dens The density of the appended pathlet.
+     * @param sampled_path The path sample to tranport light on.
+     * @param sub_path_len The length of sampled_path.
+     * @param is_forward The direction in which light is transported.
+     * @return The amount of radiance transported.
+     */
     e8util::vec3 transport_subpath(e8util::vec3 const &src_rad,
                                    e8util::vec3 const &appending_ray,
                                    float appending_ray_dens,
