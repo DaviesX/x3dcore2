@@ -3,18 +3,17 @@
 
 #include "test/test.h"
 
-namespace test
-{
+namespace test {
 
-class test_gltf_resource: public if_test
+class test_gltf_resource : public if_test
 {
 public:
-        test_gltf_resource();
-        ~test_gltf_resource() override;
+    test_gltf_resource();
+    ~test_gltf_resource() override;
 
-        void    run() const override;
+    void run() const override;
 };
 
-}
+} // namespace test
 
 #endif // TESTGLTFRESOURCE_H

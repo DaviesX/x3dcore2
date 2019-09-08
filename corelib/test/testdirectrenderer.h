@@ -3,19 +3,17 @@
 
 #include "test.h"
 
-namespace test
-{
+namespace test {
 
-class test_direct_renderer: public if_test
+class test_direct_renderer : public if_test
 {
 public:
-        test_direct_renderer();
-        ~test_direct_renderer();
+    test_direct_renderer();
+    ~test_direct_renderer();
 
-        void    run() const;
+    void run() const;
 };
 
-}
-
+} // namespace test
 
 #endif // TEST_DIRECT_RENDERER_H

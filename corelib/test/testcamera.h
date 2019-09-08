@@ -3,18 +3,17 @@
 
 #include "test.h"
 
-namespace test
-{
+namespace test {
 
-class test_camera: public if_test
+class test_camera : public if_test
 {
 public:
-        test_camera();
-        ~test_camera();
+    test_camera();
+    ~test_camera();
 
-        void    run() const;
+    void run() const;
 };
 
-}
+} // namespace test
 
 #endif // TEST_CAMERA_H

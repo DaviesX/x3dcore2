@@ -3,18 +3,17 @@
 
 #include "test.h"
 
-namespace test
-{
+namespace test {
 
-class test_unidirect_renderer: public if_test
+class test_unidirect_renderer : public if_test
 {
 public:
-        test_unidirect_renderer();
-        ~test_unidirect_renderer() override;
+    test_unidirect_renderer();
+    ~test_unidirect_renderer() override;
 
-        void    run() const override;
+    void run() const override;
 };
 
-}
+} // namespace test
 
 #endif // TESTUNIDIRECTRENDERER_H

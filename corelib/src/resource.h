@@ -1,56 +1,56 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
+#include "camera.h"
+#include "geometry.h"
+#include "light.h"
+#include "material.h"
+#include "obj.h"
+#include <exception>
 #include <string>
 #include <vector>
-#include <exception>
-#include "geometry.h"
-#include "material.h"
-#include "light.h"
-#include "camera.h"
-#include "obj.h"
 
+namespace e8util {
 
-namespace e8util
-{
-
-class res_io_exception: public std::exception
+class res_io_exception : public std::exception
 {
 public:
-        res_io_exception(std::string const& cause);
-        char const*     what() const noexcept override;
+    res_io_exception(std::string const &cause);
+    char const *what() const noexcept override;
+
 private:
-        std::string     m_cause;
+    std::string m_cause;
 };
 
 class if_resource
 {
 public:
-        if_resource();
-        virtual ~if_resource();
-        virtual std::vector<std::shared_ptr<e8::if_obj>>        load_roots();
-        virtual void                                            save_roots(std::vector<std::shared_ptr<e8::if_obj>> const& roots);
+    if_resource();
+    virtual ~if_resource();
+    virtual std::vector<std::shared_ptr<e8::if_obj>> load_roots();
+    virtual void save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots);
 };
 
-class wavefront_obj: public if_resource
+class wavefront_obj : public if_resource
 {
 public:
-        wavefront_obj(std::string const& location);
-        ~wavefront_obj() override;
+    wavefront_obj(std::string const &location);
+    ~wavefront_obj() override;
 
-        std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
-        void                                            save_roots(std::vector<std::shared_ptr<e8::if_obj>> const& roots) override;
-        std::shared_ptr<e8::if_geometry>                load_geometry() const;
-        bool                                            save_geometry(e8::if_geometry const* geo);
+    std::vector<std::shared_ptr<e8::if_obj>> load_roots() override;
+    void save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots) override;
+    std::shared_ptr<e8::if_geometry> load_geometry() const;
+    bool save_geometry(e8::if_geometry const *geo);
+
 private:
-        std::string     m_location;
+    std::string m_location;
 };
 
-class cornell_scene: public if_resource
+class cornell_scene : public if_resource
 {
 public:
-        cornell_scene();
-        std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
+    cornell_scene();
+    std::vector<std::shared_ptr<e8::if_obj>> load_roots() override;
 };
 
 class gltf_scene_internal;
@@ -83,22 +83,22 @@ class gltf_scene_internal;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class gltf_scene: public if_resource
+class gltf_scene : public if_resource
 {
 public:
-        gltf_scene(std::string const& location);
-        ~gltf_scene() override;
+    gltf_scene(std::string const &location);
+    ~gltf_scene() override;
 
-        std::vector<std::shared_ptr<e8::if_material>>   load_materials() const;
-        std::vector<std::shared_ptr<e8::if_light>>      load_lights() const;
-        std::vector<std::shared_ptr<e8::if_light>>      load_virtual_lights() const;
+    std::vector<std::shared_ptr<e8::if_material>> load_materials() const;
+    std::vector<std::shared_ptr<e8::if_light>> load_lights() const;
+    std::vector<std::shared_ptr<e8::if_light>> load_virtual_lights() const;
 
-        std::vector<std::shared_ptr<e8::if_obj>>        load_roots() override;
+    std::vector<std::shared_ptr<e8::if_obj>> load_roots() override;
+
 private:
-        std::unique_ptr<gltf_scene_internal>            m_pimpl;
+    std::unique_ptr<gltf_scene_internal> m_pimpl;
 };
 
-
-}
+} // namespace e8util
 
 #endif // RESOURCE_H

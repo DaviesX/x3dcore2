@@ -1,288 +1,240 @@
-#include <thread>
 #include "thread.h"
+#include <thread>
 
+e8util::if_task_storage::if_task_storage() : m_data_id(-1) {}
 
-e8util::if_task_storage::if_task_storage():
-        m_data_id(-1)
+e8util::if_task_storage::if_task_storage(data_id_t data_id) : m_data_id(data_id) {}
+
+e8util::if_task_storage::~if_task_storage() {}
+
+void e8util::if_task_storage::set_data_id(data_id_t id)
 {
+    m_data_id = id;
 }
 
-e8util::if_task_storage::if_task_storage(data_id_t data_id):
-        m_data_id(data_id)
+e8util::data_id_t e8util::if_task_storage::data_id() const
 {
+    return m_data_id;
 }
 
-e8util::if_task_storage::~if_task_storage()
+e8util::if_task::if_task(bool drop_on_completion) : m_drop_on_completion(drop_on_completion) {}
+
+e8util::if_task::~if_task() {}
+
+bool e8util::if_task::is_drop_on_completion() const
 {
+    return m_drop_on_completion;
 }
 
-void
-e8util::if_task_storage::set_data_id(data_id_t id)
+void e8util::if_task::assign_worker_id(int worker_id)
 {
-        m_data_id = id;
+    m_worker_id = worker_id;
 }
 
-e8util::data_id_t
-e8util::if_task_storage::data_id() const
+int e8util::if_task::worker_id() const
 {
-        return m_data_id;
+    return m_worker_id;
 }
 
-e8util::if_task::if_task(bool drop_on_completion):
-        m_drop_on_completion(drop_on_completion)
+e8util::task_info::task_info(tid_t tid, pthread_t thread, if_task *task, if_task_storage *storage)
+    : m_tid(tid), m_thread(thread), m_task(task), m_task_storage(storage)
+{}
+
+e8util::task_info::task_info() : task_info(0, 0, nullptr, nullptr) {}
+
+e8util::if_task *e8util::task_info::task() const
 {
+    return m_task;
 }
 
-e8util::if_task::~if_task()
+e8util::if_task_storage *e8util::task_info::task_storage() const
 {
+    return m_task_storage;
 }
 
-bool
-e8util::if_task::is_drop_on_completion() const
+unsigned e8util::cpu_core_count()
 {
-        return m_drop_on_completion;
+    return std::thread::hardware_concurrency();
 }
 
-void
-e8util::if_task::assign_worker_id(int worker_id)
+e8util::mutex_t e8util::mutex()
 {
-        m_worker_id = worker_id;
+    mutex_t mutex;
+    pthread_mutex_init(&mutex, nullptr);
+    return mutex;
 }
 
-int
-e8util::if_task::worker_id() const
+void e8util::destroy(mutex_t &mutex)
 {
-        return m_worker_id;
+    pthread_mutex_destroy(&mutex);
 }
 
-
-e8util::task_info::task_info(tid_t tid,
-                             pthread_t thread,
-                             if_task* task,
-                             if_task_storage* storage):
-        m_tid(tid),
-        m_thread(thread),
-        m_task(task),
-        m_task_storage(storage)
+void e8util::lock(mutex_t &mutex)
 {
+    pthread_mutex_lock(&mutex);
 }
 
-e8util::task_info::task_info():
-        task_info(0, 0, nullptr, nullptr)
+void e8util::unlock(mutex_t &mutex)
 {
-}
-
-e8util::if_task*
-e8util::task_info::task() const
-{
-        return m_task;
-}
-
-e8util::if_task_storage*
-e8util::task_info::task_storage() const
-{
-        return m_task_storage;
-}
-
-
-unsigned
-e8util::cpu_core_count()
-{
-        return std::thread::hardware_concurrency();
-}
-
-e8util::mutex_t
-e8util::mutex()
-{
-        mutex_t mutex;
-        pthread_mutex_init(&mutex, nullptr);
-        return mutex;
-}
-
-void
-e8util::destroy(mutex_t& mutex)
-{
-        pthread_mutex_destroy(&mutex);
-}
-
-void
-e8util::lock(mutex_t& mutex)
-{
-        pthread_mutex_lock(&mutex);
-}
-
-void
-e8util::unlock(mutex_t& mutex)
-{
-        pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
 }
 
 struct thread_worker_data
 {
-        thread_worker_data(e8util::if_task* task,
-                           e8util::if_task_storage* task_data):
-                task(task),
-                task_data(task_data)
-        {}
+    thread_worker_data(e8util::if_task *task, e8util::if_task_storage *task_data)
+        : task(task), task_data(task_data)
+    {}
 
-        ~thread_worker_data()
-        {
-        }
+    ~thread_worker_data() {}
 
-        e8util::if_task*                task;
-        e8util::if_task_storage*        task_data;
+    e8util::if_task *task;
+    e8util::if_task_storage *task_data;
 };
 
-static void*
-worker(void* p)
+static void *worker(void *p)
 {
-        thread_worker_data* data = static_cast<thread_worker_data*>(p);
+    thread_worker_data *data = static_cast<thread_worker_data *>(p);
 
-        data->task->run(nullptr);
-        delete data;
+    data->task->run(nullptr);
+    delete data;
 
-        pthread_exit(nullptr);
-        return nullptr;
+    pthread_exit(nullptr);
+    return nullptr;
 }
 
-e8util::task_info
-e8util::run(if_task* task, if_task_storage* task_data)
+e8util::task_info e8util::run(if_task *task, if_task_storage *task_data)
 {
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
 
-        task_info info(0, 0, task, task_data);
+    task_info info(0, 0, task, task_data);
 
-        task->assign_worker_id(-1);
+    task->assign_worker_id(-1);
 
-        thread_worker_data* thrdata = new thread_worker_data(task, task_data);
-        pthread_create(&info.m_thread, &attr, worker, thrdata);
-        return info;
+    thread_worker_data *thrdata = new thread_worker_data(task, task_data);
+    pthread_create(&info.m_thread, &attr, worker, thrdata);
+    return info;
 }
 
-void
-e8util::sync(task_info& info)
+void e8util::sync(task_info &info)
 {
-        pthread_join(info.m_thread, nullptr);
+    pthread_join(info.m_thread, nullptr);
 }
 
-namespace e8util
-{
+namespace e8util {
 struct thread_pool_worker_data
 {
-        thread_pool_worker_data(thread_pool* this_, unsigned worker_id):
-                this_(this_), worker_id(worker_id)
-        {
-        }
+    thread_pool_worker_data(thread_pool *this_, unsigned worker_id)
+        : this_(this_), worker_id(worker_id)
+    {}
 
-        thread_pool*    this_;
-        unsigned        worker_id;
-        uint32_t        reserved0;
+    thread_pool *this_;
+    unsigned worker_id;
+    uint32_t reserved0;
 };
 
-void*   thread_pool_worker(void* p);
-}
+void *thread_pool_worker(void *p);
+} // namespace e8util
 
-void*
-e8util::thread_pool_worker(void* p)
+void *e8util::thread_pool_worker(void *p)
 {
-        e8util::thread_pool* this_ = static_cast<e8util::thread_pool_worker_data*>(p)->this_;
-        unsigned worker_id = static_cast<e8util::thread_pool_worker_data*>(p)->worker_id;
+    e8util::thread_pool *this_ = static_cast<e8util::thread_pool_worker_data *>(p)->this_;
+    unsigned worker_id = static_cast<e8util::thread_pool_worker_data *>(p)->worker_id;
 
-        do {
-                sem_wait(&this_->m_enter_sem);
-                while (true) {
-                        pthread_mutex_lock(&this_->m_enter_mutex);
-                        if (!this_->m_tasks.empty()) {
-                                // Retrieve task.
-                                e8util::task_info info = this_->m_tasks.front();
-                                this_->m_tasks.pop();
+    do {
+        sem_wait(&this_->m_enter_sem);
+        while (true) {
+            pthread_mutex_lock(&this_->m_enter_mutex);
+            if (!this_->m_tasks.empty()) {
+                // Retrieve task.
+                e8util::task_info info = this_->m_tasks.front();
+                this_->m_tasks.pop();
 
-                                pthread_mutex_unlock(&this_->m_enter_mutex);
+                pthread_mutex_unlock(&this_->m_enter_mutex);
 
-                                info.m_task->assign_worker_id(static_cast<int>(worker_id));
-                                info.m_task->run(info.m_task_storage);
+                info.m_task->assign_worker_id(static_cast<int>(worker_id));
+                info.m_task->run(info.m_task_storage);
 
-                                if (!info.m_task->is_drop_on_completion()) {
-                                        pthread_mutex_lock(&this_->m_exit_mutex);
+                if (!info.m_task->is_drop_on_completion()) {
+                    pthread_mutex_lock(&this_->m_exit_mutex);
 
-                                        this_->m_completed_tasks.push(info);
+                    this_->m_completed_tasks.push(info);
 
-                                        pthread_mutex_unlock(&this_->m_exit_mutex);
-                                        sem_post(&this_->m_exit_sem);
-                                }
-                        } else {
-                                pthread_mutex_unlock(&this_->m_enter_mutex);
-                                break;
-                        }
+                    pthread_mutex_unlock(&this_->m_exit_mutex);
+                    sem_post(&this_->m_exit_sem);
                 }
-        } while (this_->m_is_running);
+            } else {
+                pthread_mutex_unlock(&this_->m_enter_mutex);
+                break;
+            }
+        }
+    } while (this_->m_is_running);
 
-        delete static_cast<e8util::thread_pool_worker_data*>(p);
-        pthread_exit(nullptr);
-        return nullptr;
+    delete static_cast<e8util::thread_pool_worker_data *>(p);
+    pthread_exit(nullptr);
+    return nullptr;
 }
 
-e8util::thread_pool::thread_pool(unsigned num_thrs):
-        m_num_thrs(num_thrs)
+e8util::thread_pool::thread_pool(unsigned num_thrs) : m_num_thrs(num_thrs)
 {
-        sem_init(&m_enter_sem, 0, 0);
-        sem_init(&m_exit_sem, 0, 0);
-        pthread_mutex_init(&m_enter_mutex, nullptr);
-        pthread_mutex_init(&m_exit_mutex, nullptr);
-        pthread_mutex_init(&m_work_group_mutex, nullptr);
+    sem_init(&m_enter_sem, 0, 0);
+    sem_init(&m_exit_sem, 0, 0);
+    pthread_mutex_init(&m_enter_mutex, nullptr);
+    pthread_mutex_init(&m_exit_mutex, nullptr);
+    pthread_mutex_init(&m_work_group_mutex, nullptr);
 
-        m_workers = new pthread_t [num_thrs];
+    m_workers = new pthread_t[num_thrs];
 
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        for (unsigned i = 0; i < num_thrs; i ++)
-                pthread_create(&m_workers[i], &attr, thread_pool_worker, new thread_pool_worker_data(this, i));
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    for (unsigned i = 0; i < num_thrs; i++)
+        pthread_create(&m_workers[i],
+                       &attr,
+                       thread_pool_worker,
+                       new thread_pool_worker_data(this, i));
 }
 
 e8util::thread_pool::~thread_pool()
 {
-        m_is_running = false;
-        for (unsigned i = 0; i < m_num_thrs; i ++)
-                sem_post(&m_enter_sem);
-
-        for (unsigned i = 0; i < m_num_thrs; i ++)
-                pthread_join(m_workers[i], nullptr);
-
-        delete [] m_workers;
-        m_num_thrs = 0;
-
-        e8util::destroy(m_enter_mutex);
-        e8util::destroy(m_exit_mutex);
-        e8util::destroy(m_work_group_mutex);
-}
-
-e8util::task_info
-e8util::thread_pool::run(if_task* t, if_task_storage* task_data)
-{
-        pthread_mutex_lock(&m_enter_mutex);
-
-        task_info info(m_uuid ++, 0, t, task_data);
-        m_tasks.push(info);
-
-        pthread_mutex_unlock(&m_enter_mutex);
+    m_is_running = false;
+    for (unsigned i = 0; i < m_num_thrs; i++)
         sem_post(&m_enter_sem);
 
-        return info;
+    for (unsigned i = 0; i < m_num_thrs; i++)
+        pthread_join(m_workers[i], nullptr);
+
+    delete[] m_workers;
+    m_num_thrs = 0;
+
+    e8util::destroy(m_enter_mutex);
+    e8util::destroy(m_exit_mutex);
+    e8util::destroy(m_work_group_mutex);
 }
 
-e8util::task_info
-e8util::thread_pool::retrieve_next_completed()
+e8util::task_info e8util::thread_pool::run(if_task *t, if_task_storage *task_data)
 {
-        e8util::task_info info;
+    pthread_mutex_lock(&m_enter_mutex);
 
-        sem_wait(&m_exit_sem);
-        pthread_mutex_lock(&m_exit_mutex);
+    task_info info(m_uuid++, 0, t, task_data);
+    m_tasks.push(info);
 
-        info = m_completed_tasks.front();
-        m_completed_tasks.pop();
+    pthread_mutex_unlock(&m_enter_mutex);
+    sem_post(&m_enter_sem);
 
-        pthread_mutex_unlock(&m_exit_mutex);
+    return info;
+}
 
-        return info;
+e8util::task_info e8util::thread_pool::retrieve_next_completed()
+{
+    e8util::task_info info;
+
+    sem_wait(&m_exit_sem);
+    pthread_mutex_lock(&m_exit_mutex);
+
+    info = m_completed_tasks.front();
+    m_completed_tasks.pop();
+
+    pthread_mutex_unlock(&m_exit_mutex);
+
+    return info;
 }
