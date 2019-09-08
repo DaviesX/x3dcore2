@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS = corelib/e8yescg.pro \
+SUBDIRS = corelib/corelib.pro \
           demoplayer/demoplayer.pro
 
 CONFIG += ordered
