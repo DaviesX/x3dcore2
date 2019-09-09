@@ -130,12 +130,28 @@ class unidirect_pathtracer : public direct_pathtracer {
         sampled_pathlet(sampled_pathlet const &other) = default;
     };
 
-    class pahtlet_transporter {
+    /**
+     * @brief The pathlet_transporter class
+     * Incrementally transport light pathlet by pathlet.
+     * @param FORWARD The direction in respect to the path where light is transported.
+     */
+    template <bool FORWARD> class pathlet_transporter {
       public:
-        pahtlet_transporter(sampled_pathlet const *path, unsigned len, e8util::vec3 const &src_rad,
-                            bool foward);
+        /**
+         * @brief pahtlet_transporter
+         * @param path The path sample on which light is transported.
+         * @param len The length of path.
+         * @param src_rad Source radiance to transport.
+         */
+        pathlet_transporter(sampled_pathlet const *path, unsigned len, e8util::vec3 const &src_rad);
 
         e8util::vec3 next(e8util::vec3 const &appending_ray, float appending_ray_dens);
+        e8util::vec3 next();
+
+      private:
+        e8util::vec3 const &src_rad;
+        sampled_pathlet const *m_path;
+        unsigned m_len;
     };
 
     /**
