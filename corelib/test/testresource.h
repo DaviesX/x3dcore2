@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_resource : public if_test
-{
-public:
+class test_resource : public if_test {
+  public:
     test_resource();
     ~test_resource() override;
 

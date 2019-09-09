@@ -3,14 +3,13 @@
 
 namespace test {
 
-class if_test
-{
-public:
+class if_test {
+  public:
     if_test();
     virtual ~if_test();
     virtual void run() const = 0;
 
-protected:
+  protected:
     float draw_rand() const;
 };
 

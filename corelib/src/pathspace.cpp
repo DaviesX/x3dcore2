@@ -7,13 +7,9 @@ e8::if_path_space::if_path_space() {}
 
 e8::if_path_space::~if_path_space() {}
 
-e8util::aabb e8::if_path_space::aabb() const
-{
-    return m_bound;
-}
+e8util::aabb e8::if_path_space::aabb() const { return m_bound; }
 
-void e8::if_path_space::load(if_obj const &obj, e8util::mat44 const &trans)
-{
+void e8::if_path_space::load(if_obj const &obj, e8util::mat44 const &trans) {
     std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const &>(obj).transform(trans);
     std::vector<if_obj *> mats = obj.get_children(obj_protocol::obj_protocol_material);
     std::vector<if_obj *> lights = obj.get_children(obj_protocol::obj_protocol_light);
@@ -31,18 +27,14 @@ void e8::if_path_space::load(if_obj const &obj, e8util::mat44 const &trans)
     m_geometries.insert(std::make_pair(obj.id(), binded_geometry(geo, mat, light)));
 }
 
-void e8::if_path_space::unload(if_obj const &obj)
-{
+void e8::if_path_space::unload(if_obj const &obj) {
     auto it = m_geometries.find(obj.id());
     if (it != m_geometries.end()) {
         m_geometries.erase(it);
     }
 }
 
-e8::obj_protocol e8::if_path_space::support() const
-{
-    return obj_protocol::obj_protocol_geometry;
-}
+e8::obj_protocol e8::if_path_space::support() const { return obj_protocol::obj_protocol_geometry; }
 
 e8::linear_path_space_layout::linear_path_space_layout() {}
 
@@ -50,8 +42,7 @@ e8::linear_path_space_layout::~linear_path_space_layout() {}
 
 void e8::linear_path_space_layout::commit() {}
 
-e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r) const
-{
+e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r) const {
     float const t_min = 1e-4f;
     float const t_max = 1000.0f;
 
@@ -100,11 +91,8 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
     }
 }
 
-bool e8::linear_path_space_layout::has_intersect(e8util::ray const &r,
-                                                 float t_min,
-                                                 float t_max,
-                                                 float &t) const
-{
+bool e8::linear_path_space_layout::has_intersect(e8util::ray const &r, float t_min, float t_max,
+                                                 float &t) const {
     for (std::pair<obj_id_t const, binded_geometry> const &p : m_geometries) {
         if_geometry const *geo = p.second.geometry.get();
 
@@ -125,15 +113,13 @@ bool e8::linear_path_space_layout::has_intersect(e8util::ray const &r,
     return false;
 }
 
-e8::batched_geometry e8::linear_path_space_layout::get_relevant_geometries(
-    e8util::frustum const &) const
-{
+e8::batched_geometry
+e8::linear_path_space_layout::get_relevant_geometries(e8util::frustum const &) const {
     throw std::string("Not implemented yet.");
 }
 
-std::vector<e8::if_light const *> e8::linear_path_space_layout::get_relevant_lights(
-    e8util::frustum const &) const
-{
+std::vector<e8::if_light const *>
+e8::linear_path_space_layout::get_relevant_lights(e8util::frustum const &) const {
     throw std::string("Not implemented yet.");
 }
 
@@ -146,21 +132,17 @@ e8::bvh_path_space_layout::bvh_path_space_layout() {}
 
 e8::bvh_path_space_layout::~bvh_path_space_layout() {}
 
-std::vector<e8::bvh_path_space_layout::bucket> e8::bvh_path_space_layout::sah_buckets(
-    std::vector<primitive_details> const &prims,
-    unsigned start,
-    unsigned end,
-    unsigned axis,
-    e8util::aabb const &bound,
-    e8util::vec3 const &range)
-{
+std::vector<e8::bvh_path_space_layout::bucket>
+e8::bvh_path_space_layout::sah_buckets(std::vector<primitive_details> const &prims, unsigned start,
+                                       unsigned end, unsigned axis, e8util::aabb const &bound,
+                                       e8util::vec3 const &range) {
     // construct bucket.
     std::vector<bucket> buckets(BVH_BUCKET_COUNT);
 
     float bucket_width = range(axis) / BVH_BUCKET_COUNT;
     for (unsigned i = start; i < end; i++) {
-        unsigned i_bucket = static_cast<unsigned>((prims[i].centroid(axis) - bound.min()(axis))
-                                                  / bucket_width);
+        unsigned i_bucket =
+            static_cast<unsigned>((prims[i].centroid(axis) - bound.min()(axis)) / bucket_width);
         if (i_bucket == BVH_BUCKET_COUNT)
             i_bucket = BVH_BUCKET_COUNT - 1;
         buckets[i_bucket].bound = buckets[i_bucket].bound + prims[i].bound;
@@ -180,18 +162,16 @@ std::vector<e8::bvh_path_space_layout::bucket> e8::bvh_path_space_layout::sah_bu
             second_part = second_part + buckets[j].bound;
             c_second += buckets[j].num_prims;
         }
-        buckets[i].cost = BVH_RAY_BOX_COST
-                          + BVH_RAY_TRIANGLE_COST
-                                * (+first_part.surf_area() / bound.surf_area() * c_first
-                                   + second_part.surf_area() / bound.surf_area() * c_second);
+        buckets[i].cost =
+            BVH_RAY_BOX_COST +
+            BVH_RAY_TRIANGLE_COST * (+first_part.surf_area() / bound.surf_area() * c_first +
+                                     second_part.surf_area() / bound.surf_area() * c_second);
     }
     return buckets;
 }
 
 e8util::aabb e8::bvh_path_space_layout::bound(std::vector<primitive_details> const &prims,
-                                              unsigned start,
-                                              unsigned end)
-{
+                                              unsigned start, unsigned end) {
     e8util::aabb bound;
     for (unsigned i = start; i < end; i++) {
         bound = bound + prims[i].bound;
@@ -199,9 +179,9 @@ e8util::aabb e8::bvh_path_space_layout::bound(std::vector<primitive_details> con
     return bound;
 }
 
-e8::bvh_path_space_layout::node *e8::bvh_path_space_layout::bvh(
-    std::vector<primitive_details> &prims, unsigned start, unsigned end, unsigned depth)
-{
+e8::bvh_path_space_layout::node *
+e8::bvh_path_space_layout::bvh(std::vector<primitive_details> &prims, unsigned start, unsigned end,
+                               unsigned depth) {
     if (end - start == 0) {
         // special (error) case: empty node.
         return nullptr;
@@ -247,19 +227,17 @@ e8::bvh_path_space_layout::node *e8::bvh_path_space_layout::bvh(
             // split the primitives.
             if (depth > std::log2(prims.size())) {
                 // objects may be too large, sah won't work well. Use median heuristics instead.
-                std::sort(prims.begin() + start,
-                          prims.begin() + end,
-                          [split_axis](primitive_details const &a,
-                                       primitive_details const &b) -> bool {
-                              return a.centroid(split_axis) < b.centroid(split_axis);
-                          });
+                std::sort(
+                    prims.begin() + start, prims.begin() + end,
+                    [split_axis](primitive_details const &a, primitive_details const &b) -> bool {
+                        return a.centroid(split_axis) < b.centroid(split_axis);
+                    });
                 mid = (start + end) >> 1;
             } else {
                 // use sah heuristics.
-                float split = b.min()(split_axis)
-                              + (split_antiaxis + 1) * range(split_axis) / BVH_BUCKET_COUNT;
-                auto it = std::partition(prims.begin() + start,
-                                         prims.begin() + end,
+                float split = b.min()(split_axis) +
+                              (split_antiaxis + 1) * range(split_axis) / BVH_BUCKET_COUNT;
+                auto it = std::partition(prims.begin() + start, prims.begin() + end,
                                          [split_axis, split](primitive_details const &a) -> bool {
                                              return a.centroid(split_axis) < split;
                                          });
@@ -273,9 +251,7 @@ e8::bvh_path_space_layout::node *e8::bvh_path_space_layout::bvh(
                 m_num_nodes++;
             }
 
-            return new node(b,
-                            split_axis,
-                            bvh(prims, start, mid, depth + 1),
+            return new node(b, split_axis, bvh(prims, start, mid, depth + 1),
                             bvh(prims, mid, end, depth + 1));
         } else {
             m_max_depth = std::max(m_max_depth, depth + 1);
@@ -288,8 +264,7 @@ e8::bvh_path_space_layout::node *e8::bvh_path_space_layout::bvh(
     }
 }
 
-void e8::bvh_path_space_layout::delete_bvh(node *bvh, unsigned depth)
-{
+void e8::bvh_path_space_layout::delete_bvh(node *bvh, unsigned depth) {
     if (bvh != nullptr) {
         delete_bvh(bvh->children[0], depth + 1);
         delete bvh->children[0];
@@ -301,8 +276,7 @@ void e8::bvh_path_space_layout::delete_bvh(node *bvh, unsigned depth)
     }
 }
 
-void e8::bvh_path_space_layout::flatten(std::vector<flattened_node> &bvh, node *bvh_node)
-{
+void e8::bvh_path_space_layout::flatten(std::vector<flattened_node> &bvh, node *bvh_node) {
     if (bvh_node == nullptr) {
         // special (error) case.
         return;
@@ -314,16 +288,13 @@ void e8::bvh_path_space_layout::flatten(std::vector<flattened_node> &bvh, node *
         unsigned p = static_cast<unsigned>(bvh.size());
         bvh.push_back(flattened_node());
         flatten(bvh, bvh_node->children[0]);
-        bvh[p] = flattened_node(bvh_node->bound,
-                                bvh_node->split_axis,
-                                static_cast<unsigned>(bvh.size()),
-                                0x0);
+        bvh[p] = flattened_node(bvh_node->bound, bvh_node->split_axis,
+                                static_cast<unsigned>(bvh.size()), 0x0);
         flatten(bvh, bvh_node->children[1]);
     }
 }
 
-void e8::bvh_path_space_layout::commit()
-{
+void e8::bvh_path_space_layout::commit() {
     this->linear_path_space_layout::commit();
 
     m_mat_list.clear();
@@ -363,11 +334,9 @@ void e8::bvh_path_space_layout::commit()
     std::vector<primitive_details> prims;
     for (std::pair<obj_id_t const, binded_geometry> const &p : m_geometries) {
         for (triangle const &tri : p.second.geometry->triangles()) {
-            prims.push_back(primitive_details(tri,
-                                              p.second.geometry.get(),
-                                              geo2ind[p.second.geometry.get()],
-                                              mat2ind[p.second.mat.get()],
-                                              light2ind[p.second.light.get()]));
+            prims.push_back(
+                primitive_details(tri, p.second.geometry.get(), geo2ind[p.second.geometry.get()],
+                                  mat2ind[p.second.mat.get()], light2ind[p.second.light.get()]));
         }
     }
 
@@ -387,8 +356,7 @@ void e8::bvh_path_space_layout::commit()
     }
 }
 
-e8::intersect_info e8::bvh_path_space_layout::intersect(e8util::ray const &r) const
-{
+e8::intersect_info e8::bvh_path_space_layout::intersect(e8util::ray const &r) const {
     if (m_bvh.empty()) {
         return intersect_info();
     }
@@ -458,22 +426,16 @@ e8::intersect_info e8::bvh_path_space_layout::intersect(e8util::ray const &r) co
         e8util::vec3 const &n2 = normals[hit_prim->tri(2)];
         e8util::vec3 const &normal = (hit_b(0) * n0 + hit_b(1) * n1 + hit_b(2) * n2).normalize();
 
-        return intersect_info(t,
-                              vertex,
-                              normal,
-                              hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat],
-                              hit_prim->i_light == 0xFFFF ? nullptr
-                                                          : m_light_list[hit_prim->i_light]);
+        return intersect_info(
+            t, vertex, normal, hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat],
+            hit_prim->i_light == 0xFFFF ? nullptr : m_light_list[hit_prim->i_light]);
     } else {
         return intersect_info();
     }
 }
 
-bool e8::bvh_path_space_layout::has_intersect(e8util::ray const &r,
-                                              float t_min,
-                                              float t_max,
-                                              float &t) const
-{
+bool e8::bvh_path_space_layout::has_intersect(e8util::ray const &r, float t_min, float t_max,
+                                              float &t) const {
     std::vector<unsigned> candids({0});
     while (!candids.empty()) {
         unsigned n = candids.back();
@@ -515,23 +477,15 @@ bool e8::bvh_path_space_layout::has_intersect(e8util::ray const &r,
     return false;
 }
 
-unsigned e8::bvh_path_space_layout::max_depth() const
-{
-    return m_max_depth;
-}
+unsigned e8::bvh_path_space_layout::max_depth() const { return m_max_depth; }
 
-float e8::bvh_path_space_layout::avg_depth() const
-{
+float e8::bvh_path_space_layout::avg_depth() const {
     return static_cast<float>(m_sum_depth) / m_num_paths;
 }
 
-float e8::bvh_path_space_layout::dev_depth() const
-{
+float e8::bvh_path_space_layout::dev_depth() const {
     float mu = avg_depth();
     return std::sqrt(static_cast<float>(m_sum_depth2) / m_num_paths - mu * mu);
 }
 
-unsigned e8::bvh_path_space_layout::num_nodes() const
-{
-    return m_num_nodes;
-}
+unsigned e8::bvh_path_space_layout::num_nodes() const { return m_num_nodes; }

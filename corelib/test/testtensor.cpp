@@ -5,8 +5,7 @@
 
 test::test_tensor::test_tensor() {}
 
-void test::test_tensor::run() const
-{
+void test::test_tensor::run() const {
     // Test vector.
     e8util::vec3 a;
     e8util::vec3 b(0.0f);

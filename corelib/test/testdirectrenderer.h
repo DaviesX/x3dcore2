@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_direct_renderer : public if_test
-{
-public:
+class test_direct_renderer : public if_test {
+  public:
     test_direct_renderer();
     ~test_direct_renderer();
 

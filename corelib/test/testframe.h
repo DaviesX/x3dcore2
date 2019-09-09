@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_frame : public if_test
-{
-public:
+class test_frame : public if_test {
+  public:
     test_frame();
     ~test_frame() override;
 

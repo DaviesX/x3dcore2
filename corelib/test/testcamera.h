@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_camera : public if_test
-{
-public:
+class test_camera : public if_test {
+  public:
     test_camera();
     ~test_camera();
 

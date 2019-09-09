@@ -6,8 +6,7 @@ test::test_unidirect_renderer::test_unidirect_renderer() {}
 
 test::test_unidirect_renderer::~test_unidirect_renderer() {}
 
-void test::test_unidirect_renderer::run() const
-{
+void test::test_unidirect_renderer::run() const {
     unsigned const width = 800;
     unsigned const height = 600;
 

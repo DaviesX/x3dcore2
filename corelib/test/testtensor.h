@@ -6,9 +6,8 @@
 
 namespace test {
 
-class test_tensor : public if_test
-{
-public:
+class test_tensor : public if_test {
+  public:
     test_tensor();
 
     void run() const override;

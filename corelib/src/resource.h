@@ -12,28 +12,25 @@
 
 namespace e8util {
 
-class res_io_exception : public std::exception
-{
-public:
+class res_io_exception : public std::exception {
+  public:
     res_io_exception(std::string const &cause);
     char const *what() const noexcept override;
 
-private:
+  private:
     std::string m_cause;
 };
 
-class if_resource
-{
-public:
+class if_resource {
+  public:
     if_resource();
     virtual ~if_resource();
     virtual std::vector<std::shared_ptr<e8::if_obj>> load_roots();
     virtual void save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots);
 };
 
-class wavefront_obj : public if_resource
-{
-public:
+class wavefront_obj : public if_resource {
+  public:
     wavefront_obj(std::string const &location);
     ~wavefront_obj() override;
 
@@ -42,13 +39,12 @@ public:
     std::shared_ptr<e8::if_geometry> load_geometry() const;
     bool save_geometry(e8::if_geometry const *geo);
 
-private:
+  private:
     std::string m_location;
 };
 
-class cornell_scene : public if_resource
-{
-public:
+class cornell_scene : public if_resource {
+  public:
     cornell_scene();
     std::vector<std::shared_ptr<e8::if_obj>> load_roots() override;
 };
@@ -58,7 +54,8 @@ class gltf_scene_internal;
 /**
  * @brief The gltf_scene class
  * The implementation of this class is an adaptation of the work
- * done in tinygltf (https://github.com/syoyo/tinygltf/blob/326d7ea310497cedd7f778426df8af983330499b/examples/raytrace/gltf-loader.cc).
+ * done in tinygltf
+ (https://github.com/syoyo/tinygltf/blob/326d7ea310497cedd7f778426df8af983330499b/examples/raytrace/gltf-loader.cc).
  *
  * MIT License
  *
@@ -83,9 +80,8 @@ class gltf_scene_internal;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class gltf_scene : public if_resource
-{
-public:
+class gltf_scene : public if_resource {
+  public:
     gltf_scene(std::string const &location);
     ~gltf_scene() override;
 
@@ -95,7 +91,7 @@ public:
 
     std::vector<std::shared_ptr<e8::if_obj>> load_roots() override;
 
-private:
+  private:
     std::unique_ptr<gltf_scene_internal> m_pimpl;
 };
 

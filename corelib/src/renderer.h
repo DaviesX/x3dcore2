@@ -11,8 +11,7 @@
 
 namespace e8 {
 
-struct rendering_stats
-{
+struct rendering_stats {
     float sample_sigma;
     float scaled_sigma;
     float max_sigma;
@@ -20,25 +19,20 @@ struct rendering_stats
     float time_per_sample;
 };
 
-class pt_image_renderer
-{
-public:
+class pt_image_renderer {
+  public:
     pt_image_renderer(pathtracer_factory *fact);
     ~pt_image_renderer();
 
     bool update_image_view(if_camera const &cam, if_compositor *compositor);
-    void render(if_path_space const &path_space,
-                if_light_sources const &light_sources,
-                if_camera const &cam,
-                if_compositor *compositor);
+    void render(if_path_space const &path_space, if_light_sources const &light_sources,
+                if_camera const &cam, if_compositor *compositor);
     rendering_stats get_stats() const;
 
-private:
-    struct sampling_task_data : public e8util::if_task_storage
-    {
+  private:
+    struct sampling_task_data : public e8util::if_task_storage {
         sampling_task_data();
-        sampling_task_data(e8util::data_id_t id,
-                           if_path_space const *path_space,
+        sampling_task_data(e8util::data_id_t id, if_path_space const *path_space,
                            if_light_sources const *light_sources,
                            std::vector<e8util::ray> const &rays);
 
@@ -49,9 +43,8 @@ private:
         std::vector<e8util::ray> rays;
     };
 
-    class sampling_task : public e8util::if_task
-    {
-    public:
+    class sampling_task : public e8util::if_task {
+      public:
         sampling_task();
         sampling_task(sampling_task &&rhs);
         sampling_task(e8::if_pathtracer *pt);
@@ -61,7 +54,7 @@ private:
         void run(e8util::if_task_storage *) override;
         std::vector<e8util::vec3> get_estimates() const;
 
-    private:
+      private:
         std::vector<e8util::vec3> m_estimate;
         e8util::rng m_rng;
         e8::if_pathtracer *m_pt;

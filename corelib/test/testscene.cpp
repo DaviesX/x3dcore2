@@ -7,8 +7,7 @@ test::test_path_space::test_path_space() {}
 
 test::test_path_space::~test_path_space() {}
 
-void test::test_path_space::run() const
-{
+void test::test_path_space::run() const {
     unsigned const width = 1024;
     unsigned const height = 768;
 

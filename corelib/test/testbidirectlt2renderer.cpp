@@ -6,8 +6,7 @@ test::test_bidirect_lt2_renderer::test_bidirect_lt2_renderer() {}
 
 test::test_bidirect_lt2_renderer::~test_bidirect_lt2_renderer() {}
 
-void test::test_bidirect_lt2_renderer::run() const
-{
+void test::test_bidirect_lt2_renderer::run() const {
     unsigned const width = 800;
     unsigned const height = 600;
 

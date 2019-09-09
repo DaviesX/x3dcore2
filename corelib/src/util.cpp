@@ -2,10 +2,9 @@
 
 e8util::flex_config::flex_config() {}
 
-template<typename T>
+template <typename T>
 static std::map<std::string, T> val_diff(std::map<std::string, T> const &a,
-                                         std::map<std::string, T> const &b)
-{
+                                         std::map<std::string, T> const &b) {
     std::map<std::string, T> diff_a_from_b;
     for (auto const &pair_a : a) {
         auto it_b = b.find(pair_a.first);
@@ -23,8 +22,7 @@ static std::map<std::string, T> val_diff(std::map<std::string, T> const &a,
     return diff_a_from_b;
 }
 
-e8util::flex_config e8util::flex_config::operator-(flex_config const &other) const
-{
+e8util::flex_config e8util::flex_config::operator-(flex_config const &other) const {
     flex_config diff_this_from_other;
     diff_this_from_other.bool_val = val_diff(bool_val, other.bool_val);
     diff_this_from_other.int_val = val_diff(int_val, other.int_val);

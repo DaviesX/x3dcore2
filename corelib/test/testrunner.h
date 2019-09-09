@@ -7,9 +7,8 @@
 
 namespace test {
 
-class test_runner
-{
-public:
+class test_runner {
+  public:
     test_runner();
     test_runner(test_runner const &other);
     ~test_runner();
@@ -21,7 +20,7 @@ public:
     void enable(std::string const &t);
     void disable(std::string const &t);
 
-private:
+  private:
     std::map<std::string, if_test *> m_tests;
     std::map<std::string, bool> m_status;
 };

@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_gltf_resource : public if_test
-{
-public:
+class test_gltf_resource : public if_test {
+  public:
     test_gltf_resource();
     ~test_gltf_resource() override;
 

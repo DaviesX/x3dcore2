@@ -7,12 +7,11 @@ test::test_camera::test_camera() {}
 
 test::test_camera::~test_camera() {}
 
-void test::test_camera::run() const
-{
+void test::test_camera::run() const {
     e8util::vec3 trans_vec{1.0f, 2.0f, 3.0f};
     e8util::mat44 trans = e8util::mat44_translate(trans_vec);
-    e8util::mat44 rot = e8util::mat44_rotate(static_cast<float>(M_PI) / 4.0f,
-                                             e8util::vec3({0.0f, 1.0f, 0.0f}));
+    e8util::mat44 rot =
+        e8util::mat44_rotate(static_cast<float>(M_PI) / 4.0f, e8util::vec3({0.0f, 1.0f, 0.0f}));
     float const sensor_size = 0.032f;
     float const focal_len = 0.035f;
     float const aspect = 4.0f / 3.0f;
@@ -37,10 +36,10 @@ void test::test_camera::run() const
             e8util::ray ray = trans_cam->sample(rng, i, j, resx, resy, pdf);
             assert(ray.o() == trans_vec);
 
-            float x = (static_cast<float>(i) / (resx - 1) * sensor_size - sensor_size / 2.0f)
-                      * aspect;
-            float y = (resy - 1 - static_cast<float>(j)) / (resy - 1) * sensor_size
-                      - sensor_size / 2.0f;
+            float x =
+                (static_cast<float>(i) / (resx - 1) * sensor_size - sensor_size / 2.0f) * aspect;
+            float y =
+                (resy - 1 - static_cast<float>(j)) / (resy - 1) * sensor_size - sensor_size / 2.0f;
             float z = -focal_len;
             e8util::vec3 v({x, y, z});
             v = v.normalize();

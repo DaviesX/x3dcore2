@@ -8,9 +8,8 @@
 
 namespace e8 {
 
-class if_cinematics : public if_obj_manager
-{
-public:
+class if_cinematics : public if_obj_manager {
+  public:
     if_cinematics(std::string const &name);
     virtual ~if_cinematics() override;
 
@@ -22,14 +21,13 @@ public:
     obj_protocol support() const override;
     std::string name() const;
 
-protected:
+  protected:
     std::string m_name;
     std::map<obj_id_t, std::unique_ptr<if_camera>> m_cams;
 };
 
-class stationary_cam_controller : public if_cinematics
-{
-public:
+class stationary_cam_controller : public if_cinematics {
+  public:
     stationary_cam_controller(std::string const &name);
     ~stationary_cam_controller() override;
 

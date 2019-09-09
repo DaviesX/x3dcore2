@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_unidirect_renderer : public if_test
-{
-public:
+class test_unidirect_renderer : public if_test {
+  public:
     test_unidirect_renderer();
     ~test_unidirect_renderer() override;
 

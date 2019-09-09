@@ -8,8 +8,7 @@ test::test_gltf_resource::test_gltf_resource() {}
 
 test::test_gltf_resource::~test_gltf_resource() {}
 
-void test::test_gltf_resource::run() const
-{
+void test::test_gltf_resource::run() const {
     e8util::gltf_scene res("res/polly/project_polly.gltf");
 
     e8::objdb db;

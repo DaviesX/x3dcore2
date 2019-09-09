@@ -5,13 +5,11 @@
 
 namespace e8 {
 
-class pathtracer_factory
-{
-public:
+class pathtracer_factory {
+  public:
     enum pt_type { normal, position, direct, unidirect, bidirect_lt2, bidirect_mis };
 
-    struct options
-    {
+    struct options {
         int max_pathlen;
     };
 
@@ -20,7 +18,7 @@ public:
 
     if_pathtracer *create();
 
-private:
+  private:
     pt_type m_type;
     options m_opts;
 };

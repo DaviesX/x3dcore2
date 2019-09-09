@@ -10,9 +10,8 @@ namespace e8 {
 
 typedef e8util::vec<3, unsigned> triangle;
 
-class if_geometry : public if_operable_obj<if_geometry>
-{
-public:
+class if_geometry : public if_operable_obj<if_geometry> {
+  public:
     if_geometry(std::string const &name);
     virtual ~if_geometry() override;
 
@@ -28,16 +27,15 @@ public:
     virtual std::unique_ptr<if_geometry> copy() const override = 0;
     virtual std::unique_ptr<if_geometry> transform(e8util::mat44 const &trans) const override = 0;
 
-protected:
+  protected:
     if_geometry(obj_id_t id, std::string const &name);
 
-private:
+  private:
     std::string m_name;
 };
 
-class trimesh : public if_geometry
-{
-public:
+class trimesh : public if_geometry {
+  public:
     trimesh();
     trimesh(trimesh const &mesh);
     trimesh(std::string const &name);
@@ -60,7 +58,7 @@ public:
 
     void update();
 
-protected:
+  protected:
     void update_aabb();
     void update_face_cdf();
 
@@ -73,19 +71,15 @@ protected:
     float m_area;
 };
 
-class triangle_fragment : public trimesh
-{
-public:
-    triangle_fragment(std::string const &name,
-                      e8util::vec3 const &a,
-                      e8util::vec3 const &b,
+class triangle_fragment : public trimesh {
+  public:
+    triangle_fragment(std::string const &name, e8util::vec3 const &a, e8util::vec3 const &b,
                       e8util::vec3 const &c);
     ~triangle_fragment();
 };
 
-class uv_sphere : public trimesh
-{
-public:
+class uv_sphere : public trimesh {
+  public:
     uv_sphere(std::string const &name, e8util::vec3 const &o, float r, unsigned const res);
     uv_sphere(e8util::vec3 const &o, float r, unsigned const res);
     ~uv_sphere();

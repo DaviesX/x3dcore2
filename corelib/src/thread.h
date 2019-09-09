@@ -3,9 +3,9 @@
 
 #include <map>
 #include <pthread.h>
+#include <queue>
 #include <semaphore.h>
 #include <vector>
-#include <queue>
 
 namespace e8util {
 
@@ -13,9 +13,8 @@ typedef pthread_mutex_t mutex_t;
 typedef unsigned int tid_t;
 typedef uint64_t data_id_t;
 
-class if_task_storage
-{
-public:
+class if_task_storage {
+  public:
     if_task_storage();
     if_task_storage(data_id_t data_id);
     virtual ~if_task_storage();
@@ -23,13 +22,12 @@ public:
     void set_data_id(data_id_t id);
     data_id_t data_id() const;
 
-private:
+  private:
     data_id_t m_data_id;
 };
 
-class if_task
-{
-public:
+class if_task {
+  public:
     if_task(bool drop_on_completion = true);
     virtual ~if_task();
 
@@ -39,46 +37,44 @@ public:
     void assign_worker_id(int worker_id);
     int worker_id() const;
 
-private:
+  private:
     int m_worker_id;
     bool m_drop_on_completion;
     int8_t m_reserved0;
     int16_t m_reserved1;
 };
 
-class task_info
-{
+class task_info {
     friend task_info run(if_task *task, if_task_storage *task_data);
     friend void sync(task_info &info);
 
     friend void *thread_pool_worker(void *p);
 
-public:
+  public:
     task_info(tid_t tid, pthread_t thread, if_task *task, if_task_storage *storage);
     task_info();
 
     if_task *task() const;
     if_task_storage *task_storage() const;
 
-private:
+  private:
     tid_t m_tid;
     pthread_t m_thread;
     if_task *m_task;
     if_task_storage *m_task_storage;
 };
 
-class thread_pool
-{
+class thread_pool {
     friend void *thread_pool_worker(void *p);
 
-public:
+  public:
     thread_pool(unsigned num_thrs);
     ~thread_pool();
 
     task_info run(if_task *task, if_task_storage *task_data = nullptr);
     task_info retrieve_next_completed();
 
-private:
+  private:
     sem_t m_enter_sem;
     pthread_mutex_t m_enter_mutex;
     sem_t m_exit_sem;

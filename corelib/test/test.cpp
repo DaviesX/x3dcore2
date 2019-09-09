@@ -8,7 +8,4 @@ test::if_test::if_test() {}
 
 test::if_test::~if_test() {}
 
-float test::if_test::draw_rand() const
-{
-    return ur(engine);
-}
+float test::if_test::draw_rand() const { return ur(engine); }

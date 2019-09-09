@@ -7,11 +7,11 @@ test::test_frame::test_frame() {}
 
 test::test_frame::~test_frame() {}
 
-void test::test_frame::run() const
-{
+void test::test_frame::run() const {
     QImage qim(QString("test/Lenna.png"));
 
-    e8::aces_compositor com(static_cast<unsigned>(qim.width()), static_cast<unsigned>(qim.height()));
+    e8::aces_compositor com(static_cast<unsigned>(qim.width()),
+                            static_cast<unsigned>(qim.height()));
 
     for (unsigned j = 0; j < static_cast<unsigned>(qim.height()); j++) {
         for (unsigned i = 0; i < static_cast<unsigned>(qim.width()); i++) {

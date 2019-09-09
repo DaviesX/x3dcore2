@@ -8,9 +8,8 @@
 
 namespace e8 {
 
-class objdb
-{
-public:
+class objdb {
+  public:
     objdb();
     ~objdb();
 
@@ -22,7 +21,7 @@ public:
     void push_updates();
     void clear();
 
-private:
+  private:
     void push_updates(if_obj *obj, e8util::mat44 const &global_trans, bool is_dirty_anyway);
 
     std::set<std::shared_ptr<if_obj>> m_roots;

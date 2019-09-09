@@ -3,17 +3,16 @@
 
 #include "tensor.h"
 #include "thread.h"
-#include <vector>
 #include <QOpenGLWidget>
+#include <vector>
 
 namespace e8 {
 
 typedef e8util::vec<4, unsigned char> pixel;
 
 // Thread-safe frame buffer.
-class if_frame
-{
-public:
+class if_frame {
+  public:
     if_frame();
     virtual ~if_frame();
 
@@ -27,9 +26,8 @@ public:
 
     virtual void commit() = 0;
 
-protected:
-    struct surface
-    {
+  protected:
+    struct surface {
         surface();
         ~surface();
 
@@ -51,9 +49,8 @@ protected:
     bool m_spin = 0;
 };
 
-class ram_ogl_frame : public if_frame, public QOpenGLWidget
-{
-public:
+class ram_ogl_frame : public if_frame, public QOpenGLWidget {
+  public:
     ram_ogl_frame(QWidget *parent);
     ~ram_ogl_frame() override;
 
@@ -63,19 +60,18 @@ public:
     void resizeGL(int w, int h) override;
     void paintGL() override;
 
-private:
+  private:
     unsigned *m_gl_pixels;
 };
 
-class img_file_frame : public if_frame
-{
-public:
+class img_file_frame : public if_frame {
+  public:
     img_file_frame(std::string const &file_name, unsigned width, unsigned height);
     ~img_file_frame() override;
 
     void commit() override;
 
-private:
+  private:
     std::string m_file_name;
 };
 

@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_path_space : public if_test
-{
-public:
+class test_path_space : public if_test {
+  public:
     test_path_space();
     ~test_path_space() override;
 

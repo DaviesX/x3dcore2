@@ -5,9 +5,8 @@
 
 namespace test {
 
-class test_geometry : public if_test
-{
-public:
+class test_geometry : public if_test {
+  public:
     test_geometry();
     ~test_geometry() override;
 

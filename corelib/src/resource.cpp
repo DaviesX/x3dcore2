@@ -27,29 +27,23 @@
 
 e8util::res_io_exception::res_io_exception(std::string const &cause) : m_cause(cause) {}
 
-char const *e8util::res_io_exception::what() const noexcept
-{
-    return m_cause.c_str();
-}
+char const *e8util::res_io_exception::what() const noexcept { return m_cause.c_str(); }
 
 e8util::if_resource::if_resource() {}
 
 e8util::if_resource::~if_resource() {}
 
-std::vector<std::shared_ptr<e8::if_obj>> e8util::if_resource::load_roots()
-{
+std::vector<std::shared_ptr<e8::if_obj>> e8util::if_resource::load_roots() {
     throw std::string("resource doesn't support load_roots");
 }
 
-void e8util::if_resource::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const & /* roots */)
-{
+void e8util::if_resource::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const & /* roots */) {
     throw std::string("resource doesn't support save_roots");
 }
 
 e8util::cornell_scene::cornell_scene() {}
 
-std::vector<std::shared_ptr<e8::if_geometry>> static cornell_scene_load_geometries()
-{
+std::vector<std::shared_ptr<e8::if_geometry>> static cornell_scene_load_geometries() {
     std::vector<std::shared_ptr<e8::if_geometry>> geometries(8);
     geometries[0] = e8util::wavefront_obj("res/cornellbox/left_wall.obj").load_geometry();
     geometries[1] = e8util::wavefront_obj("res/cornellbox/right_wall.obj").load_geometry();
@@ -62,66 +56,52 @@ std::vector<std::shared_ptr<e8::if_geometry>> static cornell_scene_load_geometri
     return geometries;
 }
 
-std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_materials()
-{
-    std::shared_ptr<e8::if_material> white
-        = std::make_shared<e8::oren_nayar>(e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
-    std::shared_ptr<e8::if_material> red
-        = std::make_shared<e8::oren_nayar>(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
-    std::shared_ptr<e8::if_material> green
-        = std::make_shared<e8::oren_nayar>(e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
-    std::shared_ptr<e8::if_material> glossy
-        = std::make_shared<e8::cook_torr>(e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
-    std::shared_ptr<e8::if_material> light = std::make_shared<e8::oren_nayar>(e8util::vec3(
-                                                                                  {0, 0, 0}),
-                                                                              0.078f);
+std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_materials() {
+    std::shared_ptr<e8::if_material> white =
+        std::make_shared<e8::oren_nayar>(e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
+    std::shared_ptr<e8::if_material> red =
+        std::make_shared<e8::oren_nayar>(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
+    std::shared_ptr<e8::if_material> green =
+        std::make_shared<e8::oren_nayar>(e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
+    std::shared_ptr<e8::if_material> glossy =
+        std::make_shared<e8::cook_torr>(e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
+    std::shared_ptr<e8::if_material> light =
+        std::make_shared<e8::oren_nayar>(e8util::vec3({0, 0, 0}), 0.078f);
     return std::vector<std::shared_ptr<e8::if_material>>(
         {red, green, white, white, white, glossy, white, light});
 }
 
 std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_lights(
-    e8::if_geometry const &light_geo)
-{
+    e8::if_geometry const &light_geo) {
     return std::vector<std::shared_ptr<e8::if_light>>(
-        {nullptr,
-         nullptr,
-         nullptr,
-         nullptr,
-         nullptr,
-         nullptr,
-         nullptr,
+        {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
          std::make_shared<e8::area_light>(light_geo,
                                           e8util::vec3({0.911f, 0.660f, 0.345f}) * 15.0f)});
 }
 
-std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_virtual_lights()
-{
+std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_virtual_lights() {
     return std::vector<std::shared_ptr<e8::if_light>>();
 }
 
-std::shared_ptr<e8::if_camera> static cornell_scene_load_camera()
-{
+std::shared_ptr<e8::if_camera> static cornell_scene_load_camera() {
     /*return new e8::pinhole_camera(e8util::vec3({0.0f, -3.4f, 0.795f}),
                                       e8util::mat44_rotate(M_PI/2.0f, e8util::vec3({1, 0, 0})),
                                       0.032f, 0.035f, 4.0f/3.0f);*/
     e8util::mat44 trans = e8util::mat44_translate({0.0f, 0.795f, 3.4f});
     e8util::mat44 rot = e8util::mat44_rotate(0.0f, {0, 0, 1});
-    std::shared_ptr<e8::if_camera> cam = std::make_shared<e8::pinhole_camera>("cornell_cam",
-                                                                              0.032f,
-                                                                              0.035f,
-                                                                              4.0f / 3.0f);
+    std::shared_ptr<e8::if_camera> cam =
+        std::make_shared<e8::pinhole_camera>("cornell_cam", 0.032f, 0.035f, 4.0f / 3.0f);
     cam->init_blueprint({"rotation", "translation"});
     cam->update_stage(std::make_pair("rotation", rot));
     cam->update_stage(std::make_pair("translation", trans));
     return cam;
 }
 
-std::vector<std::shared_ptr<e8::if_obj>> e8util::cornell_scene::load_roots()
-{
+std::vector<std::shared_ptr<e8::if_obj>> e8util::cornell_scene::load_roots() {
     std::vector<std::shared_ptr<e8::if_geometry>> geometries = cornell_scene_load_geometries();
     std::vector<std::shared_ptr<e8::if_material>> mats = cornell_scene_load_materials();
-    std::vector<std::shared_ptr<e8::if_light>> obj_lights = cornell_scene_load_lights(
-        *geometries[7]);
+    std::vector<std::shared_ptr<e8::if_light>> obj_lights =
+        cornell_scene_load_lights(*geometries[7]);
     std::shared_ptr<e8::if_camera> cams = cornell_scene_load_camera();
     std::vector<std::shared_ptr<e8::if_obj>> roots;
     roots.push_back(cams);
@@ -143,8 +123,7 @@ e8util::wavefront_obj::wavefront_obj(std::string const &location) : m_location(l
 
 e8util::wavefront_obj::~wavefront_obj() {}
 
-std::vector<std::string> split(std::string const &s, char delim)
-{
+std::vector<std::string> split(std::string const &s, char delim) {
     std::vector<std::string> parts;
     std::stringstream ss(s);
     std::string item;
@@ -153,8 +132,7 @@ std::vector<std::string> split(std::string const &s, char delim)
     return parts;
 }
 
-std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const
-{
+std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const {
     std::ifstream file(m_location);
     if (!file.is_open()) {
         std::perror(("wavefront_obj::load_geometries to " + m_location).c_str());
@@ -203,37 +181,37 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const
                     std::string f = result[v + 1];
                     std::vector<std::string> s_index = split(f, '/');
                     if (s_index.size() != 3)
-                        throw "Malformed data at line " + std::to_string(i + 1)
-                            + " where attribute " + std::to_string(v + 1)
-                            + " doesn't have at least 3 vertex attributes";
+                        throw "Malformed data at line " + std::to_string(i + 1) +
+                            " where attribute " + std::to_string(v + 1) +
+                            " doesn't have at least 3 vertex attributes";
 
                     if (s_index[0].empty())
-                        throw "Malformed data at line " + std::to_string(i + 1)
-                            + " where vertex index is missing.";
+                        throw "Malformed data at line " + std::to_string(i + 1) +
+                            " where vertex index is missing.";
                     else {
                         unsigned iattri = std::stoul(s_index[0]) - 1;
                         if (iattri >= vertices.size())
-                            throw "At line " + std::to_string(i + 1) + ", attribute "
-                                + std::to_string(v + 1) + " referenced vertex "
-                                + std::to_string(iattri + 1) + " is illegal.";
+                            throw "At line " + std::to_string(i + 1) + ", attribute " +
+                                std::to_string(v + 1) + " referenced vertex " +
+                                std::to_string(iattri + 1) + " is illegal.";
                         iverts.push_back(iattri);
                     }
 
                     if (!s_index[1].empty()) {
                         unsigned iattri = std::stoul(s_index[1]) - 1;
                         if (iattri >= texcoords.size())
-                            throw "At line " + std::to_string(i + 1) + ", attribute "
-                                + std::to_string(v + 1) + " referenced texcoord "
-                                + std::to_string(iattri + 1) + " is illegal.";
+                            throw "At line " + std::to_string(i + 1) + ", attribute " +
+                                std::to_string(v + 1) + " referenced texcoord " +
+                                std::to_string(iattri + 1) + " is illegal.";
                         itex.push_back(iattri);
                     }
 
                     if (!s_index[2].empty()) {
                         unsigned iattri = std::stoul(s_index[2]) - 1;
                         if (iattri >= normals.size())
-                            throw "At line " + std::to_string(i + 1) + ", attribute "
-                                + std::to_string(v + 1) + " referenced normal "
-                                + std::to_string(iattri + 1) + " is illegal.";
+                            throw "At line " + std::to_string(i + 1) + ", attribute " +
+                                std::to_string(v + 1) + " referenced normal " +
+                                std::to_string(iattri + 1) + " is illegal.";
                         inorms.push_back(iattri);
                     }
                 }
@@ -274,8 +252,7 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const
     return mesh;
 }
 
-bool e8util::wavefront_obj::save_geometry(e8::if_geometry const *geo)
-{
+bool e8util::wavefront_obj::save_geometry(e8::if_geometry const *geo) {
     std::ofstream file(m_location + "_" + std::to_string(geo->id()) + ".obj");
 
     if (!file.is_open()) {
@@ -316,25 +293,20 @@ bool e8util::wavefront_obj::save_geometry(e8::if_geometry const *geo)
     return true;
 }
 
-std::vector<std::shared_ptr<e8::if_obj>> e8util::wavefront_obj::load_roots()
-{
+std::vector<std::shared_ptr<e8::if_obj>> e8util::wavefront_obj::load_roots() {
     return std::vector<std::shared_ptr<e8::if_obj>>{load_geometry()};
 }
 
-void e8util::wavefront_obj::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots)
-{
-    e8::visit_all_filtered(
-        roots.begin(),
-        roots.end(),
-        [this](e8::if_obj const *obj) {
-            this->save_geometry(static_cast<e8::if_geometry const *>(obj));
-        },
-        std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
+void e8util::wavefront_obj::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots) {
+    e8::visit_all_filtered(roots.begin(), roots.end(),
+                           [this](e8::if_obj const *obj) {
+                               this->save_geometry(static_cast<e8::if_geometry const *>(obj));
+                           },
+                           std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
 }
 
-class e8util::gltf_scene_internal
-{
-public:
+class e8util::gltf_scene_internal {
+  public:
     enum file_type { ascii, bin };
 
     gltf_scene_internal(std::string const &location);
@@ -342,12 +314,11 @@ public:
 
     tinygltf::Model const &get_model() const;
 
-private:
+  private:
     tinygltf::Model m_model;
 };
 
-e8util::gltf_scene_internal::file_type gtlf_file_type(std::string const &loc)
-{
+e8util::gltf_scene_internal::file_type gtlf_file_type(std::string const &loc) {
     auto dot_pos = loc.find_last_of(".");
     if (dot_pos == std::string::npos) {
         throw e8util::res_io_exception("Unknown file type of " + loc);
@@ -363,8 +334,7 @@ e8util::gltf_scene_internal::file_type gtlf_file_type(std::string const &loc)
     }
 }
 
-e8util::gltf_scene_internal::gltf_scene_internal(std::string const &location)
-{
+e8util::gltf_scene_internal::gltf_scene_internal(std::string const &location) {
     tinygltf::TinyGLTF loader;
 
     std::string err;
@@ -387,31 +357,24 @@ e8util::gltf_scene_internal::gltf_scene_internal(std::string const &location)
     }
 
     if (!res) {
-        throw e8util::res_io_exception("Failed to load " + location
-                                       + "\n"
-                                         "\tError: "
-                                       + err
-                                       + "\n"
-                                         "\tWarning: "
-                                       + warn);
+        throw e8util::res_io_exception("Failed to load " + location + "\n"
+                                                                      "\tError: " +
+                                       err + "\n"
+                                             "\tWarning: " +
+                                       warn);
     }
 }
 
 e8util::gltf_scene_internal::~gltf_scene_internal() {}
 
-tinygltf::Model const &e8util::gltf_scene_internal::get_model() const
-{
-    return m_model;
-}
+tinygltf::Model const &e8util::gltf_scene_internal::get_model() const { return m_model; }
 
 e8util::gltf_scene::gltf_scene(std::string const &location)
-    : m_pimpl(std::make_unique<gltf_scene_internal>(location))
-{}
+    : m_pimpl(std::make_unique<gltf_scene_internal>(location)) {}
 
 e8util::gltf_scene::~gltf_scene() {}
 
-static unsigned gltf_idx_get(unsigned char const *idx_data, unsigned stride, unsigned i)
-{
+static unsigned gltf_idx_get(unsigned char const *idx_data, unsigned stride, unsigned i) {
     switch (stride) {
     case 1:
         return reinterpret_cast<uint8_t const *>(idx_data)[i];
@@ -425,37 +388,32 @@ static unsigned gltf_idx_get(unsigned char const *idx_data, unsigned stride, uns
     }
 }
 
-static e8util::vec3 gltf_vec3_get(unsigned char const *idx_data, unsigned stride, unsigned i)
-{
+static e8util::vec3 gltf_vec3_get(unsigned char const *idx_data, unsigned stride, unsigned i) {
     switch (stride) {
     case 4 * 3:
         return e8util::vec3{reinterpret_cast<float const *>(idx_data)[3 * i + 0],
                             reinterpret_cast<float const *>(idx_data)[3 * i + 1],
                             reinterpret_cast<float const *>(idx_data)[3 * i + 2]};
     case 8 * 3:
-        return e8util::vec3{static_cast<float>(
-                                reinterpret_cast<double const *>(idx_data)[3 * i + 0]),
-                            static_cast<float>(
-                                reinterpret_cast<double const *>(idx_data)[3 * i + 1]),
-                            static_cast<float>(
-                                reinterpret_cast<double const *>(idx_data)[3 * i + 2])};
+        return e8util::vec3{
+            static_cast<float>(reinterpret_cast<double const *>(idx_data)[3 * i + 0]),
+            static_cast<float>(reinterpret_cast<double const *>(idx_data)[3 * i + 1]),
+            static_cast<float>(reinterpret_cast<double const *>(idx_data)[3 * i + 2])};
     default:
         assert(stride == 4 * 3 || stride == 8 * 3);
         return e8util::vec3();
     }
 }
 
-static e8util::vec2 gltf_vec2_get(unsigned char const *idx_data, unsigned stride, unsigned i)
-{
+static e8util::vec2 gltf_vec2_get(unsigned char const *idx_data, unsigned stride, unsigned i) {
     switch (stride) {
     case 4 * 2:
         return e8util::vec2{reinterpret_cast<float const *>(idx_data)[2 * i + 0],
                             reinterpret_cast<float const *>(idx_data)[2 * i + 1]};
     case 8 * 2:
-        return e8util::vec2{static_cast<float>(
-                                reinterpret_cast<double const *>(idx_data)[2 * i + 0]),
-                            static_cast<float>(
-                                reinterpret_cast<double const *>(idx_data)[2 * i + 1])};
+        return e8util::vec2{
+            static_cast<float>(reinterpret_cast<double const *>(idx_data)[2 * i + 0]),
+            static_cast<float>(reinterpret_cast<double const *>(idx_data)[2 * i + 1])};
     default:
         assert(stride == 4 * 2 || stride == 8 * 2);
         return e8util::vec2();
@@ -463,8 +421,7 @@ static e8util::vec2 gltf_vec2_get(unsigned char const *idx_data, unsigned stride
 }
 
 static std::shared_ptr<e8::if_geometry> load_geometry(tinygltf::Mesh const &mesh,
-                                                      tinygltf::Model const &model)
-{
+                                                      tinygltf::Model const &model) {
     std::shared_ptr<e8::trimesh> geo = std::make_shared<e8::trimesh>();
 
     std::vector<e8::triangle> tris;
@@ -474,12 +431,13 @@ static std::shared_ptr<e8::if_geometry> load_geometry(tinygltf::Mesh const &mesh
 
     for (size_t k = 0; k < mesh.primitives.size(); k++) {
         tinygltf::Primitive const &prim = mesh.primitives[k];
-        tinygltf::Accessor const &idx_accessor = model.accessors[static_cast<unsigned>(prim.indices)];
-        tinygltf::BufferView const &idx_buf_view
-            = model.bufferViews[static_cast<unsigned>(idx_accessor.bufferView)];
+        tinygltf::Accessor const &idx_accessor =
+            model.accessors[static_cast<unsigned>(prim.indices)];
+        tinygltf::BufferView const &idx_buf_view =
+            model.bufferViews[static_cast<unsigned>(idx_accessor.bufferView)];
         tinygltf::Buffer const &idx_buf = model.buffers[static_cast<unsigned>(idx_buf_view.buffer)];
-        unsigned char const *idx_data = idx_buf.data.data() + idx_buf_view.byteOffset
-                                        + idx_accessor.byteOffset;
+        unsigned char const *idx_data =
+            idx_buf.data.data() + idx_buf_view.byteOffset + idx_accessor.byteOffset;
         unsigned stride = static_cast<unsigned>(idx_accessor.ByteStride(idx_buf_view));
         unsigned count = static_cast<unsigned>(idx_accessor.count);
 
@@ -492,14 +450,14 @@ static std::shared_ptr<e8::if_geometry> load_geometry(tinygltf::Mesh const &mesh
         }
 
         for (std::pair<std::string, int> const attri : prim.attributes) {
-            tinygltf::Accessor const &attri_acs
-                = model.accessors[static_cast<unsigned>(attri.second)];
-            tinygltf::BufferView const &attri_buf_view
-                = model.bufferViews[static_cast<unsigned>(attri_acs.bufferView)];
-            tinygltf::Buffer const &attri_buf
-                = model.buffers[static_cast<unsigned>(attri_buf_view.buffer)];
-            unsigned char const *attri_data = attri_buf.data.data() + attri_buf_view.byteOffset
-                                              + attri_acs.byteOffset;
+            tinygltf::Accessor const &attri_acs =
+                model.accessors[static_cast<unsigned>(attri.second)];
+            tinygltf::BufferView const &attri_buf_view =
+                model.bufferViews[static_cast<unsigned>(attri_acs.bufferView)];
+            tinygltf::Buffer const &attri_buf =
+                model.buffers[static_cast<unsigned>(attri_buf_view.buffer)];
+            unsigned char const *attri_data =
+                attri_buf.data.data() + attri_buf_view.byteOffset + attri_acs.byteOffset;
             unsigned stride = static_cast<unsigned>(attri_acs.ByteStride(attri_buf_view));
             unsigned count = static_cast<unsigned>(attri_acs.count);
 
@@ -528,13 +486,12 @@ static std::shared_ptr<e8::if_geometry> load_geometry(tinygltf::Mesh const &mesh
     return geo;
 }
 
-std::vector<std::shared_ptr<e8::if_material>> e8util::gltf_scene::load_materials() const
-{
+std::vector<std::shared_ptr<e8::if_material>> e8util::gltf_scene::load_materials() const {
     std::vector<std::shared_ptr<e8::if_material>> mats;
 
     // TODO: cannot implement material loading with current e8::materials.
-    std::shared_ptr<e8::if_material> mat
-        = std::make_shared<e8::oren_nayar>(e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
+    std::shared_ptr<e8::if_material> mat =
+        std::make_shared<e8::oren_nayar>(e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
 
     tinygltf::Model const &model = m_pimpl->get_model();
     for (size_t i = 0; i < model.materials.size(); i++) {
@@ -551,22 +508,19 @@ std::vector<std::shared_ptr<e8::if_material>> e8util::gltf_scene::load_materials
     return geo_mats;
 }
 
-std::vector<std::shared_ptr<e8::if_light>> e8util::gltf_scene::load_lights() const
-{
+std::vector<std::shared_ptr<e8::if_light>> e8util::gltf_scene::load_lights() const {
     // Lights are not handled by glTF 2.0 as of now.
     return std::vector<std::shared_ptr<e8::if_light>>();
 }
 
-std::vector<std::shared_ptr<e8::if_light>> e8util::gltf_scene::load_virtual_lights() const
-{
+std::vector<std::shared_ptr<e8::if_light>> e8util::gltf_scene::load_virtual_lights() const {
     // Lights are not handled by glTF 2.0 as of now.
     // return as least one default light.
     return std::vector<std::shared_ptr<e8::if_light>>{
         std::make_shared<e8::sky_light>(e8util::vec3{.529f, .808f, .922f})};
 }
 
-static std::shared_ptr<e8::if_camera> load_camera(tinygltf::Camera const &gltfcam)
-{
+static std::shared_ptr<e8::if_camera> load_camera(tinygltf::Camera const &gltfcam) {
     if (gltfcam.type == "perspective") {
         // gltfcam.perspective.
         std::shared_ptr<e8::pinhole_camera> cam = std::make_shared<e8::pinhole_camera>(
@@ -584,8 +538,7 @@ static std::shared_ptr<e8::if_camera> load_camera(tinygltf::Camera const &gltfca
 }
 
 static std::shared_ptr<e8::if_obj> load_node(tinygltf::Node const &node,
-                                             tinygltf::Model const &model)
-{
+                                             tinygltf::Model const &model) {
     // Create current node with metadata loaded in.
     std::shared_ptr<e8::if_obj> node_obj = nullptr;
     if (node.mesh >= 0) {
@@ -620,8 +573,7 @@ static std::shared_ptr<e8::if_obj> load_node(tinygltf::Node const &node,
     return node_obj;
 }
 
-std::vector<std::shared_ptr<e8::if_obj>> e8util::gltf_scene::load_roots()
-{
+std::vector<std::shared_ptr<e8::if_obj>> e8util::gltf_scene::load_roots() {
     std::vector<std::shared_ptr<e8::if_obj>> roots;
     tinygltf::Model model = m_pimpl->get_model();
     std::vector<tinygltf::Node> nodes = model.nodes;
@@ -634,8 +586,7 @@ std::vector<std::shared_ptr<e8::if_obj>> e8util::gltf_scene::load_roots()
 
     // assign default material if geometry doesn't have material assigned.
     e8::visit_all_filtered(
-        roots.begin(),
-        roots.end(),
+        roots.begin(), roots.end(),
         [](e8::if_obj *obj) {
             if (obj->get_children(e8::obj_protocol::obj_protocol_material).empty()) {
                 obj->add_child(std::make_shared<e8::mat_fail_safe>("gltf_fail_safe"));
