@@ -1,6 +1,164 @@
 #include "pathtracer.h"
 #include <iostream>
 
+namespace {
+/**
+ * @brief The sampled_pathlet struct
+ * Element of the smallest parition of a path.
+ */
+struct sampled_pathlet {
+    // The path vector.
+    e8util::vec3 o;
+
+    // The density which this pathlet is being selected, conditioned on all
+    // previous pathlets.
+    float dens;
+
+    // The vertex to anchor the vector in space.
+    // Note that, the end of the vector is anchored rather than the beginning.
+    e8::intersect_info vert;
+
+    sampled_pathlet() {}
+
+    sampled_pathlet(e8util::vec3 o, e8::intersect_info vert, float dens)
+        : o(o), dens(dens), vert(vert) {}
+};
+
+/**
+ * @brief The pathlet_transporter class
+ * Incrementally transport light pathlet by pathlet.
+ * @param FORWARD The direction in respect to the path where light is transported.
+ */
+template <bool FORWARD> class pathlet_transporter {
+  public:
+    /**
+     * @brief pahtlet_transporter
+     * @param path The path sample on which light is transported.
+     * @param len The length of path.
+     * @param src_rad Source radiance to transport.
+     */
+    pathlet_transporter(sampled_pathlet const *path, unsigned len, e8util::vec3 const &src_rad);
+
+    e8util::vec3 next(e8util::vec3 const &appending_ray, float appending_ray_dens);
+    e8util::vec3 next();
+
+  private:
+    e8util::vec3 const &src_rad;
+    unsigned m_len;
+    sampled_pathlet const *m_path;
+};
+
+/**
+ * @brief sample_path Recursively sample then concatenate pathlets to form a path sample.
+ */
+unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
+                     e8::if_path_space const &path_space, unsigned depth, unsigned max_depth) {
+    if (depth == max_depth)
+        return depth;
+    float w_dens;
+    e8util::vec3 const &i = sampled_path[depth - 1].vert.mat->sample(
+        rng, sampled_path[depth - 1].vert.normal, -sampled_path[depth - 1].o, w_dens);
+    e8::intersect_info const &next_vert =
+        path_space.intersect(e8util::ray(sampled_path[depth - 1].vert.vertex, i));
+    if (next_vert.valid) {
+        sampled_path[depth] = sampled_pathlet(i, next_vert, w_dens);
+        return sample_path(rng, sampled_path, path_space, depth + 1, max_depth);
+    } else {
+        return depth;
+    }
+}
+
+/**
+ * @brief sample_path Sample a path X conditioned on X0 = r0 and max_depth.
+ * @param rng Random number generator.
+ * @param sampled_path Result, path sample.
+ * @param r0 The bootstrap path to condition on.
+ * @param dens0 The density of the pathlet r0.
+ * @param path_space The path space to sample from.
+ * @param max_depth Maximum path length condition.
+ * @return Actual path length of the sampled_path. It may not be max_depth in the case when the
+ * light escapes out of the path_space during sampling.
+ */
+unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path, e8util::ray const &r0,
+                     float dens0, e8::if_path_space const &path_space, unsigned max_depth) {
+    e8::intersect_info const &vert0 = path_space.intersect(r0);
+    if (!vert0.valid) {
+        return 0;
+    } else {
+        sampled_path[0] = sampled_pathlet(r0.v(), vert0, dens0);
+        return sample_path(rng, sampled_path, path_space, 1, max_depth);
+    }
+}
+
+/**
+ * @brief transport_subpath Compute a light transport sample over the sampled_path[:sub_path_len].
+ * @param src_rad Source radiance to transport.
+ * @param appending_ray Append a pathlet vector to the ending of the
+ * sampled_path.
+ * @param appending_ray_dens The density of the appended pathlet.
+ * @param sampled_path The path sample that the sub-path is to be taken from.
+ * @param sub_path_len The length of the prefix subpath taken from sampled_path.
+ * @param forward The direction in which light is transported.
+ * @return The amount of radiance transported.
+ */
+e8util::vec3 transport_subpath(e8util::vec3 const &src_rad, e8util::vec3 const &appending_ray,
+                               float appending_ray_dens, sampled_pathlet const *sampled_path,
+                               unsigned sub_path_len, bool forward) {
+    if (sub_path_len == 0)
+        return src_rad;
+    if (forward) {
+        e8util::vec3 transport = src_rad;
+        for (unsigned k = 0; k < sub_path_len - 1; k++) {
+            transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
+                                                        sampled_path[k + 1].o, -sampled_path[k].o) *
+                         sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
+                         sampled_path[k + 1].dens;
+        }
+        return transport *
+               sampled_path[sub_path_len - 1].vert.mat->eval(
+                   sampled_path[sub_path_len - 1].vert.normal, appending_ray,
+                   -sampled_path[sub_path_len - 1].o) *
+               sampled_path[sub_path_len - 1].vert.normal.inner(-sampled_path[sub_path_len - 1].o) /
+               appending_ray_dens;
+    } else {
+        e8util::vec3 transport = src_rad *
+                                 sampled_path[sub_path_len - 1].vert.mat->eval(
+                                     sampled_path[sub_path_len - 1].vert.normal,
+                                     -sampled_path[sub_path_len - 1].o, appending_ray) *
+                                 sampled_path[sub_path_len - 1].vert.normal.inner(appending_ray) /
+                                 appending_ray_dens;
+        for (int k = static_cast<int>(sub_path_len) - 2; k >= 0; k--) {
+            transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
+                                                        -sampled_path[k].o, sampled_path[k + 1].o) *
+                         sampled_path[k].vert.normal.inner(sampled_path[k + 1].o) /
+                         sampled_path[k + 1].dens;
+        }
+        return transport;
+    }
+}
+
+/**
+ * @brief subpath_density The path density of sampled_path[path_start:path_end]
+ * @param src_dens The density of the initial vertex.
+ * @param sampled_path The path sample that the sub-path is to be taken from.
+ * @param path_start
+ * @param path_end
+ * @return
+ */
+float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned path_start,
+                      unsigned path_end) {
+    if (path_end == 0)
+        return 0.0f;
+    float dens = src_dens;
+    for (unsigned k = path_start; k < path_end; k++) {
+        dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
+                (sampled_path[k].vert.t * sampled_path[k].vert.t);
+    }
+    return dens;
+}
+
+} // namespace
+
 e8::if_pathtracer::if_pathtracer() {}
 
 e8::if_pathtracer::~if_pathtracer() {}
@@ -134,85 +292,6 @@ std::vector<e8util::vec3> e8::direct_pathtracer::sample(e8util::rng &rng,
 e8::unidirect_pathtracer::unidirect_pathtracer() {}
 
 e8::unidirect_pathtracer::~unidirect_pathtracer() {}
-
-unsigned e8::unidirect_pathtracer::sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
-                                               if_path_space const &path_space, unsigned depth,
-                                               unsigned max_depth) const {
-    if (depth == max_depth)
-        return depth;
-    float w_dens;
-    e8util::vec3 const &i = sampled_path[depth - 1].vert.mat->sample(
-        rng, sampled_path[depth - 1].vert.normal, -sampled_path[depth - 1].o, w_dens);
-    e8::intersect_info const &next_vert =
-        path_space.intersect(e8util::ray(sampled_path[depth - 1].vert.vertex, i));
-    if (next_vert.valid) {
-        sampled_path[depth] = sampled_pathlet(i, next_vert, w_dens);
-        return sample_path(rng, sampled_path, path_space, depth + 1, max_depth);
-    } else {
-        return depth;
-    }
-}
-
-unsigned e8::unidirect_pathtracer::sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
-                                               e8util::ray const &r0, float dens0,
-                                               if_path_space const &path_space,
-                                               unsigned max_depth) const {
-    e8::intersect_info const &vert0 = path_space.intersect(r0);
-    if (!vert0.valid) {
-        return 0;
-    } else {
-        sampled_path[0] = sampled_pathlet(r0.v(), vert0, dens0);
-        return sample_path(rng, sampled_path, path_space, 1, max_depth);
-    }
-}
-
-e8util::vec3 e8::unidirect_pathtracer::transport_subpath(
-    e8util::vec3 const &src_rad, e8util::vec3 const &appending_ray, float appending_ray_dens,
-    sampled_pathlet const *sampled_path, unsigned sub_path_len, bool is_forward) const {
-    if (sub_path_len == 0)
-        return src_rad;
-    if (is_forward) {
-        e8util::vec3 transport = src_rad;
-        for (unsigned k = 0; k < sub_path_len - 1; k++) {
-            transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
-                                                        sampled_path[k + 1].o, -sampled_path[k].o) *
-                         sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
-                         sampled_path[k + 1].dens;
-        }
-        return transport *
-               sampled_path[sub_path_len - 1].vert.mat->eval(
-                   sampled_path[sub_path_len - 1].vert.normal, appending_ray,
-                   -sampled_path[sub_path_len - 1].o) *
-               sampled_path[sub_path_len - 1].vert.normal.inner(-sampled_path[sub_path_len - 1].o) /
-               appending_ray_dens;
-    } else {
-        e8util::vec3 transport = src_rad *
-                                 sampled_path[sub_path_len - 1].vert.mat->eval(
-                                     sampled_path[sub_path_len - 1].vert.normal,
-                                     -sampled_path[sub_path_len - 1].o, appending_ray) *
-                                 sampled_path[sub_path_len - 1].vert.normal.inner(appending_ray) /
-                                 appending_ray_dens;
-        for (int k = static_cast<int>(sub_path_len) - 2; k >= 0; k--) {
-            transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
-                                                        -sampled_path[k].o, sampled_path[k + 1].o) *
-                         sampled_path[k].vert.normal.inner(sampled_path[k + 1].o) /
-                         sampled_path[k + 1].dens;
-        }
-        return transport;
-    }
-}
-
-float e8::unidirect_pathtracer::subpath_density(float src_dens, sampled_pathlet const *sampled_path,
-                                                unsigned path_start, unsigned path_end) const {
-    if (path_end == 0)
-        return 0.0f;
-    float dens = src_dens;
-    for (unsigned k = path_start; k < path_end; k++) {
-        dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
-                (sampled_path[k].vert.t * sampled_path[k].vert.t);
-    }
-    return dens;
-}
 
 e8util::vec3 e8::unidirect_pathtracer::sample_indirect_illum(
     e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &vert,
