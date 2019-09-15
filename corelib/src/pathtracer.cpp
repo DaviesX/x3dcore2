@@ -45,30 +45,6 @@ unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
 }
 
 /**
- * @brief The pathlet_transporter class
- * Incrementally transport light pathlet by pathlet.
- * @param FORWARD The direction in respect to the path where light is transported.
- */
-template <bool FORWARD> class pathlet_transporter {
-  public:
-    /**
-     * @brief pahtlet_transporter
-     * @param path The path sample on which light is transported.
-     * @param len The length of path.
-     * @param src_rad Source radiance to transport.
-     */
-    pathlet_transporter(sampled_pathlet const *path, unsigned len, e8util::vec3 const &src_rad);
-
-    e8util::vec3 next(e8util::vec3 const &appending_ray, float appending_ray_dens);
-    e8util::vec3 next();
-
-  private:
-    e8util::vec3 const &src_rad;
-    unsigned m_len;
-    sampled_pathlet const *m_path;
-};
-
-/**
  * @brief sample_path Sample a path X conditioned on X0 = r0 and max_depth.
  * @param rng Random number generator.
  * @param sampled_path Result, path sample.
@@ -258,6 +234,10 @@ float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsig
     return dens;
 }
 
+float weight_of_all_fixed_len_subpaths(sampled_pathlet const *cam_path, unsigned max_cam_path_len,
+                                       sampled_pathlet const *light_path,
+                                       unsigned max_light_path_len, unsigned target_len) {}
+
 /**
  * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the camera
  * and the light source by adding exactly one connection pathlet. The sum of the transportation of
@@ -291,10 +271,11 @@ e8util::vec3 transport_all_connectible_subpaths(
         unsigned cam_plen = std::min(plen - 1, max_cam_path_len);
         unsigned light_plen = plen - 1 - cam_plen;
 
-        unsigned num_valid_samps = 0;
         e8util::vec3 paritition_rad_sum;
+        float paritition_weight_sum = 0.0f;
         while (light_plen < plen && light_plen <= max_light_path_len) {
             e8util::vec3 path_rad;
+            float path_weight = 0.0f;
 
             if (light_plen == 0 && cam_plen == 0) {
                 // We have only the connection path, if it exists, which connects
@@ -302,8 +283,8 @@ e8util::vec3 transport_all_connectible_subpaths(
                 if (cam_path[0].vert.light != nullptr) {
                     path_rad =
                         cam_path[0].vert.light->emission(-cam_path[0].o, cam_path[0].vert.normal);
-                    num_valid_samps++;
                 }
+                path_weight = 1.0;
             } else if (light_plen == 0) {
                 float dens = light_p_dens; // direction was not chosen by random process.
                 e8util::vec3 transported_light_illum =
@@ -316,7 +297,7 @@ e8util::vec3 transport_all_connectible_subpaths(
                     transport_subpath(transported_light_illum, cam_path[cam_plen - 1].o,
                                       cam_path[cam_plen - 1].dens, cam_path, cam_plen - 1, false) /
                     cam_path[0].dens;
-                num_valid_samps++;
+                path_weight = subpath_density(1.0f, cam_path, 1, cam_plen) * dens;
             } else if (cam_plen == 0) {
                 path_rad = 0.0f;
             } else {
@@ -346,17 +327,22 @@ e8util::vec3 transport_all_connectible_subpaths(
                     path_rad = transport_subpath(transported_light_illum, -join_path, 1.0f,
                                                  cam_path, cam_plen, false) /
                                cam_path[0].dens;
-                    num_valid_samps++;
+                    float cam_weight = subpath_density(1.0f, cam_path, 1, cam_plen);
+                    float light_weight = subpath_density(light_p_dens, light_path, 0, light_plen);
+                    path_weight = cam_weight * light_weight;
                 }
             }
 
-            paritition_rad_sum += path_rad;
+            paritition_rad_sum += path_weight * path_rad;
+            paritition_weight_sum += path_weight;
+
             light_plen++;
             cam_plen--;
         }
 
-        if (num_valid_samps > 0)
-            rad += paritition_rad_sum / num_valid_samps;
+        if (paritition_weight_sum > 0) {
+            rad += paritition_rad_sum / paritition_weight_sum;
+        }
     }
     return rad;
 }
