@@ -294,6 +294,7 @@ e8util::vec3 transport_all_connectible_subpaths(
                                       cam_path[cam_plen - 1].dens, cam_path, cam_plen - 1, false) /
                     cam_path[0].dens;
                 path_weight = subpath_density(1.0f, cam_path, 1, cam_plen) * dens;
+                // path_weight = 1.0f;
             } else if (cam_plen == 0) {
                 path_rad = 0.0f;
             } else {
@@ -323,7 +324,7 @@ e8util::vec3 transport_all_connectible_subpaths(
                     path_rad = transport_subpath(transported_light_illum, -join_path, 1.0f,
                                                  cam_path, cam_plen, false) /
                                cam_path[0].dens;
-                    float cam_weight = subpath_density(1.0f, cam_path, 1, cam_plen);
+                    float cam_weight = subpath_density(1.0f, cam_path, 0, cam_plen);
                     float light_weight = subpath_density(light_p_dens, light_path, 0, light_plen);
                     path_weight = cam_weight * light_weight;
                 }
