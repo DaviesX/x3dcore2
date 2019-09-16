@@ -180,31 +180,31 @@ e8util::vec3 transport_direct_illum(e8util::rng &rng, e8util::vec3 const &target
  */
 e8util::vec3 transport_subpath(e8util::vec3 const &src_rad, e8util::vec3 const &appending_ray,
                                float appending_ray_dens, sampled_pathlet const *sampled_path,
-                               unsigned sub_path_len, bool forward) {
-    if (sub_path_len == 0)
+                               unsigned subpath_len, bool forward) {
+    if (subpath_len == 0)
         return src_rad;
     if (forward) {
         e8util::vec3 transport = src_rad;
-        for (unsigned k = 0; k < sub_path_len - 1; k++) {
+        for (unsigned k = 0; k < subpath_len - 1; k++) {
             transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
                                                         sampled_path[k + 1].o, -sampled_path[k].o) *
                          sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
                          sampled_path[k + 1].dens;
         }
         return transport *
-               sampled_path[sub_path_len - 1].vert.mat->eval(
-                   sampled_path[sub_path_len - 1].vert.normal, appending_ray,
-                   -sampled_path[sub_path_len - 1].o) *
-               sampled_path[sub_path_len - 1].vert.normal.inner(-sampled_path[sub_path_len - 1].o) /
+               sampled_path[subpath_len - 1].vert.mat->eval(
+                   sampled_path[subpath_len - 1].vert.normal, appending_ray,
+                   -sampled_path[subpath_len - 1].o) *
+               sampled_path[subpath_len - 1].vert.normal.inner(-sampled_path[subpath_len - 1].o) /
                appending_ray_dens;
     } else {
-        e8util::vec3 transport = src_rad *
-                                 sampled_path[sub_path_len - 1].vert.mat->eval(
-                                     sampled_path[sub_path_len - 1].vert.normal,
-                                     -sampled_path[sub_path_len - 1].o, appending_ray) *
-                                 sampled_path[sub_path_len - 1].vert.normal.inner(appending_ray) /
-                                 appending_ray_dens;
-        for (int k = static_cast<int>(sub_path_len) - 2; k >= 0; k--) {
+        e8util::vec3 transport =
+            src_rad *
+            sampled_path[subpath_len - 1].vert.mat->eval(sampled_path[subpath_len - 1].vert.normal,
+                                                         -sampled_path[subpath_len - 1].o,
+                                                         appending_ray) *
+            sampled_path[subpath_len - 1].vert.normal.inner(appending_ray) / appending_ray_dens;
+        for (int k = static_cast<int>(subpath_len) - 2; k >= 0; k--) {
             transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
                                                         -sampled_path[k].o, sampled_path[k + 1].o) *
                          sampled_path[k].vert.normal.inner(sampled_path[k + 1].o) /
@@ -215,19 +215,17 @@ e8util::vec3 transport_subpath(e8util::vec3 const &src_rad, e8util::vec3 const &
 }
 
 /**
- * @brief subpath_density The path density of sampled_path[path_start:path_end]
+ * @brief subpath_density The path density of sampled_path[:subpath_len]
  * @param src_dens The density of the initial vertex.
  * @param sampled_path The path sample that the sub-path is to be taken from.
- * @param path_start See the brief description.
- * @param path_end See the brief description.
+ * @param subpath_len See the brief description.
  * @return The probability density of the subpath sampled_path[path_start:path_end].
  */
-float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned path_start,
-                      unsigned path_end) {
-    if (path_end == 0)
+float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned subpath_len) {
+    if (subpath_len == 0)
         return 0.0f;
     float dens = src_dens;
-    for (unsigned k = path_start; k < path_end; k++) {
+    for (unsigned k = 0; k < subpath_len; k++) {
         dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
                 (sampled_path[k].vert.t * sampled_path[k].vert.t);
     }
@@ -293,8 +291,7 @@ e8util::vec3 transport_all_connectible_subpaths(
                     transport_subpath(transported_light_illum, cam_path[cam_plen - 1].o,
                                       cam_path[cam_plen - 1].dens, cam_path, cam_plen - 1, false) /
                     cam_path[0].dens;
-                path_weight = subpath_density(1.0f, cam_path, 1, cam_plen) * dens;
-                // path_weight = 1.0f;
+                path_weight = subpath_density(1.0f, cam_path, cam_plen) * dens;
             } else if (cam_plen == 0) {
                 path_rad = 0.0f;
             } else {
@@ -324,8 +321,8 @@ e8util::vec3 transport_all_connectible_subpaths(
                     path_rad = transport_subpath(transported_light_illum, -join_path, 1.0f,
                                                  cam_path, cam_plen, false) /
                                cam_path[0].dens;
-                    float cam_weight = subpath_density(1.0f, cam_path, 0, cam_plen);
-                    float light_weight = subpath_density(light_p_dens, light_path, 0, light_plen);
+                    float cam_weight = subpath_density(1.0f, cam_path, cam_plen);
+                    float light_weight = subpath_density(light_p_dens, light_path, light_plen);
                     path_weight = cam_weight * light_weight;
                 }
             }
