@@ -234,10 +234,6 @@ float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsig
     return dens;
 }
 
-float weight_of_all_fixed_len_subpaths(sampled_pathlet const *cam_path, unsigned max_cam_path_len,
-                                       sampled_pathlet const *light_path,
-                                       unsigned max_light_path_len, unsigned target_len) {}
-
 /**
  * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the camera
  * and the light source by adding exactly one connection pathlet. The sum of the transportation of

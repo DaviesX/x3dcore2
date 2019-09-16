@@ -1,24 +1,25 @@
 #ifndef APP_H
 #define APP_H
 
+#include <memory>
+
 #include "../corelib/src/pipeline.h"
-#include <ctime>
 #include <QMainWindow>
 #include <QTimer>
+#include <ctime>
 
 namespace Ui {
 class MainWindow;
 }
 
-class App : public QMainWindow
-{
+class App : public QMainWindow {
     Q_OBJECT
 
-public:
+  public:
     explicit App(QWidget *parent = nullptr);
     ~App();
 
-private slots:
+  private slots:
     void on_check_autoexposure_stateChanged(int arg1);
 
     void on_button_save_clicked();
@@ -33,13 +34,13 @@ private slots:
 
     void on_update_stats();
 
-private:
-    Ui::MainWindow *m_ui;
+  private:
+    std::unique_ptr<Ui::MainWindow> m_ui;
 
     QTimer m_stats_update_timer;
 
-    e8::ram_ogl_frame *m_frame;
-    e8::if_render_pipeline *m_pipeline;
+    std::unique_ptr<e8::ram_ogl_frame> m_frame;
+    std::unique_ptr<e8::if_render_pipeline> m_pipeline;
     e8util::task_info m_pipeline_task;
     e8util::flex_config m_pipeline_config;
 };

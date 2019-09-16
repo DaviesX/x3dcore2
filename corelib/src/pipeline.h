@@ -2,6 +2,7 @@
 #define PIPELINE_H
 
 #include <ctime>
+#include <memory>
 
 #include "cinematics.h"
 #include "compositor.h"
@@ -59,8 +60,8 @@ class pt_render_pipeline : public if_render_pipeline {
     e8util::flex_config config_protocol() const override;
 
   private:
-    e8::pt_image_renderer *m_renderer = nullptr;
-    e8::aces_compositor *m_com = nullptr;
+    std::unique_ptr<e8::pt_image_renderer> m_renderer;
+    std::unique_ptr<e8::aces_compositor> m_com;
     unsigned m_samps_per_frame = 1;
 };
 

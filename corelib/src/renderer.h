@@ -1,6 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <memory>
+
 #include "camera.h"
 #include "compositor.h"
 #include "frame.h"
@@ -21,7 +23,7 @@ struct rendering_stats {
 
 class pt_image_renderer {
   public:
-    pt_image_renderer(pathtracer_factory *fact);
+    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact);
     ~pt_image_renderer();
 
     bool update_image_view(if_camera const &cam, if_compositor *compositor);
@@ -68,8 +70,8 @@ class pt_image_renderer {
     unsigned m_num_tasks;
     sampling_task *m_tasks;
     sampling_task_data *m_task_storages;
-    e8util::thread_pool *m_thrpool;
-    pathtracer_factory *m_fact;
+    e8util::thread_pool m_thrpool;
+    std::unique_ptr<pathtracer_factory> m_fact;
 
     e8util::rng m_rng;
     std::vector<e8util::vec3> m_rad;

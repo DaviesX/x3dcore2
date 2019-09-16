@@ -47,14 +47,12 @@ std::vector<e8util::vec3> e8::pt_image_renderer::sampling_task::get_estimates() 
     return m_estimate;
 }
 
-e8::pt_image_renderer::pt_image_renderer(pathtracer_factory *fact)
+e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact)
     : m_w(0), m_h(0), m_t(e8util::mat44_scale(1.0f)),
       m_num_tiles_per_dim(static_cast<unsigned>(std::ceil(std::sqrt(e8util::cpu_core_count())))),
       m_num_tasks(m_num_tiles_per_dim * m_num_tiles_per_dim),
       m_tasks(new sampling_task[m_num_tasks]), m_task_storages(new sampling_task_data[m_num_tasks]),
-      m_fact(fact), m_rng(100), m_samps(0) {
-    m_thrpool = new e8util::thread_pool(m_num_tasks);
-
+      m_thrpool(m_num_tasks), m_fact(std::move(fact)), m_rng(100), m_samps(0) {
     // create task constructs.
     for (unsigned i = 0; i < m_num_tasks; i++) {
         m_tasks[i] = sampling_task(m_fact->create());
@@ -64,8 +62,6 @@ e8::pt_image_renderer::pt_image_renderer(pathtracer_factory *fact)
 e8::pt_image_renderer::~pt_image_renderer() {
     delete[] m_tasks;
     delete[] m_task_storages;
-    delete m_thrpool;
-    delete m_fact;
 }
 
 bool e8::pt_image_renderer::update_image_view(if_camera const &cam, if_compositor *compositor) {
@@ -119,14 +115,14 @@ void e8::pt_image_renderer::render(if_path_space const &path_space,
 
     // launch tasks.
     for (unsigned i = 0; i < m_num_tasks; i++) {
-        m_thrpool->run(&m_tasks[i], &m_task_storages[i]);
+        m_thrpool.run(&m_tasks[i], &m_task_storages[i]);
     }
 
     // retrieve and accumulate estimated values.
     m_samps += 1;
     float pr = 1.0f / m_samps;
     for (unsigned k = 0; k < m_num_tasks; k++) {
-        e8util::task_info task_info = m_thrpool->retrieve_next_completed();
+        e8util::task_info task_info = m_thrpool.retrieve_next_completed();
         unsigned i =
             static_cast<unsigned>(task_info.task_storage()->data_id()) % m_num_tiles_per_dim;
         unsigned j =

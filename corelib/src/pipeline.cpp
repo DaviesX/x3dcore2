@@ -46,7 +46,7 @@ float e8::if_render_pipeline::time_elapsed() const {
 }
 
 e8::pt_render_pipeline::pt_render_pipeline(if_frame *target) : if_render_pipeline(target) {
-    m_com = new aces_compositor(0, 0);
+    m_com = std::make_unique<aces_compositor>(/*width=*/0, /*height=*/0);
     update_pipeline(config_protocol());
     m_objdb.register_manager(std::make_unique<stationary_cam_controller>("default_cinematics"));
 }
@@ -65,7 +65,7 @@ void e8::pt_render_pipeline::render_frame() {
     if_camera *cur_cam = cinematics->main_cam();
     if (cur_cam != nullptr) {
         for (unsigned i = 0; i < m_samps_per_frame; i++) {
-            m_renderer->render(*path_space, *light_sources, *cur_cam, m_com);
+            m_renderer->render(*path_space, *light_sources, *cur_cam, m_com.get());
         }
     }
     m_com->commit(m_frame);
@@ -79,7 +79,7 @@ e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     config.enum_sel["path_space"] = "static_bvh";
     config.enum_vals["path_tracer"] = std::set<std::string>{
         "normal", "position", "direct", "unidirectional", "bidirectional_lt2", "bidirectional_mis"};
-    config.enum_sel["path_tracer"] = "unidirectional";
+    config.enum_sel["path_tracer"] = "bidirectional_mis";
     config.enum_vals["light_sources"] = std::set<std::string>{"basic"};
     config.enum_sel["light_sources"] = "basic";
     config.bool_val["auto_exposure"] = false;
@@ -93,7 +93,6 @@ void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
     // update.
     diff.find_enum("path_tracer", [this](std::string const &tracer_type,
                                          e8util::flex_config const * /*config*/) {
-        delete m_renderer;
         e8::pathtracer_factory::pt_type pt_type = e8::pathtracer_factory::pt_type::normal;
         if (tracer_type == "normal") {
             pt_type = e8::pathtracer_factory::pt_type::normal;
@@ -108,8 +107,8 @@ void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
         } else if (tracer_type == "bidirectional_mis") {
             pt_type = e8::pathtracer_factory::pt_type::bidirect_mis;
         }
-        m_renderer = new e8::pt_image_renderer(
-            new e8::pathtracer_factory(pt_type, e8::pathtracer_factory::options()));
+        m_renderer = std::make_unique<e8::pt_image_renderer>(
+            std::make_unique<e8::pathtracer_factory>(pt_type, e8::pathtracer_factory::options()));
     });
 
     diff.find_enum("path_space", [this](std::string const &path_space_type,
