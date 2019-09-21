@@ -233,6 +233,37 @@ float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsig
 }
 
 /**
+ * @brief pathlet_density_sequence_ratio
+ * @param src_dens
+ * @param sampled_path
+ * @param path_len
+ */
+std::vector<float> pathlet_density_sequence_ratio(float src_dens,
+                                                  sampled_pathlet const *sampled_path,
+                                                  unsigned path_len) {
+    std::vector<float> ratios(path_len);
+
+    float prev_denom = src_dens;
+    for (unsigned i = 0; i < path_len; i++) {
+        float cur_nomin;
+        ratios[i] = cur_nomin / prev_denom;
+        prev_denom = cur_nomin;
+    }
+    return ratios;
+}
+
+/**
+ * @brief subpath_weight
+ * @param cam_subpath_ratios
+ * @param cam_subpath_len
+ * @param light_subpath_ratios
+ * @param light_subpath_len
+ * @return
+ */
+float subpath_weight(std::vector<float> const &cam_subpath_ratios, unsigned cam_subpath_len,
+                     std::vector<float> const &light_subpath_ratios, unsigned light_subpath_len) {}
+
+/**
  * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the camera
  * and the light source by adding exactly one connection pathlet. The sum of the transportation of
  * the connnected subpaths of different length is a lower bound estimate (sample) to the measurement
