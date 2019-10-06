@@ -11,8 +11,8 @@ TARGET = e8yescg
 TEMPLATE = lib
 
 QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE += -Ofast -flto -march=native
-QMAKE_LFLAGS_RELEASE += -Ofast -flto -march=native
+QMAKE_CXXFLAGS_RELEASE += -Ofast -march=native
+QMAKE_LFLAGS_RELEASE += -Ofast -march=native
 
 CONFIG += c++17
 

@@ -2,6 +2,7 @@
 #include <iostream>
 
 namespace {
+
 /**
  * @brief The sampled_pathlet struct
  * Element of the smallest parition of a path.
@@ -103,6 +104,9 @@ e8util::vec3 transport_illum_source(e8::if_light const &light, e8util::vec3 cons
     }
 }
 
+/**
+ * @brief The light_sample struct
+ */
 struct light_sample {
     // The selected light sample.
     e8::if_light const *light;
@@ -115,6 +119,8 @@ struct light_sample {
 
     // Probability density at p.
     float density;
+
+    unsigned align0;
 };
 
 /**
@@ -168,81 +174,89 @@ e8util::vec3 transport_direct_illum(e8util::rng &rng, e8util::vec3 const &target
 }
 
 /**
- * @brief transport_subpath Compute a light transport sample over the sampled_path[:sub_path_len].
- * @param src_rad Source radiance to transport.
- * @param appending_ray Append a pathlet vector to the ending of the
- * sampled_path.
- * @param appending_ray_dens The density of the appended pathlet.
- * @param sampled_path The path sample that the sub-path is to be taken from.
- * @param sub_path_len The length of the prefix subpath taken from sampled_path.
- * @param forward The direction in which light is transported.
- * @return The amount of radiance transported.
+ * @brief The light_transport_info class
  */
-e8util::vec3 transport_subpath(e8util::vec3 const &src_rad, e8util::vec3 const &appending_ray,
-                               float appending_ray_dens, sampled_pathlet const *sampled_path,
-                               unsigned subpath_len, bool forward) {
-    if (subpath_len == 0)
-        return src_rad;
-    if (forward) {
-        e8util::vec3 transport = src_rad;
-        for (unsigned k = 0; k < subpath_len - 1; k++) {
-            transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
-                                                        sampled_path[k + 1].o, -sampled_path[k].o) *
-                         sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
-                         sampled_path[k + 1].dens;
+template <bool FOWARD> class light_transport_info {
+  public:
+    /**
+     * @brief light_transport_info Pre-compute a light transport over all prefixes (with regards to
+     * FORWARD direction) of the specified path, as well as conditional density that every vertex
+     * was generated. This makes transport() a constant time computation and conditional_density() a
+     * smaller constant (complexity).
+     * @param path The path sample that the light transport is to compute on.
+     * @param len Length of the path.
+     */
+    light_transport_info(sampled_pathlet const *path, unsigned len)
+        : m_prefix_transport(len), m_cond_density(len), m_path(path) {
+        if (len == 0)
+            return;
+
+        // Pre-compute light transport.
+        if (FOWARD) {
+            e8util::vec3 transport = 1.0f;
+            for (unsigned k = 0; k < len - 1; k++) {
+                transport *=
+                    path[k].vert.mat->eval(path[k].vert.normal, path[k + 1].o, -path[k].o) *
+                    path[k].vert.normal.inner(-path[k].o) / path[k + 1].dens;
+                m_prefix_transport[k] = transport;
+            }
+        } else {
+            e8util::vec3 transport = 1.0f;
+            for (int k = static_cast<int>(len) - 2; k >= 0; k--) {
+                transport *=
+                    path[k].vert.mat->eval(path[k].vert.normal, -path[k].o, path[k + 1].o) *
+                    path[k].vert.normal.inner(path[k + 1].o) / path[k + 1].dens;
+                m_prefix_transport[static_cast<unsigned>(k)] = transport;
+            }
         }
-        return transport *
-               sampled_path[subpath_len - 1].vert.mat->eval(
-                   sampled_path[subpath_len - 1].vert.normal, appending_ray,
-                   -sampled_path[subpath_len - 1].o) *
-               sampled_path[subpath_len - 1].vert.normal.inner(-sampled_path[subpath_len - 1].o) /
-               appending_ray_dens;
-    } else {
-        e8util::vec3 transport =
-            src_rad *
-            sampled_path[subpath_len - 1].vert.mat->eval(sampled_path[subpath_len - 1].vert.normal,
-                                                         -sampled_path[subpath_len - 1].o,
-                                                         appending_ray) *
-            sampled_path[subpath_len - 1].vert.normal.inner(appending_ray) / appending_ray_dens;
-        for (int k = static_cast<int>(subpath_len) - 2; k >= 0; k--) {
-            transport *= sampled_path[k].vert.mat->eval(sampled_path[k].vert.normal,
-                                                        -sampled_path[k].o, sampled_path[k + 1].o) *
-                         sampled_path[k].vert.normal.inner(sampled_path[k + 1].o) /
-                         sampled_path[k + 1].dens;
+
+        // Pre-compute conditional density on vertex generation.
+        for (unsigned k = 0; k < len; k++) {
+            m_cond_density[k] = path[k].dens * path[k].vert.normal.inner(-path[k].o) /
+                                (path[k].vert.t * path[k].vert.t);
         }
-        return transport;
     }
-}
 
-///**
-// * @brief subpath_density The path density of sampled_path[:subpath_len]
-// * @param src_dens The density of the initial vertex.
-// * @param sampled_path The path sample that the sub-path is to be taken from.
-// * @param subpath_len See the brief description.
-// * @return The probability density of the subpath sampled_path[path_start:path_end].
-// */
-// float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned start,
-//                      unsigned subpath_len) {
-//    if (subpath_len == 0)
-//        return 0.0f;
-//    float dens = src_dens;
-//    for (unsigned k = start; k < subpath_len; k++) {
-//        dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
-//                (sampled_path[k].vert.t * sampled_path[k].vert.t);
-//    }
-//    return dens;
-//}
+    /**
+     * @brief transport Compute a light transport sample over the sampled_path[:sub_path_len].
+     * @param sub_path_len The length of the prefix subpath taken from sampled_path.
+     * @param src_rad Source radiance to transport.
+     * @param appending_ray Append a pathlet vector to the ending of the
+     * sampled_path.
+     * @param appending_ray_dens The density of the appended pathlet.
+     * @return The amount of radiance transported.
+     */
+    e8util::vec3 transport(unsigned subpath_len, e8util::vec3 const &src_rad,
+                           e8util::vec3 const &appending_ray, float appending_ray_dens) const {
+        if (subpath_len == 0)
+            return src_rad;
+        e8util::vec3 last_piece =
+            FOWARD
+                ? (m_path[subpath_len - 1].vert.mat->eval(m_path[subpath_len - 1].vert.normal,
+                                                          appending_ray,
+                                                          -m_path[subpath_len - 1].o) *
+                   m_path[subpath_len - 1].vert.normal.inner(-m_path[subpath_len - 1].o) /
+                   appending_ray_dens)
+                : (m_path[subpath_len - 1].vert.mat->eval(m_path[subpath_len - 1].vert.normal,
+                                                          -m_path[subpath_len - 1].o,
+                                                          appending_ray) *
+                   m_path[subpath_len - 1].vert.normal.inner(appending_ray) / appending_ray_dens);
+        return subpath_len >= 2 ? (m_prefix_transport[subpath_len - 2] * last_piece * src_rad)
+                                : (last_piece * src_rad);
+    }
 
-/**
- * @brief pathlet_density The pathspace density of sampled_path[i]
- * @param sampled_path The path sample.
- * @param i The ith pathlet to compute on.
- * @return The density of that the ith vertex is generated.
- */
-float pathlet_density(sampled_pathlet const *sampled_path, unsigned i) {
-    return sampled_path[i].dens * sampled_path[i].vert.normal.inner(-sampled_path[i].o) /
-           (sampled_path[i].vert.t * sampled_path[i].vert.t);
-}
+    /**
+     * @brief conditional_density The conditional pathspace density of sampled_path[i]
+     * @param i The ith pathlet to compute on.
+     * @return The conditional density of that the ith vertex is generated.
+     */
+    float conditional_density(unsigned i) const { return m_cond_density[i]; }
+
+  private:
+    std::vector<e8util::vec3> m_prefix_transport;
+    std::vector<float> m_cond_density;
+    sampled_pathlet const *m_path;
+};
 
 /**
  * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the
@@ -271,6 +285,9 @@ e8util::vec3 transport_all_connectible_subpaths(
         // Nothing to sample;
         return 0.0f;
     }
+
+    light_transport_info</*FOWARD=*/false> cam_transport(cam_path, max_cam_path_len);
+    light_transport_info</*FOWARD=*/true> light_transport(light_path, max_light_path_len);
 
     e8util::vec3 rad;
 
@@ -307,8 +324,8 @@ e8util::vec3 transport_all_connectible_subpaths(
 
                 // compute light transportation for camera subpath.
                 path_rad =
-                    transport_subpath(transported_light_illum, cam_path[cam_plen - 1].o,
-                                      cam_path[cam_plen - 1].dens, cam_path, cam_plen - 1, false) /
+                    cam_transport.transport(cam_plen - 1, transported_light_illum,
+                                            cam_path[cam_plen - 1].o, cam_path[cam_plen - 1].dens) /
                     cam_path[0].dens;
             } else if (cam_plen == 0) {
                 valid_sample_indicator = false;
@@ -333,17 +350,19 @@ e8util::vec3 transport_all_connectible_subpaths(
                     // compute light transportation for light subpath.
                     e8util::vec3 light_illum = light.emission(light_path[0].o, light_n) /
                                                (light_path[0].dens * light_p_dens);
-                    e8util::vec3 light_subpath_rad = transport_subpath(
-                        light_illum, join_path, 1.0f, light_path, light_plen, true);
+                    e8util::vec3 light_subpath_rad =
+                        light_transport.transport(light_plen, light_illum, join_path,
+                                                  /*appending_ray_dens=*/1.0f);
 
                     // transport light for the join path.
                     e8util::vec3 transported_light_illum =
                         light_subpath_rad * cos_wo / (distance * distance);
 
                     // compute light transportation for camera subpath.
-                    path_rad = transport_subpath(transported_light_illum, -join_path, 1.0f,
-                                                 cam_path, cam_plen, false) /
-                               cam_path[0].dens;
+                    path_rad =
+                        cam_transport.transport(cam_plen, transported_light_illum, -join_path,
+                                                /*appending_ray_dens=*/1.0f) /
+                        cam_path[0].dens;
                 }
             }
 
@@ -351,8 +370,9 @@ e8util::vec3 transport_all_connectible_subpaths(
             paritition_weight_sum += valid_sample_indicator * cur_path_weight;
 
             cur_path_weight *=
-                (light_plen < max_light_path_len ? pathlet_density(light_path, light_plen) : 0.0f) /
-                (cam_plen != 0 ? pathlet_density(cam_path, cam_plen - 1) : 1.0f);
+                (light_plen < max_light_path_len ? light_transport.conditional_density(light_plen)
+                                                 : 0.0f) /
+                (cam_plen != 0 ? cam_transport.conditional_density(cam_plen - 1) : 1.0f);
 
             light_plen++;
             cam_plen--;
