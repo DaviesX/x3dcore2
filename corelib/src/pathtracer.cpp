@@ -214,59 +214,43 @@ e8util::vec3 transport_subpath(e8util::vec3 const &src_rad, e8util::vec3 const &
     }
 }
 
+///**
+// * @brief subpath_density The path density of sampled_path[:subpath_len]
+// * @param src_dens The density of the initial vertex.
+// * @param sampled_path The path sample that the sub-path is to be taken from.
+// * @param subpath_len See the brief description.
+// * @return The probability density of the subpath sampled_path[path_start:path_end].
+// */
+// float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned start,
+//                      unsigned subpath_len) {
+//    if (subpath_len == 0)
+//        return 0.0f;
+//    float dens = src_dens;
+//    for (unsigned k = start; k < subpath_len; k++) {
+//        dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
+//                (sampled_path[k].vert.t * sampled_path[k].vert.t);
+//    }
+//    return dens;
+//}
+
 /**
- * @brief subpath_density The path density of sampled_path[:subpath_len]
- * @param src_dens The density of the initial vertex.
- * @param sampled_path The path sample that the sub-path is to be taken from.
- * @param subpath_len See the brief description.
- * @return The probability density of the subpath sampled_path[path_start:path_end].
+ * @brief pathlet_density The pathspace density of sampled_path[i]
+ * @param sampled_path The path sample.
+ * @param i The ith pathlet to compute on.
+ * @return The density of that the ith vertex is generated.
  */
-float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned subpath_len) {
-    if (subpath_len == 0)
-        return 0.0f;
-    float dens = src_dens;
-    for (unsigned k = 0; k < subpath_len; k++) {
-        dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
-                (sampled_path[k].vert.t * sampled_path[k].vert.t);
-    }
-    return dens;
+float pathlet_density(sampled_pathlet const *sampled_path, unsigned i) {
+    return sampled_path[i].dens * sampled_path[i].vert.normal.inner(-sampled_path[i].o) /
+           (sampled_path[i].vert.t * sampled_path[i].vert.t);
 }
 
 /**
- * @brief pathlet_density_sequence_ratio
- * @param src_dens
- * @param sampled_path
- * @param path_len
- */
-std::vector<float> pathlet_density_sequence_ratio(float src_dens,
-                                                  sampled_pathlet const *sampled_path,
-                                                  unsigned path_len) {
-    std::vector<float> ratios(path_len);
-
-    float prev_denom = src_dens;
-    for (unsigned i = 0; i < path_len; i++) {
-        float cur_nomin;
-        ratios[i] = cur_nomin / prev_denom;
-        prev_denom = cur_nomin;
-    }
-    return ratios;
-}
-
-/**
- * @brief subpath_weight
- * @param cam_subpath_ratios
- * @param cam_subpath_len
- * @param light_subpath_ratios
- * @param light_subpath_len
- * @return
- */
-float subpath_weight(std::vector<float> const &cam_subpath_ratios, unsigned cam_subpath_len,
-                     std::vector<float> const &light_subpath_ratios, unsigned light_subpath_len) {}
-
-/**
- * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the camera
- * and the light source by adding exactly one connection pathlet. The sum of the transportation of
- * the connnected subpaths of different length is a lower bound estimate (sample) to the measurement
+ * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the
+ * camera
+ * and the light source by adding exactly one connection pathlet. The sum of the transportation
+ * of
+ * the connnected subpaths of different length is a lower bound estimate (sample) to the
+ * measurement
  * function. It's a lower bound because it computes transportation only on finite path lengths.
  * @param cam_path The subpath originated from the camera.
  * @param max_cam_path_len The total length of the camera subpath.
@@ -298,19 +282,23 @@ e8util::vec3 transport_all_connectible_subpaths(
 
         e8util::vec3 paritition_rad_sum;
         float paritition_weight_sum = 0.0f;
-        while (light_plen < plen && light_plen <= max_light_path_len) {
+        float cur_path_weight = 1.0f;
+        while (static_cast<int>(cam_plen) >= 0 && light_plen <= max_light_path_len) {
             e8util::vec3 path_rad;
-            float path_weight = 0.0f;
+            bool valid_sample_indicator;
 
             if (light_plen == 0 && cam_plen == 0) {
                 // We have only the connection path, if it exists, which connects
                 // one vertex from the camera and one vertex from the light.
+                valid_sample_indicator = true;
+
                 if (cam_path[0].vert.light != nullptr) {
                     path_rad =
                         cam_path[0].vert.light->emission(-cam_path[0].o, cam_path[0].vert.normal);
                 }
-                path_weight = 1.0;
             } else if (light_plen == 0) {
+                valid_sample_indicator = true;
+
                 float dens = light_p_dens; // direction was not chosen by random process.
                 e8util::vec3 transported_light_illum =
                     transport_illum_source(light, light_p, light_n, cam_path[cam_plen - 1].vert,
@@ -322,22 +310,26 @@ e8util::vec3 transport_all_connectible_subpaths(
                     transport_subpath(transported_light_illum, cam_path[cam_plen - 1].o,
                                       cam_path[cam_plen - 1].dens, cam_path, cam_plen - 1, false) /
                     cam_path[0].dens;
-                path_weight = subpath_density(1.0f, cam_path, cam_plen) * dens;
             } else if (cam_plen == 0) {
+                valid_sample_indicator = false;
                 path_rad = 0.0f;
             } else {
                 e8util::vec3 join_path =
                     cam_path[cam_plen - 1].vert.vertex - light_path[light_plen - 1].vert.vertex;
                 float distance = join_path.norm();
                 join_path = join_path / distance;
+
                 e8util::ray join_ray(cam_path[cam_plen - 1].vert.vertex, join_path);
                 float cos_w2 =
                     light_path[light_plen].vert.normal.inner(-light_path[light_plen - 1].o);
                 float cos_wo = light_path[light_plen].vert.normal.inner(join_path);
                 float cos_wi = cam_path[light_plen - 1].vert.normal.inner(-join_path);
                 float t;
-                if (cos_wo > 0.0f && cos_wi > 0.0f && cos_w2 > 0.0f &&
-                    !path_space.has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
+                valid_sample_indicator =
+                    cos_wo > 0.0f && cos_wi > 0.0f && cos_w2 > 0.0f &&
+                    !path_space.has_intersect(join_ray, 1e-4f, distance - 1e-3f, t);
+
+                if (valid_sample_indicator) {
                     // compute light transportation for light subpath.
                     e8util::vec3 light_illum = light.emission(light_path[0].o, light_n) /
                                                (light_path[0].dens * light_p_dens);
@@ -352,14 +344,15 @@ e8util::vec3 transport_all_connectible_subpaths(
                     path_rad = transport_subpath(transported_light_illum, -join_path, 1.0f,
                                                  cam_path, cam_plen, false) /
                                cam_path[0].dens;
-                    float cam_weight = subpath_density(1.0f, cam_path, cam_plen);
-                    float light_weight = subpath_density(light_p_dens, light_path, light_plen);
-                    path_weight = cam_weight * light_weight;
                 }
             }
 
-            paritition_rad_sum += path_weight * path_rad;
-            paritition_weight_sum += path_weight;
+            paritition_rad_sum += valid_sample_indicator * cur_path_weight * path_rad;
+            paritition_weight_sum += valid_sample_indicator * cur_path_weight;
+
+            cur_path_weight *=
+                (light_plen < max_light_path_len ? pathlet_density(light_path, light_plen) : 0.0f) /
+                (cam_plen != 0 ? pathlet_density(cam_path, cam_plen - 1) : 1.0f);
 
             light_plen++;
             cam_plen--;
