@@ -1,23 +1,21 @@
+#include <cmath>
+
 #include "renderer.h"
 #include "tensor.h"
 #include "thread.h"
-#include <cmath>
-
-e8::pt_image_renderer::sampling_task_data::sampling_task_data() : path_space(nullptr) {}
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(e8util::data_id_t id,
-                                                              if_path_space const *path_space,
-                                                              if_light_sources const *light_sources,
-                                                              std::vector<e8util::ray> const &rays)
-    : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources),
-      rays(rays) {}
-
-e8::pt_image_renderer::sampling_task_data::~sampling_task_data() {}
+                                                              if_path_space const &path_space,
+                                                              if_light_sources const &light_sources,
+                                                              std::vector<e8util::ray> const &rays,
+                                                              unsigned num_samps)
+    : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources), rays(rays),
+      num_samps(num_samps) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task() : e8util::if_task(false), m_pt(nullptr) {}
 
-e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt)
-    : e8util::if_task(false), m_rng(100), m_pt(pt) {}
+e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt, unsigned seed)
+    : e8util::if_task(false), m_rng(seed), m_pt(pt) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task(sampling_task &&rhs) {
     m_estimate = rhs.m_estimate;
@@ -37,118 +35,75 @@ operator=(sampling_task rhs) {
 }
 
 void e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage *p) {
-    unsigned const n_samples = 1;
     sampling_task_data *data = static_cast<sampling_task_data *>(p);
     m_estimate =
-        m_pt->sample(m_rng, data->rays, *data->path_space, *data->light_sources, n_samples);
+        m_pt->sample(m_rng, data->rays, data->path_space, data->light_sources, data->num_samps);
 }
 
-std::vector<e8util::vec3> e8::pt_image_renderer::sampling_task::get_estimates() const {
+std::vector<e8util::vec3> const &e8::pt_image_renderer::sampling_task::get_estimates() const {
     return m_estimate;
 }
 
 e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact)
-    : m_w(0), m_h(0), m_t(e8util::mat44_scale(1.0f)),
-      m_num_tiles_per_dim(static_cast<unsigned>(std::ceil(std::sqrt(e8util::cpu_core_count())))),
-      m_num_tasks(m_num_tiles_per_dim * m_num_tiles_per_dim),
-      m_tasks(new sampling_task[m_num_tasks]), m_task_storages(new sampling_task_data[m_num_tasks]),
-      m_thrpool(m_num_tasks), m_fact(std::move(fact)), m_rng(100), m_samps(0) {
+    : m_tasks(e8util::cpu_core_count()), m_thrpool(e8util::cpu_core_count()), m_rng(1361) {
     // create task constructs.
-    for (unsigned i = 0; i < m_num_tasks; i++) {
-        m_tasks[i] = sampling_task(m_fact->create());
+    for (unsigned i = 0; i < m_tasks.size(); i++) {
+        m_tasks[i] = sampling_task(fact->create(), i * 1361 + 33);
     }
 }
 
-e8::pt_image_renderer::~pt_image_renderer() {
-    delete[] m_tasks;
-    delete[] m_task_storages;
-}
-
-bool e8::pt_image_renderer::update_image_view(if_camera const &cam, if_compositor *compositor) {
-    e8util::mat44 const &proj = cam.projection();
-    if (proj != m_t || compositor->width() != m_w || compositor->height() != m_h) {
-        m_t = proj;
-        m_w = compositor->width();
-        m_h = compositor->height();
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void e8::pt_image_renderer::render(if_path_space const &path_space,
-                                   if_light_sources const &light_sources, if_camera const &cam,
-                                   if_compositor *compositor) {
-    // generate camera seed ray, if the update is dirty, for each tile task.
-    if (update_image_view(cam, compositor)) {
-        for (unsigned j = 0; j < m_num_tiles_per_dim; j++) {
-            for (unsigned i = 0; i < m_num_tiles_per_dim; i++) {
-                unsigned tile_w = i == m_num_tiles_per_dim - 1 ? m_w - m_w / m_num_tiles_per_dim * i
-                                                               : m_w / m_num_tiles_per_dim;
-                unsigned tile_h = j == m_num_tiles_per_dim - 1 ? m_h - m_h / m_num_tiles_per_dim * j
-                                                               : m_h / m_num_tiles_per_dim;
-                m_task_storages[i + j * m_num_tiles_per_dim].rays.resize(tile_w * tile_h);
-                m_task_storages[i + j * m_num_tiles_per_dim].path_space = &path_space;
-                m_task_storages[i + j * m_num_tiles_per_dim].light_sources = &light_sources;
-                m_task_storages[i + j * m_num_tiles_per_dim].set_data_id(
-                    static_cast<e8util::data_id_t>(i + j * m_num_tiles_per_dim));
-
-                unsigned top_left_i = m_w / m_num_tiles_per_dim * i;
-                unsigned top_left_j = m_h / m_num_tiles_per_dim * j;
-                std::vector<e8util::ray> &tile_rays =
-                    m_task_storages[i + j * m_num_tiles_per_dim].rays;
-                for (unsigned tj = 0; tj < tile_h; tj++) {
-                    for (unsigned ti = 0; ti < tile_w; ti++) {
-                        float pdf;
-                        tile_rays[ti + tj * tile_w] =
-                            cam.sample(m_rng, top_left_i + ti, top_left_j + tj, m_w, m_h, pdf);
-                    }
-                }
-            }
+e8::pt_image_renderer::numerical_stats
+e8::pt_image_renderer::render(if_path_space const &path_space,
+                              if_light_sources const &light_sources, if_camera const &cam,
+                              unsigned num_samps, if_compositor *compositor) {
+    // Generate camera seed rays
+    std::vector<e8util::ray> rays(compositor->width() * compositor->height());
+    for (unsigned j = 0; j < compositor->height(); j++) {
+        for (unsigned i = 0; i < compositor->width(); i++) {
+            float pdf;
+            rays[i + j * compositor->width()] =
+                cam.sample(m_rng, i, j, compositor->width(), compositor->height(), pdf);
         }
-
-        m_rad.resize(m_w * m_h);
-        for (unsigned i = 0; i < m_w * m_h; i++)
-            m_rad[i] = 0.0f;
-        m_samps = 0;
     }
 
-    // launch tasks.
-    for (unsigned i = 0; i < m_num_tasks; i++) {
-        m_thrpool.run(&m_tasks[i], &m_task_storages[i]);
+    // Launch tasks.
+    unsigned allocated_samps =
+        static_cast<unsigned>(std::ceil(static_cast<float>(num_samps) / m_tasks.size()));
+    sampling_task_data task_config(/*id=*/0, path_space, light_sources, rays, allocated_samps);
+    for (unsigned i = 0; i < m_tasks.size(); i++) {
+        m_thrpool.run(&m_tasks[i], &task_config);
     }
 
-    // retrieve and accumulate estimated values.
-    m_samps += 1;
-    float pr = 1.0f / m_samps;
-    for (unsigned k = 0; k < m_num_tasks; k++) {
-        e8util::task_info task_info = m_thrpool.retrieve_next_completed();
-        unsigned i =
-            static_cast<unsigned>(task_info.task_storage()->data_id()) % m_num_tiles_per_dim;
-        unsigned j =
-            static_cast<unsigned>(task_info.task_storage()->data_id()) / m_num_tiles_per_dim;
+    for (unsigned j = 0; j < compositor->height(); j++) {
+        for (unsigned i = 0; i < compositor->width(); i++) {
+            (*compositor)(i, j) = 0.0f;
+        }
+    }
 
-        unsigned tile_w = i == m_num_tiles_per_dim - 1 ? m_w - m_w / m_num_tiles_per_dim * i
-                                                       : m_w / m_num_tiles_per_dim;
-        unsigned tile_h = j == m_num_tiles_per_dim - 1 ? m_h - m_h / m_num_tiles_per_dim * j
-                                                       : m_h / m_num_tiles_per_dim;
+    // Retrieve and accumulate estimated values.
+    for (unsigned i = 0; i < m_tasks.size(); i++) {
+        e8util::task_info result = m_thrpool.retrieve_next_completed();
+        std::vector<e8util::vec3> const &estimates =
+            static_cast<sampling_task *>(result.task())->get_estimates();
 
-        unsigned top_left_i = m_w / m_num_tiles_per_dim * i;
-        unsigned top_left_j = m_h / m_num_tiles_per_dim * j;
-        unsigned task_i = i + j * m_num_tiles_per_dim;
-
-        std::vector<e8util::vec3> const &estimates = m_tasks[task_i].get_estimates();
-        for (unsigned tj = 0; tj < tile_h; tj++) {
-            for (unsigned ti = 0; ti < tile_w; ti++) {
-                unsigned p = (top_left_i + ti) + (top_left_j + tj) * m_w;
-                m_rad[p] = m_rad[p] + estimates[ti + tj * tile_w];
-                e8util::vec3 const &r = pr * m_rad[p];
-                (*compositor)(top_left_i + ti, top_left_j + tj) = r.homo(1.0f);
+        for (unsigned j = 0; j < compositor->height(); j++) {
+            for (unsigned i = 0; i < compositor->width(); i++) {
+                (*compositor)(i, j) += estimates[i + j * compositor->width()].homo(1.0f);
             }
         }
     }
-}
 
-e8::rendering_stats e8::pt_image_renderer::get_stats() const {
-    throw std::string("Not implemented yet");
+    // Average estimates.
+    float scale = 1.0f / m_tasks.size();
+    for (unsigned j = 0; j < compositor->height(); j++) {
+        for (unsigned i = 0; i < compositor->width(); i++) {
+            (*compositor)(i, j) *= scale;
+        }
+    }
+
+    // TODO: Complete all stats.
+    numerical_stats stats;
+    stats.num_samples = allocated_samps * static_cast<unsigned>(m_tasks.size());
+
+    return stats;
 }

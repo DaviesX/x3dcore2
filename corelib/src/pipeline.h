@@ -16,6 +16,9 @@
 
 namespace e8 {
 
+/**
+ * @brief The if_render_pipeline class General rendering pipeline interface.
+ */
 class if_render_pipeline : public e8util::if_task {
   public:
     if_render_pipeline(if_frame *target);
@@ -50,6 +53,10 @@ class if_render_pipeline : public e8util::if_task {
     e8util::flex_config m_old_config;
 };
 
+/**
+ * @brief The pt_render_pipeline class High-level encapsulation of the path-tracing rendering
+ * pipeline.
+ */
 class pt_render_pipeline : public if_render_pipeline {
   public:
     pt_render_pipeline(if_frame *target);

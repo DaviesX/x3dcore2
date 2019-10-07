@@ -64,9 +64,7 @@ void e8::pt_render_pipeline::render_frame() {
         static_cast<if_light_sources *>(m_objdb.manager_of(obj_protocol::obj_protocol_light));
     if_camera *cur_cam = cinematics->main_cam();
     if (cur_cam != nullptr) {
-        for (unsigned i = 0; i < m_samps_per_frame; i++) {
-            m_renderer->render(*path_space, *light_sources, *cur_cam, m_com.get());
-        }
+        m_renderer->render(*path_space, *light_sources, *cur_cam, m_samps_per_frame, m_com.get());
     }
     m_com->commit(m_frame);
     m_frame->commit();
@@ -85,7 +83,7 @@ e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     config.bool_val["auto_exposure"] = false;
     config.float_val["exposure"] = 1.0f;
     config.int_val["super_samples"] = 16;
-    config.int_val["samples_per_frame"] = 1;
+    config.int_val["samples_per_frame"] = 16;
     return config;
 }
 
