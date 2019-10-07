@@ -36,8 +36,26 @@ operator=(sampling_task rhs) {
 
 void e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage *p) {
     sampling_task_data *data = static_cast<sampling_task_data *>(p);
-    m_estimate =
-        m_pt->sample(m_rng, data->rays, data->path_space, data->light_sources, data->num_samps);
+
+    m_estimate.resize(data->rays.size());
+
+    // Compute and accumulate multi-sample estimate.
+    m_estimate = m_pt->sample(m_rng, data->rays, data->path_space, data->light_sources);
+    for (unsigned i = 1; i < data->num_samps; i++) {
+        std::vector<e8util::vec3> estimate =
+            m_pt->sample(m_rng, data->rays, data->path_space, data->light_sources);
+        for (unsigned j = 0; j < estimate.size(); j++) {
+            m_estimate[j] += estimate[j];
+        }
+    }
+
+    if (data->num_samps > 1) {
+        // Average estimate if there are more than 1 sample.
+        float scale = 1.0f / data->num_samps;
+        for (unsigned i = 0; i < m_estimate.size(); i++) {
+            m_estimate[i] *= scale;
+        }
+    }
 }
 
 std::vector<e8util::vec3> const &e8::pt_image_renderer::sampling_task::get_estimates() const {

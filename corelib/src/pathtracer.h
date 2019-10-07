@@ -18,8 +18,7 @@ class if_pathtracer {
 
     virtual std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                              if_path_space const &path_space,
-                                             if_light_sources const &light_sources,
-                                             unsigned n) const = 0;
+                                             if_light_sources const &light_sources) const = 0;
 };
 
 /**
@@ -32,8 +31,7 @@ class position_pathtracer : public if_pathtracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      if_path_space const &path_space,
-                                     if_light_sources const &light_sources,
-                                     unsigned n) const override;
+                                     if_light_sources const &light_sources) const override;
 };
 
 /**
@@ -46,8 +44,7 @@ class normal_pathtracer : public if_pathtracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      if_path_space const &path_space,
-                                     if_light_sources const &light_sources,
-                                     unsigned n) const override;
+                                     if_light_sources const &light_sources) const override;
 };
 
 /**
@@ -61,8 +58,7 @@ class direct_pathtracer : public if_pathtracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      if_path_space const &path_space,
-                                     if_light_sources const &light_sources,
-                                     unsigned n) const override;
+                                     if_light_sources const &light_sources) const override;
 };
 
 /**
@@ -76,8 +72,7 @@ class unidirect_pathtracer : public if_pathtracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      if_path_space const &path_space,
-                                     if_light_sources const &light_sources,
-                                     unsigned n) const override;
+                                     if_light_sources const &light_sources) const override;
 
   protected:
     e8util::vec3 sample_indirect_illum(e8util::rng &rng, e8util::vec3 const &o,
@@ -101,8 +96,7 @@ class bidirect_lt2_pathtracer : public if_pathtracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      if_path_space const &path_space,
-                                     if_light_sources const &light_sources,
-                                     unsigned n) const override;
+                                     if_light_sources const &light_sources) const override;
 
   protected:
     e8util::vec3 join_with_light_paths(e8util::rng &rng, e8util::vec3 const &o,
@@ -128,8 +122,7 @@ class bidirect_mis_pathtracer : public if_pathtracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      if_path_space const &path_space,
-                                     if_light_sources const &light_sources,
-                                     unsigned n) const override;
+                                     if_light_sources const &light_sources) const override;
 
   protected:
     e8::if_light const *sample_illum_source(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n,
