@@ -68,7 +68,7 @@ class pt_image_renderer {
         // All rays shooting out from the camera sensor.
         std::vector<e8util::ray> const &rays;
 
-        //
+        // Cache of the information about the first intersection.
         if_pathtracer::first_hits const &first_hits;
 
         // Number of samples to compute to form the estimate.
