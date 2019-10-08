@@ -57,7 +57,8 @@ class pt_image_renderer {
     struct sampling_task_data : public e8util::if_task_storage {
         sampling_task_data(e8util::data_id_t id, if_path_space const &path_space,
                            if_light_sources const &light_sources,
-                           std::vector<e8util::ray> const &rays, unsigned num_samps);
+                           std::vector<e8util::ray> const &rays,
+                           if_pathtracer::first_hits const &first_hits, unsigned num_samps);
 
         ~sampling_task_data() override = default;
 
@@ -66,6 +67,9 @@ class pt_image_renderer {
 
         // All rays shooting out from the camera sensor.
         std::vector<e8util::ray> const &rays;
+
+        //
+        if_pathtracer::first_hits const &first_hits;
 
         // Number of samples to compute to form the estimate.
         unsigned num_samps;

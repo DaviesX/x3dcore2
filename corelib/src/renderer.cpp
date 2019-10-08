@@ -4,13 +4,12 @@
 #include "tensor.h"
 #include "thread.h"
 
-e8::pt_image_renderer::sampling_task_data::sampling_task_data(e8util::data_id_t id,
-                                                              if_path_space const &path_space,
-                                                              if_light_sources const &light_sources,
-                                                              std::vector<e8util::ray> const &rays,
-                                                              unsigned num_samps)
+e8::pt_image_renderer::sampling_task_data::sampling_task_data(
+    e8util::data_id_t id, if_path_space const &path_space, if_light_sources const &light_sources,
+    std::vector<e8util::ray> const &rays, if_pathtracer::first_hits const &first_hits,
+    unsigned num_samps)
     : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources), rays(rays),
-      num_samps(num_samps) {}
+      first_hits(first_hits), num_samps(num_samps) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task() : e8util::if_task(false), m_pt(nullptr) {}
 
@@ -40,10 +39,11 @@ void e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage *p) {
     m_estimate.resize(data->rays.size());
 
     // Compute and accumulate multi-sample estimate.
-    m_estimate = m_pt->sample(m_rng, data->rays, data->path_space, data->light_sources);
+    m_estimate =
+        m_pt->sample(m_rng, data->rays, data->first_hits, data->path_space, data->light_sources);
     for (unsigned i = 1; i < data->num_samps; i++) {
-        std::vector<e8util::vec3> estimate =
-            m_pt->sample(m_rng, data->rays, data->path_space, data->light_sources);
+        std::vector<e8util::vec3> estimate = m_pt->sample(m_rng, data->rays, data->first_hits,
+                                                          data->path_space, data->light_sources);
         for (unsigned j = 0; j < estimate.size(); j++) {
             m_estimate[j] += estimate[j];
         }
@@ -74,7 +74,7 @@ e8::pt_image_renderer::numerical_stats
 e8::pt_image_renderer::render(if_path_space const &path_space,
                               if_light_sources const &light_sources, if_camera const &cam,
                               unsigned num_samps, if_compositor *compositor) {
-    // Generate camera seed rays
+    // Generate camera seed rays and first_hits
     std::vector<e8util::ray> rays(compositor->width() * compositor->height());
     for (unsigned j = 0; j < compositor->height(); j++) {
         for (unsigned i = 0; i < compositor->width(); i++) {
@@ -84,10 +84,13 @@ e8::pt_image_renderer::render(if_path_space const &path_space,
         }
     }
 
+    if_pathtracer::first_hits first_hits = if_pathtracer::compute_first_hit(rays, path_space);
+
     // Launch tasks.
     unsigned allocated_samps =
         static_cast<unsigned>(std::ceil(static_cast<float>(num_samps) / m_tasks.size()));
-    sampling_task_data task_config(/*id=*/0, path_space, light_sources, rays, allocated_samps);
+    sampling_task_data task_config(/*id=*/0, path_space, light_sources, rays, first_hits,
+                                   allocated_samps);
     for (unsigned i = 0; i < m_tasks.size(); i++) {
         m_thrpool.run(&m_tasks[i], &task_config);
     }
