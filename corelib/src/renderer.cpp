@@ -11,10 +11,12 @@ e8::pt_image_renderer::sampling_task_data::sampling_task_data(
     : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources), rays(rays),
       first_hits(first_hits), num_samps(num_samps) {}
 
-e8::pt_image_renderer::sampling_task::sampling_task() : e8util::if_task(false), m_pt(nullptr) {}
+e8::pt_image_renderer::sampling_task::sampling_task()
+    : e8util::if_task(false), m_pt(nullptr), m_firefly_filter(false) {}
 
-e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt, unsigned seed)
-    : e8util::if_task(false), m_rng(seed), m_pt(pt) {}
+e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt, unsigned seed,
+                                                    bool firefly_filter)
+    : e8util::if_task(false), m_rng(seed), m_pt(pt), m_firefly_filter(firefly_filter) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task(sampling_task &&rhs) {
     m_estimate = rhs.m_estimate;
@@ -62,11 +64,12 @@ std::vector<e8util::vec3> const &e8::pt_image_renderer::sampling_task::get_estim
     return m_estimate;
 }
 
-e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact)
+e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact,
+                                         bool firefly_filter)
     : m_tasks(e8util::cpu_core_count()), m_thrpool(e8util::cpu_core_count()), m_rng(1361) {
     // create task constructs.
     for (unsigned i = 0; i < m_tasks.size(); i++) {
-        m_tasks[i] = sampling_task(fact->create(), i * 1361 + 33);
+        m_tasks[i] = sampling_task(fact->create(), i * 1361 + 33, firefly_filter);
     }
 }
 

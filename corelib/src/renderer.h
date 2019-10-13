@@ -22,7 +22,7 @@ class pt_image_renderer {
      * @brief pt_image_renderer It internally creates multiple path-tracers so they can be run in
      * parallel.
      */
-    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact);
+    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact, bool firefly_filter);
     ~pt_image_renderer() = default;
 
     /**
@@ -82,7 +82,7 @@ class pt_image_renderer {
       public:
         sampling_task();
         sampling_task(sampling_task &&rhs);
-        sampling_task(e8::if_pathtracer *pt, unsigned seed);
+        sampling_task(e8::if_pathtracer *pt, unsigned seed, bool firefly_filter);
         ~sampling_task() override;
 
         sampling_task &operator=(sampling_task rhs);
@@ -94,6 +94,7 @@ class pt_image_renderer {
         std::vector<e8util::vec3> m_estimate;
         e8util::rng m_rng;
         e8::if_pathtracer *m_pt;
+        bool m_firefly_filter;
     };
 
     std::vector<sampling_task> m_tasks;
