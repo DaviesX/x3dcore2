@@ -79,12 +79,10 @@ void App::on_button_render_clicked() {
 }
 
 void App::on_update_stats() {
-    // std::cout << "Updating stats" << std::endl;
     m_frame->repaint();
     m_ui->label_time->setText(
         QString::fromStdString(std::to_string(m_pipeline->time_elapsed()) + " s"));
-    m_ui->label_samp_count1->setText(
-        QString::fromStdString(std::to_string(m_pipeline->frame_no())));
+    m_ui->label_frame_no->setText(QString::fromStdString(std::to_string(m_pipeline->frame_no())));
 }
 
 void App::on_MainWindow_destroyed() {
