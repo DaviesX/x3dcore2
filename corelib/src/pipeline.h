@@ -70,6 +70,7 @@ class pt_render_pipeline : public if_render_pipeline {
     std::unique_ptr<e8::pt_image_renderer> m_renderer;
     std::unique_ptr<e8::aces_compositor> m_com;
     unsigned m_samps_per_frame = 1;
+    bool m_firefly_filter = true;
 };
 
 } // namespace e8

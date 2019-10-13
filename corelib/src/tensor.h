@@ -57,6 +57,7 @@ template <unsigned N, typename T = float> class vec {
     vec outer(vec const &rhs) const;
 
     T norm() const;
+    T norm2() const;
     vec normalize() const;
 
     vec<N + 1, T> homo(T p) const;
@@ -195,14 +196,14 @@ template <unsigned N, typename T> vec<N, T> vec<N, T>::outer(vec const &rhs) con
     if (N != 3)
         throw std::string("outer product of 2 vectors only defines in 3 dimension.");
     else
-        return vec<N, T>({(*this)(1) * rhs(2) - (*this)(2) * rhs(1),
-                          (*this)(2) * rhs(0) - (*this)(0) * rhs(2),
-                          (*this)(0) * rhs(1) - (*this)(1) * rhs(0)});
+        return vec<N, T>({ (*this)(1) * rhs(2) - (*this)(2) * rhs(1),
+                           (*this)(2) * rhs(0) - (*this)(0) * rhs(2),
+                           (*this)(0) * rhs(1) - (*this)(1) * rhs(0)});
 }
 
-template <unsigned N, typename T> T vec<N, T>::norm() const {
-    return std::sqrt(this->inner(*this));
-}
+template <unsigned N, typename T> T vec<N, T>::norm2() const { return this->inner(*this); }
+
+template <unsigned N, typename T> T vec<N, T>::norm() const { return std::sqrt(this->norm2()); }
 
 template <unsigned N, typename T> vec<N, T> vec<N, T>::normalize() const {
     return 1.0f / norm() * (*this);

@@ -22,7 +22,7 @@ class pt_image_renderer {
      * @brief pt_image_renderer It internally creates multiple path-tracers so they can be run in
      * parallel.
      */
-    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact, bool firefly_filter);
+    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact);
     ~pt_image_renderer() = default;
 
     /**
@@ -39,16 +39,19 @@ class pt_image_renderer {
     /**
      * @brief render Computes an estimate of the radiance transported in the path-space and received
      * by the camera.
+     * @param compositor Place where final estimates are stored in the form of image.
      * @param path_space All possible ways light paths can be formed.
      * @param light_sources Light sources exist in the path-space.
      * @param cam Camera sensor in the path-space.
      * @param num_samps Total number of samples to gather to form the estimate. However, more
      * samples may be gathered in order to make the computation parallelized better.
-     * @param compositor Place where final estimates are stored in the form of image.
+     * @param firefly_filter Remove fireflies by applying prior assumption that at least one of the
+     * neighbor pixels must be smooth.
      * @return Convergence statistics (see above).
      */
-    numerical_stats render(if_path_space const &path_space, if_light_sources const &light_sources,
-                           if_camera const &cam, unsigned num_samps, if_compositor *compositor);
+    numerical_stats render(if_compositor *compositor, if_path_space const &path_space,
+                           if_light_sources const &light_sources, if_camera const &cam,
+                           unsigned num_samps, bool firefly_filter);
 
   private:
     /**
@@ -58,7 +61,8 @@ class pt_image_renderer {
         sampling_task_data(e8util::data_id_t id, if_path_space const &path_space,
                            if_light_sources const &light_sources,
                            std::vector<e8util::ray> const &rays,
-                           if_pathtracer::first_hits const &first_hits, unsigned num_samps);
+                           if_pathtracer::first_hits const &first_hits, unsigned num_samps,
+                           unsigned width, unsigned height, bool firefly_filter);
 
         ~sampling_task_data() override = default;
 
@@ -73,6 +77,15 @@ class pt_image_renderer {
 
         // Number of samples to compute to form the estimate.
         unsigned num_samps;
+
+        // The size of the image to be sampled.
+        unsigned width;
+        unsigned height;
+
+        // option to turn on/off firefly filter (See render() for detailed explanation).
+        bool firefly_filter;
+
+        uint8_t padding[3];
     };
 
     /**
@@ -82,7 +95,7 @@ class pt_image_renderer {
       public:
         sampling_task();
         sampling_task(sampling_task &&rhs);
-        sampling_task(e8::if_pathtracer *pt, unsigned seed, bool firefly_filter);
+        sampling_task(e8::if_pathtracer *pt, unsigned seed);
         ~sampling_task() override;
 
         sampling_task &operator=(sampling_task rhs);
@@ -94,7 +107,9 @@ class pt_image_renderer {
         std::vector<e8util::vec3> m_estimate;
         e8util::rng m_rng;
         e8::if_pathtracer *m_pt;
-        bool m_firefly_filter;
+
+        // Minimum difference in squared intensity to possibly classify a sample as firefly outlier.
+        static float constexpr FireFlyMinDiff = 1.5f;
     };
 
     std::vector<sampling_task> m_tasks;

@@ -7,16 +7,15 @@
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(
     e8util::data_id_t id, if_path_space const &path_space, if_light_sources const &light_sources,
     std::vector<e8util::ray> const &rays, if_pathtracer::first_hits const &first_hits,
-    unsigned num_samps)
+    unsigned num_samps, unsigned width, unsigned height, bool firefly_filter)
     : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources), rays(rays),
-      first_hits(first_hits), num_samps(num_samps) {}
+      first_hits(first_hits), num_samps(num_samps), width(width), height(height),
+      firefly_filter(firefly_filter) {}
 
-e8::pt_image_renderer::sampling_task::sampling_task()
-    : e8util::if_task(false), m_pt(nullptr), m_firefly_filter(false) {}
+e8::pt_image_renderer::sampling_task::sampling_task() : e8util::if_task(false), m_pt(nullptr) {}
 
-e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt, unsigned seed,
-                                                    bool firefly_filter)
-    : e8util::if_task(false), m_rng(seed), m_pt(pt), m_firefly_filter(firefly_filter) {}
+e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt, unsigned seed)
+    : e8util::if_task(false), m_rng(seed), m_pt(pt) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task(sampling_task &&rhs) {
     m_estimate = rhs.m_estimate;
@@ -38,16 +37,56 @@ operator=(sampling_task rhs) {
 void e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage *p) {
     sampling_task_data *data = static_cast<sampling_task_data *>(p);
 
+    // Allocate and clear result buffer.
     m_estimate.resize(data->rays.size());
+    std::fill(m_estimate.begin(), m_estimate.end(), e8util::vec3());
 
     // Compute and accumulate multi-sample estimate.
-    m_estimate =
-        m_pt->sample(m_rng, data->rays, data->first_hits, data->path_space, data->light_sources);
-    for (unsigned i = 1; i < data->num_samps; i++) {
+    for (unsigned i = 0; i < data->num_samps; i++) {
         std::vector<e8util::vec3> estimate = m_pt->sample(m_rng, data->rays, data->first_hits,
                                                           data->path_space, data->light_sources);
-        for (unsigned j = 0; j < estimate.size(); j++) {
-            m_estimate[j] += estimate[j];
+        if (data->firefly_filter) {
+            for (unsigned y = 0; y < data->height; y++) {
+                for (unsigned x = 0; x < data->width; x++) {
+                    if (x > 0 && x < data->width - 1 && y > 0 && y < data->height - 1) {
+                        // Check if all 8 neighboring pixels are all within the firefly threshold,
+                        // otherwise cap the difference.
+                        float r00 = estimate[x - 1 + (y - 1) * data->width].norm2();
+                        float r10 = estimate[x + (y - 1) * data->width].norm2();
+                        float r20 = estimate[x + 1 + (y - 1) * data->width].norm2();
+
+                        float r01 = estimate[x - 1 + y * data->width].norm2();
+                        float r11 = estimate[x + y * data->width].norm2();
+                        float r21 = estimate[x + 1 + y * data->width].norm2();
+
+                        float r02 = estimate[x - 1 + (y + 1) * data->width].norm2();
+                        float r12 = estimate[x + (y + 1) * data->width].norm2();
+                        float r22 = estimate[x + 1 + (y + 1) * data->width].norm2();
+
+                        bool firefly =
+                            (r11 - r00) > FireFlyMinDiff && (r11 - r10) > FireFlyMinDiff &&
+                            (r11 - r20) > FireFlyMinDiff && (r11 - r01) > FireFlyMinDiff &&
+                            (r11 - r21) > FireFlyMinDiff && (r11 - r02) > FireFlyMinDiff &&
+                            (r11 - r12) > FireFlyMinDiff && (r11 - r22) > FireFlyMinDiff;
+                        if (firefly) {
+                            float cap =
+                                1.0f / 8.0f * (r00 + r10 + r20 + r01 + r21 + r02 + r12 + r22) +
+                                FireFlyMinDiff;
+                            m_estimate[x + y * data->width] +=
+                                estimate[x + y * data->width].at_most(cap);
+                        } else {
+                            m_estimate[x + y * data->width] += estimate[x + y * data->width];
+                        }
+                    } else {
+                        // Just copy the egde of the image because there is not enough sample.
+                        m_estimate[x + y * data->width] += estimate[x + y * data->width];
+                    }
+                }
+            }
+        } else {
+            for (unsigned j = 0; j < estimate.size(); j++) {
+                m_estimate[j] += estimate[j];
+            }
         }
     }
 
@@ -64,19 +103,18 @@ std::vector<e8util::vec3> const &e8::pt_image_renderer::sampling_task::get_estim
     return m_estimate;
 }
 
-e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact,
-                                         bool firefly_filter)
+e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact)
     : m_tasks(e8util::cpu_core_count()), m_thrpool(e8util::cpu_core_count()), m_rng(1361) {
     // create task constructs.
     for (unsigned i = 0; i < m_tasks.size(); i++) {
-        m_tasks[i] = sampling_task(fact->create(), i * 1361 + 33, firefly_filter);
+        m_tasks[i] = sampling_task(fact->create(), i * 1361 + 33);
     }
 }
 
 e8::pt_image_renderer::numerical_stats
-e8::pt_image_renderer::render(if_path_space const &path_space,
+e8::pt_image_renderer::render(if_compositor *compositor, if_path_space const &path_space,
                               if_light_sources const &light_sources, if_camera const &cam,
-                              unsigned num_samps, if_compositor *compositor) {
+                              unsigned num_samps, bool firefly_filter) {
     // Generate camera seed rays and first_hits
     std::vector<e8util::ray> rays(compositor->width() * compositor->height());
     for (unsigned j = 0; j < compositor->height(); j++) {
@@ -93,7 +131,8 @@ e8::pt_image_renderer::render(if_path_space const &path_space,
     unsigned allocated_samps =
         static_cast<unsigned>(std::ceil(static_cast<float>(num_samps) / m_tasks.size()));
     sampling_task_data task_config(/*id=*/0, path_space, light_sources, rays, first_hits,
-                                   allocated_samps);
+                                   allocated_samps, compositor->width(), compositor->height(),
+                                   firefly_filter);
     for (unsigned i = 0; i < m_tasks.size(); i++) {
         m_thrpool.run(&m_tasks[i], &task_config);
     }
