@@ -83,8 +83,8 @@ e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     config.enum_sel["light_sources"] = "basic";
     config.bool_val["auto_exposure"] = false;
     config.float_val["exposure"] = 1.0f;
-    config.int_val["super_samples"] = 16;
-    config.int_val["samples_per_frame"] = 16;
+    config.int_val["super_samples"] = 4;
+    config.int_val["samples_per_frame"] = 64;
     config.bool_val["firefly_filter"] = true;
     return config;
 }
