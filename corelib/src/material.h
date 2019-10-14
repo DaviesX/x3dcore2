@@ -14,11 +14,11 @@ template <typename T> class texture_map {
   public:
     /**
      * @brief texture_map
-     * @param width
-     * @param height
-     * @param m_data
+     * @param width Width of the texture in terms of texel.
+     * @param height Height of the texture in terms of texel.
+     * @param data Data content of the texture.
      */
-    texture_map(unsigned width, unsigned height, std::vector<T> const &m_data);
+    texture_map(unsigned width, unsigned height, std::vector<T> const &data);
 
     /**
      * @brief map Maps a normalized 2D coordinate to content on the texture (map: [0,1)x[0,1)->T).
