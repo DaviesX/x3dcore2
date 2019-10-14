@@ -6,6 +6,46 @@
 
 namespace e8 {
 
+/**
+ * @brief The texture_map class Generic texture map. It represents a 2D texture containing arbitrary
+ * content in each texel. This 2D texture is continously addressable.
+ */
+template <typename T> class texture_map {
+  public:
+    /**
+     * @brief texture_map
+     * @param width
+     * @param height
+     * @param m_data
+     */
+    texture_map(unsigned width, unsigned height, std::vector<T> const &m_data);
+
+    /**
+     * @brief map Maps a normalized 2D coordinate to content on the texture (map: [0,1)x[0,1)->T).
+     * @param uv A 2D coordinate where each component is normalized to [0, 1).
+     * @return Mapped content.
+     */
+    T map(e8util::vec2 const &uv) const;
+
+  private:
+    unsigned m_width;
+    unsigned m_height;
+    std::vector<T> m_data;
+};
+
+template <typename T>
+texture_map<T>::texture_map(unsigned width, unsigned height, std::vector<T> const &data)
+    : m_width(width), m_height(height), m_data(data) {}
+
+template <typename T> T texture_map<T>::map(e8util::vec2 const &uv) const {
+    unsigned iu = uv(0) * m_width;
+    unsigned iv = uv(1) * m_height;
+    return m_data[iu + iv * m_width];
+}
+
+/**
+ * @brief The if_material class
+ */
 class if_material : public if_copyable_obj<if_material> {
   public:
     if_material(std::string const &name);
