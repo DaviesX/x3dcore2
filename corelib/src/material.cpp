@@ -41,9 +41,6 @@ e8::oren_nayar::oren_nayar(std::string const &name, e8util::vec3 const &albedo, 
     B = 0.45f * sigma2 / (sigma2 + 0.09f);
 }
 
-e8::oren_nayar::oren_nayar(e8util::vec3 const &albedo, float roughness)
-    : oren_nayar("Unknown_Oren_Nayar_Material_Name", albedo, roughness) {}
-
 e8::oren_nayar::oren_nayar(oren_nayar const &other)
     : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_sigma(other.m_sigma),
       A(other.A), B(other.B) {}
@@ -87,9 +84,6 @@ e8util::vec3 e8::oren_nayar::sample(e8util::rng &rng, e8util::vec3 const &n,
 
 e8::cook_torr::cook_torr(std::string const &name, e8util::vec3 const &albedo, float beta, float ior)
     : if_material(name), m_albedo(albedo), m_beta2(beta * beta), m_ior2(ior * ior) {}
-
-e8::cook_torr::cook_torr(e8util::vec3 const &albedo, float beta, float ior)
-    : cook_torr("Unknown_Cook_Torr_Material_Name", albedo, beta, ior) {}
 
 e8::cook_torr::cook_torr(cook_torr const &other)
     : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_beta2(other.m_beta2),

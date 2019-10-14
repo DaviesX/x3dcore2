@@ -58,15 +58,15 @@ std::vector<std::shared_ptr<e8::if_geometry>> static cornell_scene_load_geometri
 
 std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_materials() {
     std::shared_ptr<e8::if_material> white =
-        std::make_shared<e8::oren_nayar>(e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
+        std::make_shared<e8::oren_nayar>("white", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
     std::shared_ptr<e8::if_material> red =
-        std::make_shared<e8::oren_nayar>(e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
+        std::make_shared<e8::oren_nayar>("red", e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
     std::shared_ptr<e8::if_material> green =
-        std::make_shared<e8::oren_nayar>(e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
-    std::shared_ptr<e8::if_material> glossy =
-        std::make_shared<e8::cook_torr>(e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
+        std::make_shared<e8::oren_nayar>("green", e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
+    std::shared_ptr<e8::if_material> glossy = std::make_shared<e8::cook_torr>(
+        "glossy", e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
     std::shared_ptr<e8::if_material> light =
-        std::make_shared<e8::oren_nayar>(e8util::vec3({0, 0, 0}), 0.078f);
+        std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
     return std::vector<std::shared_ptr<e8::if_material>>(
         {red, green, white, white, white, glossy, white, light});
 }
@@ -298,11 +298,12 @@ std::vector<std::shared_ptr<e8::if_obj>> e8util::wavefront_obj::load_roots() {
 }
 
 void e8util::wavefront_obj::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots) {
-    e8::visit_all_filtered(roots.begin(), roots.end(),
-                           [this](e8::if_obj const *obj) {
-                               this->save_geometry(static_cast<e8::if_geometry const *>(obj));
-                           },
-                           std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
+    e8::visit_all_filtered(
+        roots.begin(), roots.end(),
+        [this](e8::if_obj const *obj) {
+            this->save_geometry(static_cast<e8::if_geometry const *>(obj));
+        },
+        std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
 }
 
 class e8util::gltf_scene_internal {
@@ -357,10 +358,12 @@ e8util::gltf_scene_internal::gltf_scene_internal(std::string const &location) {
     }
 
     if (!res) {
-        throw e8util::res_io_exception("Failed to load " + location + "\n"
-                                                                      "\tError: " +
-                                       err + "\n"
-                                             "\tWarning: " +
+        throw e8util::res_io_exception("Failed to load " + location +
+                                       "\n"
+                                       "\tError: " +
+                                       err +
+                                       "\n"
+                                       "\tWarning: " +
                                        warn);
     }
 }
@@ -491,7 +494,7 @@ std::vector<std::shared_ptr<e8::if_material>> e8util::gltf_scene::load_materials
 
     // TODO: cannot implement material loading with current e8::materials.
     std::shared_ptr<e8::if_material> mat =
-        std::make_shared<e8::oren_nayar>(e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
+        std::make_shared<e8::oren_nayar>("gltf_default", e8util::vec3{0.8f, 0.8f, 0.8f}, 0.4f);
 
     tinygltf::Model const &model = m_pimpl->get_model();
     for (size_t i = 0; i < model.materials.size(); i++) {

@@ -44,10 +44,14 @@ template <typename T> T texture_map<T>::map(e8util::vec2 const &uv) const {
 }
 
 /**
- * @brief The if_material class
+ * @brief The if_material class Material interface specialized for path-tracing.
  */
 class if_material : public if_copyable_obj<if_material> {
   public:
+    /**
+     * @brief if_material
+     * @param name
+     */
     if_material(std::string const &name);
     virtual ~if_material() override;
 
@@ -55,16 +59,38 @@ class if_material : public if_copyable_obj<if_material> {
     obj_protocol protocol() const override;
 
     virtual std::unique_ptr<if_material> copy() const override = 0;
+
+    /**
+     * @brief eval Compute the amount of reflected radiance.
+     * @param n Normal vector at the surface.
+     * @param o Reflected path.
+     * @param i Incident path.
+     * @return Reflected radiance.
+     */
     virtual e8util::vec3 eval(e8util::vec3 const &n, e8util::vec3 const &o,
                               e8util::vec3 const &i) const = 0;
+
+    /**
+     * @brief sample Compute a incident path sample given the normal and reflected path.
+     * @param rng Random number generator.
+     * @param n Normal vector at the surface.
+     * @param o Reflected path.
+     * @param cond_density The conditional probability density of the sample.
+     * @return Incident path sample.
+     */
     virtual e8util::vec3 sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
-                                float &pdf) const = 0;
+                                float &cond_density) const = 0;
 
   protected:
     if_material(obj_id_t id, std::string const &name);
     std::string m_name;
 };
 
+/**
+ * @brief The mat_fail_safe class A fail-safe default material. Some renderer requires every object
+ * must have material attached. This can allow the renderer to keep running even with faulty scene
+ * configurations.
+ */
 class mat_fail_safe : public if_material {
   public:
     mat_fail_safe(std::string const &name);
@@ -81,10 +107,14 @@ class mat_fail_safe : public if_material {
     unsigned m_padding;
 };
 
+/**
+ * @brief The oren_nayar class A diffuse microfacet reflectance model (See
+ * https://en.wikipedia.org/wiki/Oren%E2%80%93Nayar_reflectance_model).
+ */
 class oren_nayar : public if_material {
   public:
-    oren_nayar(e8util::vec3 const &albedo, float roughness);
     oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness);
+    oren_nayar(std::string const &name, texture_map<e8util::vec3> const &albedo, float roughness);
     oren_nayar(oren_nayar const &other);
 
     std::unique_ptr<if_material> copy() const override;
@@ -100,10 +130,13 @@ class oren_nayar : public if_material {
     float B;
 };
 
+/**
+ * @brief The cook_torr class A specular microfacet reflectance model (See
+ * https://en.wikipedia.org/wiki/Specular_highlight#Cook%E2%80%93Torrance_model).
+ */
 class cook_torr : public if_material {
   public:
     cook_torr(std::string const &name, e8util::vec3 const &albedo, float beta, float ior);
-    cook_torr(e8util::vec3 const &albedo, float beta, float ior);
     cook_torr(cook_torr const &other);
 
     std::unique_ptr<if_material> copy() const override;
