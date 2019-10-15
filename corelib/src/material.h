@@ -100,11 +100,33 @@ class mat_fail_safe : public if_material {
     e8util::vec3 eval(e8util::vec3 const &n, e8util::vec3 const &o,
                       e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
-                        float &pdf) const override;
+                        float &cond_density) const override;
 
   private:
     e8util::vec3 m_albedo;
     unsigned m_padding;
+};
+
+/**
+ * @brief The mat_mixture class Models the weighted mixture of two different materials.
+ */
+class mat_mixture : public if_material {
+  public:
+    mat_mixture(std::string const &name, std::unique_ptr<if_material> mat_0,
+                std::unique_ptr<if_material> mat_1, float ratio);
+    mat_mixture(mat_mixture const &other);
+
+    std::unique_ptr<if_material> copy() const override;
+    e8util::vec3 eval(e8util::vec3 const &n, e8util::vec3 const &o,
+                      e8util::vec3 const &i) const override;
+    e8util::vec3 sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
+                        float &cond_density) const override;
+
+  private:
+    std::unique_ptr<if_material> m_mat_0;
+    std::unique_ptr<if_material> m_mat_1;
+    float m_ratio;
+    unsigned reserved0;
 };
 
 /**
@@ -113,21 +135,25 @@ class mat_fail_safe : public if_material {
  */
 class oren_nayar : public if_material {
   public:
-    oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness);
-    oren_nayar(std::string const &name, texture_map<e8util::vec3> const &albedo, float roughness);
+    oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness,
+               std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map = nullptr,
+               std::shared_ptr<texture_map<float>> const &roughness_map = nullptr);
     oren_nayar(oren_nayar const &other);
 
     std::unique_ptr<if_material> copy() const override;
     e8util::vec3 eval(e8util::vec3 const &n, e8util::vec3 const &o,
                       e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
-                        float &pdf) const override;
+                        float &cond_density) const override;
 
   private:
+    std::shared_ptr<texture_map<e8util::vec3>> m_albedo_map;
+    std::shared_ptr<texture_map<float>> m_roughness_map;
+
     e8util::vec3 m_albedo;
     float m_sigma;
-    float A;
-    float B;
+    float m_a;
+    float m_b;
 };
 
 /**
@@ -136,14 +162,16 @@ class oren_nayar : public if_material {
  */
 class cook_torr : public if_material {
   public:
-    cook_torr(std::string const &name, e8util::vec3 const &albedo, float beta, float ior);
+    cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness, float ior,
+              std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map = nullptr,
+              std::shared_ptr<texture_map<float>> const &roughness_map = nullptr);
     cook_torr(cook_torr const &other);
 
     std::unique_ptr<if_material> copy() const override;
     e8util::vec3 eval(e8util::vec3 const &n, e8util::vec3 const &o,
                       e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
-                        float &pdf) const override;
+                        float &cond_density) const override;
 
   private:
     float fresnel(e8util::vec3 const &i, e8util::vec3 const &h) const;
@@ -151,9 +179,13 @@ class cook_torr : public if_material {
     float ggx_shadow1(e8util::vec3 const &v, e8util::vec3 const &h) const;
     float ggx_shadow(e8util::vec3 const &i, e8util::vec3 const &o, e8util::vec3 const &h) const;
 
+    std::shared_ptr<texture_map<e8util::vec3>> m_albedo_map;
+    std::shared_ptr<texture_map<float>> m_roughness_map;
+
     e8util::vec3 m_albedo;
     float m_beta2;
     float m_ior2;
+
     uint32_t m_padding;
 };
 

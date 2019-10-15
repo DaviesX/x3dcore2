@@ -28,22 +28,55 @@ e8util::vec3 e8::mat_fail_safe::eval(e8util::vec3 const & /* n */, e8util::vec3 
 }
 
 e8util::vec3 e8::mat_fail_safe::sample(e8util::rng &rng, e8util::vec3 const &n,
-                                       e8util::vec3 const & /* o */, float &pdf) const {
+                                       e8util::vec3 const & /* o */, float &cond_density) const {
     e8util::vec3 const &i = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
-    pdf = i.inner(n) / static_cast<float>(M_PI);
+    cond_density = i.inner(n) / static_cast<float>(M_PI);
     return i;
 }
 
-e8::oren_nayar::oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness)
-    : if_material(name), m_albedo(albedo), m_sigma(roughness) {
+e8::mat_mixture::mat_mixture(std::string const &name, std::unique_ptr<if_material> mat_0,
+                             std::unique_ptr<if_material> mat_1, float ratio)
+    : if_material(name), m_mat_0(std::move(mat_0)), m_mat_1(std::move(mat_1)), m_ratio(ratio) {}
+
+e8::mat_mixture::mat_mixture(mat_mixture const &other)
+    : if_material(other.id(), other.name()), m_mat_0(other.m_mat_0->copy()),
+      m_mat_1(other.m_mat_1->copy()), m_ratio(other.m_ratio) {}
+
+std::unique_ptr<e8::if_material> e8::mat_mixture::copy() const {
+    return std::make_unique<mat_mixture>(*this);
+}
+
+e8util::vec3 e8::mat_mixture::eval(e8util::vec3 const &n, e8util::vec3 const &o,
+                                   e8util::vec3 const &i) const {
+    return m_ratio * m_mat_0->eval(n, o, i) + (1 - m_ratio) * m_mat_1->eval(n, o, i);
+}
+
+e8util::vec3 e8::mat_mixture::sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
+                                     float &cond_density) const {
+    e8util::vec3 i;
+    if (rng.draw() < m_ratio) {
+        i = m_mat_0->sample(rng, n, o, cond_density);
+        cond_density *= m_ratio;
+    } else {
+        i = m_mat_1->sample(rng, n, o, cond_density);
+        cond_density *= 1 - m_ratio;
+    }
+    return i;
+}
+
+e8::oren_nayar::oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness,
+                           std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
+                           std::shared_ptr<texture_map<float>> const &roughness_map)
+    : if_material(name), m_albedo_map(albedo_map), m_roughness_map(roughness_map), m_albedo(albedo),
+      m_sigma(roughness) {
     float sigma2 = m_sigma * m_sigma;
-    A = 1 - 0.5f * sigma2 / (sigma2 + 0.33f);
-    B = 0.45f * sigma2 / (sigma2 + 0.09f);
+    m_a = 1 - 0.5f * sigma2 / (sigma2 + 0.33f);
+    m_b = 0.45f * sigma2 / (sigma2 + 0.09f);
 }
 
 e8::oren_nayar::oren_nayar(oren_nayar const &other)
     : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_sigma(other.m_sigma),
-      A(other.A), B(other.B) {}
+      m_a(other.m_a), m_b(other.m_b) {}
 
 std::unique_ptr<e8::if_material> e8::oren_nayar::copy() const {
     return std::make_unique<oren_nayar>(*this);
@@ -72,18 +105,21 @@ e8util::vec3 e8::oren_nayar::eval(e8util::vec3 const &n, e8util::vec3 const &o,
     float tan_beta = sin_beta / cos_theo;
 
     return m_albedo * (1.0f / static_cast<float>(M_PI)) *
-           (A + B * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
+           (m_a + m_b * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
 }
 
 e8util::vec3 e8::oren_nayar::sample(e8util::rng &rng, e8util::vec3 const &n,
-                                    e8util::vec3 const & /* o */, float &pdf) const {
+                                    e8util::vec3 const & /* o */, float &cond_density) const {
     e8util::vec3 const &i = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
-    pdf = i.inner(n) / static_cast<float>(M_PI);
+    cond_density = i.inner(n) / static_cast<float>(M_PI);
     return i;
 }
 
-e8::cook_torr::cook_torr(std::string const &name, e8util::vec3 const &albedo, float beta, float ior)
-    : if_material(name), m_albedo(albedo), m_beta2(beta * beta), m_ior2(ior * ior) {}
+e8::cook_torr::cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness,
+                         float ior, std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
+                         std::shared_ptr<texture_map<float>> const &roughness_map)
+    : if_material(name), m_albedo_map(albedo_map), m_roughness_map(roughness_map), m_albedo(albedo),
+      m_beta2(roughness * roughness), m_ior2(ior * ior) {}
 
 e8::cook_torr::cook_torr(cook_torr const &other)
     : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_beta2(other.m_beta2),
@@ -137,7 +173,7 @@ e8util::vec3 e8::cook_torr::eval(e8util::vec3 const &n, e8util::vec3 const &o,
 }
 
 e8util::vec3 e8::cook_torr::sample(e8util::rng &rng, e8util::vec3 const &n, e8util::vec3 const &o,
-                                   float &pdf) const {
+                                   float &cond_density) const {
     // sample over the ggx distribution.
     e8util::vec3 u, v;
     e8util::vec3_basis(n, u, v);
@@ -153,7 +189,7 @@ e8util::vec3 e8::cook_torr::sample(e8util::rng &rng, e8util::vec3 const &n, e8ut
 
     e8util::vec3 const &m = u * x + v * y + n * z;
     float m_dot_o = m.inner(o);
-    pdf = ggx_distri(n, m) * cos_phi / (4.0f * m_dot_o);
+    cond_density = ggx_distri(n, m) * cos_phi / (4.0f * m_dot_o);
 
     return 2.0f * m_dot_o * m - o;
 }
