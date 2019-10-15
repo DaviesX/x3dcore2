@@ -58,17 +58,24 @@ std::vector<std::shared_ptr<e8::if_geometry>> static cornell_scene_load_geometri
 
 std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_materials() {
     std::shared_ptr<e8::if_material> white =
-        std::make_shared<e8::oren_nayar>("white", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
+        std::make_shared<e8::oren_nayar>("white", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.178f);
     std::shared_ptr<e8::if_material> red =
-        std::make_shared<e8::oren_nayar>("red", e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
+        std::make_shared<e8::oren_nayar>("red", e8util::vec3({0.630f, 0.065f, 0.050f}), 0.178f);
     std::shared_ptr<e8::if_material> green =
-        std::make_shared<e8::oren_nayar>("green", e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
+        std::make_shared<e8::oren_nayar>("green", e8util::vec3({0.140f, 0.450f, 0.091f}), 0.178f);
     std::shared_ptr<e8::if_material> glossy = std::make_shared<e8::cook_torr>(
         "glossy", e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
+    std::shared_ptr<e8::if_material> marble = std::make_shared<e8::mat_mixture>(
+        "marble",
+        std::make_unique<e8::oren_nayar>("marble_diffuse", e8util::vec3({0.725f, 0.710f, 0.680f}),
+                                         0.078f),
+        std::make_unique<e8::cook_torr>("marble_spec", e8util::vec3({0.787f, 0.787f, 0.787f}),
+                                        0.05f, 1.49f),
+        /*ratio=*/0.93);
     std::shared_ptr<e8::if_material> light =
         std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
     return std::vector<std::shared_ptr<e8::if_material>>(
-        {red, green, white, white, white, glossy, white, light});
+        {red, green, white, white, white, glossy, marble, light});
 }
 
 std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_lights(
