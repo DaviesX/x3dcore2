@@ -71,11 +71,11 @@ std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_material
                                          0.078f),
         std::make_unique<e8::cook_torr>("marble_spec", e8util::vec3({0.787f, 0.787f, 0.787f}),
                                         0.05f, 1.49f),
-        /*ratio=*/0.93);
+        /*ratio=*/0.9);
     std::shared_ptr<e8::if_material> light =
         std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
     return std::vector<std::shared_ptr<e8::if_material>>(
-        {red, green, white, white, white, glossy, marble, light});
+        {red, green, white, marble, marble, glossy, white, light});
 }
 
 std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_lights(
