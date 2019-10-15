@@ -85,7 +85,16 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
         e8util::vec3 const &n1 = normals[(*hit_tri)(1)];
         e8util::vec3 const &n2 = normals[(*hit_tri)(2)];
         e8util::vec3 const &normal = (hit_b(0) * n0 + hit_b(1) * n1 + hit_b(2) * n2).normalize();
-        return intersect_info(t, vertex, normal, hit_geo->mat.get(), hit_geo->light.get());
+
+        std::vector<e8util::vec2> const &texcoords = hit_geo->geometry->texcoords();
+        e8util::vec2 uv;
+        if (!texcoords.empty()) {
+            e8util::vec2 uv0 = texcoords[(*hit_tri)(0)];
+            e8util::vec2 uv1 = texcoords[(*hit_tri)(1)];
+            e8util::vec2 uv2 = texcoords[(*hit_tri)(2)];
+            uv = (hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2).normalize();
+        }
+        return intersect_info(t, vertex, normal, uv, hit_geo->mat.get(), hit_geo->light.get());
     } else {
         return intersect_info();
     }
@@ -426,9 +435,19 @@ e8::intersect_info e8::bvh_path_space_layout::intersect(e8util::ray const &r) co
         e8util::vec3 const &n2 = normals[hit_prim->tri(2)];
         e8util::vec3 const &normal = (hit_b(0) * n0 + hit_b(1) * n1 + hit_b(2) * n2).normalize();
 
-        return intersect_info(
-            t, vertex, normal, hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat],
-            hit_prim->i_light == 0xFFFF ? nullptr : m_light_list[hit_prim->i_light]);
+        std::vector<e8util::vec2> const &texcoords = hit_geo->texcoords();
+        e8util::vec2 uv;
+        if (!texcoords.empty()) {
+            e8util::vec2 uv0 = texcoords[hit_prim->tri(0)];
+            e8util::vec2 uv1 = texcoords[hit_prim->tri(1)];
+            e8util::vec2 uv2 = texcoords[hit_prim->tri(2)];
+            uv = (hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2).normalize();
+        }
+
+        return intersect_info(t, vertex, normal, uv,
+                              hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat],
+                              hit_prim->i_light == 0xFFFF ? nullptr
+                                                          : m_light_list[hit_prim->i_light]);
     } else {
         return intersect_info();
     }

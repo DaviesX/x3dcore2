@@ -17,9 +17,26 @@ class if_geometry : public if_operable_obj<if_geometry> {
 
     obj_protocol protocol() const override;
     std::string name() const;
+
+    /**
+     * @brief vertices
+     * @return
+     */
     virtual std::vector<e8util::vec3> const &vertices() const = 0;
+
+    /**
+     * @brief normals
+     * @return
+     */
     virtual std::vector<e8util::vec3> const &normals() const = 0;
+
+    /**
+     * @brief texcoords Texture coordinate is optional for a geometry. It may return an empty
+     * vector.
+     * @return An array of texture coordinate if specified.
+     */
     virtual std::vector<e8util::vec2> const &texcoords() const = 0;
+
     virtual std::vector<triangle> const &triangles() const = 0;
     virtual void sample(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, float &pdf) const = 0;
     virtual float surface_area() const = 0;

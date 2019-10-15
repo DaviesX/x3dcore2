@@ -32,9 +32,12 @@ unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
                      e8::if_path_space const &path_space, unsigned depth, unsigned max_depth) {
     if (depth == max_depth)
         return depth;
+
     float w_dens;
     e8util::vec3 const &i = sampled_path[depth - 1].vert.mat->sample(
-        rng, sampled_path[depth - 1].vert.normal, -sampled_path[depth - 1].o, w_dens);
+        &rng, &w_dens, sampled_path[depth - 1].vert.uv, sampled_path[depth - 1].vert.normal,
+        -sampled_path[depth - 1].o);
+
     e8::intersect_info const &next_vert =
         path_space.intersect(e8util::ray(sampled_path[depth - 1].vert.vertex, i));
     if (next_vert.valid) {
@@ -114,7 +117,8 @@ e8util::vec3 transport_illum_source(e8::if_light const &light, e8util::vec3 cons
     e8util::ray light_ray(target_vert.vertex, i);
     float t;
     if (!path_space.has_intersect(light_ray, 1e-4f, distance - 1e-3f, t)) {
-        return illum * target_vert.mat->eval(target_vert.normal, target_o_ray, i) * cos_w;
+        return illum * target_vert.mat->eval(target_vert.uv, target_vert.normal, target_o_ray, i) *
+               cos_w;
     } else {
         return 0.0f;
     }
@@ -211,17 +215,17 @@ template <bool FOWARD> class light_transport_info {
         if (FOWARD) {
             e8util::vec3 transport = 1.0f;
             for (unsigned k = 0; k < len - 1; k++) {
-                transport *=
-                    path[k].vert.mat->eval(path[k].vert.normal, path[k + 1].o, -path[k].o) *
-                    path[k].vert.normal.inner(-path[k].o) / path[k + 1].dens;
+                transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
+                                                    path[k + 1].o, -path[k].o) *
+                             path[k].vert.normal.inner(-path[k].o) / path[k + 1].dens;
                 m_prefix_transport[k] = transport;
             }
         } else {
             e8util::vec3 transport = 1.0f;
             for (int k = static_cast<int>(len) - 2; k >= 0; k--) {
-                transport *=
-                    path[k].vert.mat->eval(path[k].vert.normal, -path[k].o, path[k + 1].o) *
-                    path[k].vert.normal.inner(path[k + 1].o) / path[k + 1].dens;
+                transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
+                                                    -path[k].o, path[k + 1].o) *
+                             path[k].vert.normal.inner(path[k + 1].o) / path[k + 1].dens;
                 m_prefix_transport[static_cast<unsigned>(k)] = transport;
             }
         }
@@ -248,14 +252,14 @@ template <bool FOWARD> class light_transport_info {
             return src_rad;
         e8util::vec3 last_piece =
             FOWARD
-                ? (m_path[subpath_len - 1].vert.mat->eval(m_path[subpath_len - 1].vert.normal,
-                                                          appending_ray,
-                                                          -m_path[subpath_len - 1].o) *
+                ? (m_path[subpath_len - 1].vert.mat->eval(
+                       m_path[subpath_len - 1].vert.uv, m_path[subpath_len - 1].vert.normal,
+                       appending_ray, -m_path[subpath_len - 1].o) *
                    m_path[subpath_len - 1].vert.normal.inner(-m_path[subpath_len - 1].o) /
                    appending_ray_dens)
-                : (m_path[subpath_len - 1].vert.mat->eval(m_path[subpath_len - 1].vert.normal,
-                                                          -m_path[subpath_len - 1].o,
-                                                          appending_ray) *
+                : (m_path[subpath_len - 1].vert.mat->eval(
+                       m_path[subpath_len - 1].vert.uv, m_path[subpath_len - 1].vert.normal,
+                       -m_path[subpath_len - 1].o, appending_ray) *
                    m_path[subpath_len - 1].vert.normal.inner(appending_ray) / appending_ray_dens);
         return subpath_len >= 2 ? (m_prefix_transport[subpath_len - 2] * last_piece * src_rad)
                                 : (last_piece * src_rad);
@@ -503,13 +507,13 @@ e8util::vec3 e8::unidirect_pathtracer::sample_indirect_illum(
     float mat_pdf;
     e8util::vec3 multi_indirect;
     for (unsigned k = 0; k < multi_indirect_samps; k++) {
-        e8util::vec3 const &i = vert.mat->sample(rng, vert.normal, o, mat_pdf);
+        e8util::vec3 const &i = vert.mat->sample(&rng, &mat_pdf, vert.uv, vert.normal, o);
         e8::intersect_info const &indirect_vert = path_space.intersect(e8util::ray(vert.vertex, i));
         if (indirect_vert.valid) {
             e8util::vec3 const &indirect =
                 sample_indirect_illum(rng, -i, indirect_vert, path_space, light_sources, depth + 1,
                                       multi_light_samps, multi_indirect_samps);
-            e8util::vec3 const &brdf = vert.mat->eval(vert.normal, o, i);
+            e8util::vec3 const &brdf = vert.mat->eval(vert.uv, vert.normal, o, i);
             float cos_w = vert.normal.inner(i);
             multi_indirect += indirect * brdf * cos_w / mat_pdf;
         }
@@ -579,10 +583,11 @@ e8util::vec3 e8::bidirect_lt2_pathtracer::join_with_light_paths(
     e8util::vec3 p2_direct;
     if (cos_wo > 0.0f && cos_wi > 0.0f && cos_w2 > 0.0f &&
         !path_space.has_intersect(join_ray, 1e-4f, distance - 1e-3f, t)) {
-        e8util::vec3 f2 =
-            light_illum * terminate.mat->eval(terminate.normal, join_path, tray) * cos_w2;
-        p2_direct =
-            f2 * cos_wo / (distance * distance) * poi.mat->eval(poi.normal, o, -join_path) * cos_wi;
+        e8util::vec3 f2 = light_illum *
+                          terminate.mat->eval(terminate.uv, terminate.normal, join_path, tray) *
+                          cos_w2;
+        p2_direct = f2 * cos_wo / (distance * distance) *
+                    poi.mat->eval(poi.uv, poi.normal, o, -join_path) * cos_wi;
         if (cam_path_len == 0)
             return p1_direct + 0.5f * p2_direct;
         else
@@ -607,13 +612,13 @@ e8util::vec3 e8::bidirect_lt2_pathtracer::sample_indirect_illum(
 
     // indirect.
     float mat_pdf;
-    e8util::vec3 const &i = vert.mat->sample(rng, vert.normal, o, mat_pdf);
+    e8util::vec3 const &i = vert.mat->sample(&rng, &mat_pdf, vert.uv, vert.normal, o);
     e8::intersect_info const &indirect_info = path_space.intersect(e8util::ray(vert.vertex, i));
     e8util::vec3 r;
     if (indirect_info.valid) {
         e8util::vec3 const &indirect =
             sample_indirect_illum(rng, -i, indirect_info, path_space, light_sources, depth + 1);
-        e8util::vec3 const &brdf = vert.mat->eval(vert.normal, o, i);
+        e8util::vec3 const &brdf = vert.mat->eval(vert.uv, vert.normal, o, i);
         float cos_w = vert.normal.inner(i);
         if (cos_w < 0.0f)
             return 0.0f;

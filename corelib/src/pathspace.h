@@ -14,8 +14,8 @@ namespace e8 {
 
 struct intersect_info {
     intersect_info(float t, e8util::vec3 const &vertex, e8util::vec3 const &normal,
-                   if_material const *mat, if_light const *light)
-        : valid(true), t(t), vertex(vertex), normal(normal), mat(mat), light(light) {}
+                   e8util::vec2 const &uv, if_material const *mat, if_light const *light)
+        : valid(true), t(t), vertex(vertex), normal(normal), uv(uv), mat(mat), light(light) {}
 
     intersect_info() : valid(false) {}
 
@@ -23,6 +23,7 @@ struct intersect_info {
     float t;
     e8util::vec3 vertex;
     e8util::vec3 normal;
+    e8util::vec2 uv;
     if_material const *mat;
     if_light const *light;
 };
