@@ -85,7 +85,7 @@ e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     config.float_val["exposure"] = 1.0f;
     config.int_val["super_samples"] = 4;
     config.int_val["samples_per_frame"] = 64;
-    config.bool_val["firefly_filter"] = true;
+    config.bool_val["firefly_filter"] = false;
     return config;
 }
 
