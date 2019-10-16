@@ -9,7 +9,7 @@
 namespace e8 {
 
 /**
- * @brief The if_pathtracer class
+ * @brief The if_pathtracer class CPU path-tracing interface.
  */
 class if_pathtracer {
   public:
