@@ -22,7 +22,7 @@ class pt_image_renderer {
      * @brief pt_image_renderer It internally creates multiple path-tracers so they can be run in
      * parallel.
      */
-    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact);
+    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact, unsigned num_threads = 1);
     ~pt_image_renderer() = default;
 
     /**
@@ -116,6 +116,13 @@ class pt_image_renderer {
     e8util::thread_pool m_thrpool;
 
     e8util::rng m_rng;
+};
+
+/**
+ * @brief The rt_image_renderer class
+ */
+class rt_image_renderer {
+  public:
 };
 
 } // namespace e8
