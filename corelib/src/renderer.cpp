@@ -105,7 +105,7 @@ std::vector<e8util::vec3> const &e8::pt_image_renderer::sampling_task::get_estim
 
 e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fact,
                                          unsigned num_threads)
-    : m_tasks(e8util::cpu_core_count()),
+    : m_tasks(num_threads == 0 ? e8util::cpu_core_count() : num_threads),
       m_thrpool(num_threads == 0 ? e8util::cpu_core_count() : num_threads), m_rng(1361) {
     // create task constructs.
     for (unsigned i = 0; i < m_tasks.size(); i++) {
