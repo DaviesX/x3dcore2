@@ -672,6 +672,13 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> c
                                     first_hits const &first_hits, if_path_space const &path_space,
                                     if_light_sources const &light_sources) const {
     std::vector<e8util::vec3> rad(rays.size());
+
+    std::unique_ptr<sampled_pathlet[]> cam_path =
+        std::unique_ptr<sampled_pathlet[]>(new sampled_pathlet[m_max_path_len]);
+
+    std::unique_ptr<sampled_pathlet[]> light_path =
+        std::unique_ptr<sampled_pathlet[]>(new sampled_pathlet[m_max_path_len]);
+
     for (unsigned i = 0; i < rays.size(); i++) {
         // initialize the first paths for both camera and light.
         e8util::ray const &cam_path0 = rays[i];
@@ -685,18 +692,17 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> c
         e8util::ray const &light_path0 = e8util::ray(light_p, light_w);
 
         // produce both camera and light paths.
-        sampled_pathlet cam_path[m_max_path_len];
-        unsigned cam_path_len =
-            sample_path(rng, cam_path, cam_path0, first_hits.hits[i], path_space, m_max_path_len);
+        unsigned cam_path_len = sample_path(rng, cam_path.get(), cam_path0, first_hits.hits[i],
+                                            path_space, m_max_path_len);
 
-        sampled_pathlet light_path[m_max_path_len];
-        unsigned light_path_len =
-            sample_path(rng, light_path, light_path0, light_w_dens, path_space, m_max_path_len);
+        unsigned light_path_len = sample_path(rng, light_path.get(), light_path0, light_w_dens,
+                                              path_space, m_max_path_len);
 
         // compute radiance for different strategies.
-        rad[i] =
-            transport_all_connectible_subpaths(cam_path, cam_path_len, light_path, light_path_len,
-                                               light_p, light_n, light_dens, *light, path_space);
+        rad[i] = transport_all_connectible_subpaths(cam_path.get(), cam_path_len, light_path.get(),
+                                                    light_path_len, light_p, light_n, light_dens,
+                                                    *light, path_space);
     }
+
     return rad;
 }

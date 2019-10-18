@@ -74,8 +74,13 @@ std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_material
         /*ratio=*/0.9);
     std::shared_ptr<e8::if_material> light =
         std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
+
+    // Can't handle this material setup yet.
+    //    return std::vector<std::shared_ptr<e8::if_material>>(
+    //        {red, green, marble, marble, marble, glossy, white, light});
+
     return std::vector<std::shared_ptr<e8::if_material>>(
-        {red, green, white, marble, marble, glossy, white, light});
+        {red, green, white, white, white, glossy, white, light});
 }
 
 std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_lights(

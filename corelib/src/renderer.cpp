@@ -89,14 +89,6 @@ void e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage *p) {
             }
         }
     }
-
-    if (data->num_samps > 1) {
-        // Average estimate if there are more than 1 sample.
-        float scale = 1.0f / data->num_samps;
-        for (unsigned i = 0; i < m_estimate.size(); i++) {
-            m_estimate[i] *= scale;
-        }
-    }
 }
 
 std::vector<e8util::vec3> const &e8::pt_image_renderer::sampling_task::get_estimates() const {
@@ -159,7 +151,7 @@ e8::pt_image_renderer::render(if_compositor *compositor, if_path_space const &pa
     }
 
     // Average estimates.
-    float scale = 1.0f / m_tasks.size();
+    float scale = 1.0f / (allocated_samps * m_tasks.size());
     for (unsigned j = 0; j < compositor->height(); j++) {
         for (unsigned i = 0; i < compositor->width(); i++) {
             (*compositor)(i, j) *= scale;

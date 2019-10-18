@@ -196,9 +196,9 @@ template <unsigned N, typename T> vec<N, T> vec<N, T>::outer(vec const &rhs) con
     if (N != 3)
         throw std::string("outer product of 2 vectors only defines in 3 dimension.");
     else
-        return vec<N, T>({ (*this)(1) * rhs(2) - (*this)(2) * rhs(1),
-                           (*this)(2) * rhs(0) - (*this)(0) * rhs(2),
-                           (*this)(0) * rhs(1) - (*this)(1) * rhs(0)});
+        return vec<N, T>({(*this)(1) * rhs(2) - (*this)(2) * rhs(1),
+                          (*this)(2) * rhs(0) - (*this)(0) * rhs(2),
+                          (*this)(0) * rhs(1) - (*this)(1) * rhs(0)});
 }
 
 template <unsigned N, typename T> T vec<N, T>::norm2() const { return this->inner(*this); }
@@ -922,7 +922,7 @@ class rng {
     float draw() { return ur(engine); }
 
   private:
-    std::mt19937 engine;
+    std::default_random_engine engine;
     std::uniform_real_distribution<float> ur;
 };
 
