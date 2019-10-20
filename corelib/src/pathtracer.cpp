@@ -214,19 +214,21 @@ template <bool FOWARD> class light_transport_info {
         // Pre-compute light transport.
         if (FOWARD) {
             e8util::vec3 transport = 1.0f;
+            m_prefix_transport[0] = 1.0f;
             for (unsigned k = 0; k < len - 1; k++) {
                 transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
                                                     path[k + 1].o, -path[k].o) *
                              path[k].vert.normal.inner(-path[k].o) / path[k + 1].dens;
-                m_prefix_transport[k] = transport;
+                m_prefix_transport[k + 1] = transport;
             }
         } else {
             e8util::vec3 transport = 1.0f;
-            for (int k = static_cast<int>(len) - 2; k >= 0; k--) {
+            m_prefix_transport[0] = 1.0f;
+            for (unsigned k = 0; k < len - 1; k++) {
                 transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
                                                     -path[k].o, path[k + 1].o) *
                              path[k].vert.normal.inner(path[k + 1].o) / path[k + 1].dens;
-                m_prefix_transport[static_cast<unsigned>(k)] = transport;
+                m_prefix_transport[k + 1] = transport;
             }
         }
 
@@ -250,6 +252,7 @@ template <bool FOWARD> class light_transport_info {
                            e8util::vec3 const &appending_ray, float appending_ray_dens) const {
         if (subpath_len == 0)
             return src_rad;
+
         e8util::vec3 last_piece =
             FOWARD
                 ? (m_path[subpath_len - 1].vert.mat->eval(
@@ -261,8 +264,8 @@ template <bool FOWARD> class light_transport_info {
                        m_path[subpath_len - 1].vert.uv, m_path[subpath_len - 1].vert.normal,
                        -m_path[subpath_len - 1].o, appending_ray) *
                    m_path[subpath_len - 1].vert.normal.inner(appending_ray) / appending_ray_dens);
-        return subpath_len >= 2 ? (m_prefix_transport[subpath_len - 2] * last_piece * src_rad)
-                                : (last_piece * src_rad);
+
+        return src_rad * last_piece * m_prefix_transport[subpath_len - 1];
     }
 
     /**
@@ -277,6 +280,26 @@ template <bool FOWARD> class light_transport_info {
     std::vector<float> m_cond_density;
     sampled_pathlet const *m_path;
 };
+
+/**
+ * @brief subpath_density The path density of sampled_path[path_start:path_end]
+ * @param src_dens The density of the initial vertex.
+ * @param sampled_path The path sample that the sub-path is to be taken from.
+ * @param path_start See the brief description.
+ * @param path_end See the brief description.
+ * @return The probability density of the subpath sampled_path[path_start:path_end].
+ */
+float subpath_density(float src_dens, sampled_pathlet const *sampled_path, unsigned path_start,
+                      unsigned path_end) {
+    if (path_end == 0)
+        return 0.0f;
+    float dens = src_dens;
+    for (unsigned k = path_start; k < path_end; k++) {
+        dens *= sampled_path[k].dens * sampled_path[k].vert.normal.inner(-sampled_path[k].o) /
+                (sampled_path[k].vert.t * sampled_path[k].vert.t);
+    }
+    return dens;
+}
 
 /**
  * @brief transport_all_connectible_subpaths Two subpaths are conectible iff. they joins the
@@ -359,8 +382,8 @@ e8util::vec3 transport_all_connectible_subpaths(
                 e8util::ray join_ray(cam_path[cam_plen - 1].vert.vertex, join_path);
                 float cos_w2 =
                     light_path[light_plen].vert.normal.inner(-light_path[light_plen - 1].o);
-                float cos_wo = light_path[light_plen].vert.normal.inner(join_path);
-                float cos_wi = cam_path[light_plen - 1].vert.normal.inner(-join_path);
+                float cos_wo = light_path[light_plen - 1].vert.normal.inner(join_path);
+                float cos_wi = cam_path[cam_plen - 1].vert.normal.inner(-join_path);
                 float t;
                 valid_sample_indicator =
                     cos_wo > 0.0f && cos_wi > 0.0f && cos_w2 > 0.0f &&
@@ -677,7 +700,7 @@ e8::bidirect_mis_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> c
         std::unique_ptr<sampled_pathlet[]>(new sampled_pathlet[m_max_path_len]);
 
     std::unique_ptr<sampled_pathlet[]> light_path =
-        std::unique_ptr<sampled_pathlet[]>(new sampled_pathlet[m_max_path_len]);
+        std::unique_ptr<sampled_pathlet[]>(new sampled_pathlet[m_max_path_len + 1]);
 
     for (unsigned i = 0; i < rays.size(); i++) {
         // initialize the first paths for both camera and light.

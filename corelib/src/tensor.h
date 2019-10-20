@@ -60,6 +60,10 @@ template <unsigned N, typename T = float> class vec {
     T norm2() const;
     vec normalize() const;
 
+    vec log(float bias = 1e-3f) const;
+    vec exp() const;
+    vec sqrt() const;
+
     vec<N + 1, T> homo(T p) const;
     vec<N - 1, T> cart() const;
     vec<N - 1, T> trunc() const;
@@ -74,6 +78,10 @@ template <unsigned N, typename T = float> class vec {
 typedef vec<2> vec2;
 typedef vec<3> vec3;
 typedef vec<4> vec4;
+
+typedef vec<2, double> vecd2;
+typedef vec<3, double> vecd3;
+typedef vec<4, double> vecd4;
 
 template <unsigned N, typename T> vec<N, T>::vec(std::initializer_list<T> const &v) {
     auto it = v.begin();
@@ -209,6 +217,30 @@ template <unsigned N, typename T> vec<N, T> vec<N, T>::normalize() const {
     return 1.0f / norm() * (*this);
 }
 
+template <unsigned N, typename T> vec<N, T> vec<N, T>::log(float bias) const {
+    vec<N, T> v;
+    for (unsigned i = 0; i < N; i++) {
+        v(i) = std::log((*this)(i) + bias);
+    }
+    return v;
+}
+
+template <unsigned N, typename T> vec<N, T> vec<N, T>::exp() const {
+    vec<N, T> v;
+    for (unsigned i = 0; i < N; i++) {
+        v(i) = std::exp((*this)(i));
+    }
+    return v;
+}
+
+template <unsigned N, typename T> vec<N, T> vec<N, T>::sqrt() const {
+    vec<N, T> v;
+    for (unsigned i = 0; i < N; i++) {
+        v(i) = std::sqrt((*this)(i));
+    }
+    return v;
+}
+
 template <unsigned N, typename T> vec<N + 1, T> vec<N, T>::homo(T p) const {
     T v[N + 1];
     for (unsigned i = 0; i < N; i++)
@@ -258,7 +290,12 @@ inline std::ostream &operator<<(std::ostream &os, vec<N, T> const &v) {
 }
 
 template <unsigned N, typename T> bool equals(vec<N, T> const &a, vec<N, T> const &b) {
-    return a == b;
+    for (unsigned i = 0; i < N; i++) {
+        if (!equals(a(i), b(i))) {
+            return false;
+        }
+    }
+    return true;
 }
 
 template <unsigned M, unsigned N, typename T = float> class mat {
