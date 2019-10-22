@@ -40,7 +40,7 @@ unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
 
     e8::intersect_info const &next_vert =
         path_space.intersect(e8util::ray(sampled_path[depth - 1].vert.vertex, i));
-    if (next_vert.valid) {
+    if (next_vert.valid && next_vert.normal.inner(-i) > 0) {
         sampled_path[depth] = sampled_pathlet(i, next_vert, w_dens);
         return sample_path(rng, sampled_path, path_space, depth + 1, max_depth);
     } else {
@@ -62,7 +62,7 @@ unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path,
 unsigned sample_path(e8util::rng &rng, sampled_pathlet *sampled_path, e8util::ray const &r0,
                      float dens0, e8::if_path_space const &path_space, unsigned max_depth) {
     e8::intersect_info const &vert0 = path_space.intersect(r0);
-    if (!vert0.valid) {
+    if (!vert0.valid || vert0.normal.inner(-r0.v()) <= 0.0f) {
         return 0;
     } else {
         sampled_path[0] = sampled_pathlet(r0.v(), vert0, dens0);
@@ -379,7 +379,7 @@ e8util::vec3 transport_all_connectible_subpaths(
                 float distance = join_path.norm();
                 join_path = join_path / distance;
 
-                e8util::ray join_ray(cam_path[cam_plen - 1].vert.vertex, join_path);
+                e8util::ray join_ray(light_path[light_plen - 1].vert.vertex, join_path);
                 float cos_w2 =
                     light_path[light_plen].vert.normal.inner(-light_path[light_plen - 1].o);
                 float cos_wo = light_path[light_plen - 1].vert.normal.inner(join_path);
@@ -436,6 +436,7 @@ e8::if_pathtracer::compute_first_hit(std::vector<e8util::ray> const &rays,
     first_hits results(rays.size());
     for (unsigned i = 0; i < rays.size(); i++) {
         results.hits[i] = path_space.intersect(rays[i]);
+        results.hits[i].valid &= results.hits[i].normal.inner(-rays[i].v()) > 0;
     }
     return results;
 }

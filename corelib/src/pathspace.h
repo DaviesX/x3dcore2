@@ -17,7 +17,7 @@ struct intersect_info {
                    e8util::vec2 const &uv, if_material const *mat, if_light const *light)
         : valid(true), t(t), vertex(vertex), normal(normal), uv(uv), mat(mat), light(light) {}
 
-    intersect_info() : valid(false) {}
+    intersect_info() : valid(false), mat(nullptr), light(nullptr) {}
 
     bool valid;
     float t;
