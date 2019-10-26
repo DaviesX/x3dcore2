@@ -73,6 +73,7 @@ void e8::pt_render_pipeline::render_frame() {
 
 e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     e8util::flex_config config;
+    config.int_val["num_threads"] = 1;
     config.str_val["scene_file"] = "cornellball";
     config.enum_vals["path_space"] = std::set<std::string>{"linear", "static_bvh"};
     config.enum_sel["path_space"] = "static_bvh";
@@ -91,6 +92,10 @@ e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
 
 void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
     // update.
+    diff.find_int("num_threads", [this](int const &num_threads) {
+        m_num_threads = static_cast<unsigned>(num_threads);
+    });
+
     diff.find_enum("path_tracer", [this](std::string const &tracer_type,
                                          e8util::flex_config const * /*config*/) {
         e8::pathtracer_factory::pt_type pt_type = e8::pathtracer_factory::pt_type::normal;
@@ -108,7 +113,8 @@ void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
             pt_type = e8::pathtracer_factory::pt_type::bidirect_mis;
         }
         m_renderer = std::make_unique<e8::pt_image_renderer>(
-            std::make_unique<e8::pathtracer_factory>(pt_type, e8::pathtracer_factory::options()));
+            std::make_unique<e8::pathtracer_factory>(pt_type, e8::pathtracer_factory::options()),
+            m_num_threads);
     });
 
     diff.find_enum("path_space", [this](std::string const &path_space_type,
