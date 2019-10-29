@@ -22,7 +22,7 @@ class pt_image_renderer {
      * @brief pt_image_renderer It internally creates multiple path-tracers so they can be run in
      * parallel.
      */
-    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact, unsigned num_threads = 1);
+    pt_image_renderer(std::unique_ptr<pathtracer_factory> fact, unsigned num_threads = 0);
     ~pt_image_renderer() = default;
 
     /**
