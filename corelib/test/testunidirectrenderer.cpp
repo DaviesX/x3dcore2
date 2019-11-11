@@ -15,7 +15,7 @@ void test::test_unidirect_renderer::run() const {
 
     e8util::flex_config config = pipeline.config_protocol();
     config.enum_sel["path_tracer"] = "unidirectional";
-    config.int_val["samples_per_frame"] = 40;
+    config.int_val["samples_per_frame"] = 64;
     pipeline.update_pipeline(config);
 
     pipeline.render_frame();

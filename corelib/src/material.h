@@ -154,6 +154,8 @@ class oren_nayar : public if_material {
                         e8util::vec3 const &n, e8util::vec3 const &o) const override;
 
   private:
+    e8util::vec3 albedo(e8util::vec2 const &uv) const;
+
     std::shared_ptr<texture_map<e8util::vec3>> m_albedo_map;
     std::shared_ptr<texture_map<float>> m_roughness_map;
 
@@ -182,11 +184,14 @@ class cook_torr : public if_material {
                         e8util::vec3 const &n, e8util::vec3 const &o) const override;
 
   private:
+    e8util::vec3 albedo(e8util::vec2 const &uv) const;
+    float alpha2(e8util::vec2 const &uv) const;
+
     std::shared_ptr<texture_map<e8util::vec3>> m_albedo_map;
     std::shared_ptr<texture_map<float>> m_roughness_map;
 
     e8util::vec3 m_albedo;
-    float m_beta2;
+    float m_alpha2;
     float m_ior2;
 
     uint32_t m_padding;

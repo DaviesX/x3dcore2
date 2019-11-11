@@ -11,22 +11,24 @@ float fresnel(float ior2, e8util::vec3 const &i, e8util::vec3 const &h) {
     return 0.5f * f * f * (1.0f + d * d);
 }
 
-float ggx_distri(float beta2, e8util::vec3 const &n, e8util::vec3 const &h) {
+float ggx_distri(float alpha2, e8util::vec3 const &n, e8util::vec3 const &h) {
     float cos_th = n.inner(h);
     float cos_th2 = cos_th * cos_th;
-    float tan_th2 = 1.0f / cos_th2 - 1.0f;
-    float c = beta2 + tan_th2;
-    return beta2 / (static_cast<float>(M_PI) * cos_th2 * cos_th2 * c * c);
+    float tan_th2 = (1.0f - cos_th2) / cos_th2;
+    float c = 1.0f + tan_th2 / alpha2;
+    return 1.0f / (static_cast<float>(M_PI) * alpha2 * cos_th2 * cos_th2 * c * c);
 }
 
-float ggx_shadow1(float beta2, e8util::vec3 const &v, e8util::vec3 const &h) {
-    float cos_vh = v.inner(h);
-    float tan_tv2 = 1.0f / (cos_vh * cos_vh) - 1.0f;
-    return 2.0f / (1.0f + std::sqrt(1.0f + beta2 * tan_tv2));
+float lambda(float alpha2, e8util::vec3 const &n, e8util::vec3 const &w) {
+    float cos_th = n.inner(w);
+    float cos_th2 = cos_th * cos_th;
+    float tan_th2 = (1.0f - cos_th2) / cos_th2;
+    return (-1.0f + std::sqrt(1.0f + alpha2 * tan_th2)) / 2.0f;
 }
 
-float ggx_shadow(float beta2, e8util::vec3 const &i, e8util::vec3 const &o, e8util::vec3 const &h) {
-    return ggx_shadow1(beta2, i, h) * ggx_shadow1(beta2, o, h);
+float ggx_shadow(float alpha2, e8util::vec3 const &i, e8util::vec3 const &o,
+                 e8util::vec3 const &n) {
+    return 1.0f / (1.0f + lambda(alpha2, n, i) + lambda(alpha2, n, o));
 }
 
 } // namespace
@@ -118,6 +120,14 @@ std::unique_ptr<e8::if_material> e8::oren_nayar::copy() const {
     return std::make_unique<oren_nayar>(*this);
 }
 
+e8util::vec3 e8::oren_nayar::albedo(e8util::vec2 const &uv) const {
+    if (m_albedo_map != nullptr) {
+        return m_albedo_map->map(uv);
+    } else {
+        return m_albedo;
+    }
+}
+
 e8util::vec3 e8::oren_nayar::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
                                   e8util::vec3 const &o, e8util::vec3 const &i) const {
     float cos_thei = i.inner(n);
@@ -140,14 +150,7 @@ e8util::vec3 e8::oren_nayar::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
     float cos_theio = cos_alpha * cos_beta + sin_alpha * sin_beta;
     float tan_beta = sin_beta / cos_theo;
 
-    e8util::vec3 albedo;
-    if (m_albedo_map != nullptr) {
-        albedo = m_albedo_map->map(uv);
-    } else {
-        albedo = m_albedo;
-    }
-
-    return albedo * (1.0f / static_cast<float>(M_PI)) *
+    return albedo(uv) * (1.0f / static_cast<float>(M_PI)) *
            (m_a + m_b * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
 }
 
@@ -163,57 +166,57 @@ e8::cook_torr::cook_torr(std::string const &name, e8util::vec3 const &albedo, fl
                          float ior, std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
                          std::shared_ptr<texture_map<float>> const &roughness_map)
     : if_material(name), m_albedo_map(albedo_map), m_roughness_map(roughness_map), m_albedo(albedo),
-      m_beta2(roughness * roughness), m_ior2(ior * ior) {}
+      m_alpha2(2 * roughness * roughness), m_ior2(ior * ior) {}
 
 e8::cook_torr::cook_torr(cook_torr const &other)
-    : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_beta2(other.m_beta2),
+    : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_alpha2(other.m_alpha2),
       m_ior2(other.m_ior2) {}
 
 std::unique_ptr<e8::if_material> e8::cook_torr::copy() const {
     return std::make_unique<cook_torr>(*this);
 }
 
+e8util::vec3 e8::cook_torr::albedo(e8util::vec2 const &uv) const {
+    return m_albedo_map != nullptr ? m_albedo_map->map(uv) : m_albedo;
+}
+
+float e8::cook_torr::alpha2(e8util::vec2 const &uv) const {
+    if (m_roughness_map != nullptr) {
+        float roughness = m_roughness_map->map(uv);
+        return 2 * roughness * roughness;
+    } else {
+        return m_alpha2;
+    }
+}
+
 e8util::vec3 e8::cook_torr::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
                                  e8util::vec3 const &o, e8util::vec3 const &i) const {
-    e8util::vec3 albedo;
-    if (m_albedo_map != nullptr) {
-        albedo = m_albedo_map->map(uv);
-    } else {
-        albedo = m_albedo;
-    }
-
-    float beta2;
-    if (m_roughness_map != nullptr) {
-        float beta = m_roughness_map->map(uv);
-        beta2 = beta * beta;
-    } else {
-        beta2 = m_beta2;
-    }
-
-    float cos_the2 = n.inner(o);
-    float cos_the = n.inner(i);
-    if (cos_the2 <= 0 || cos_the <= 0)
+    float cos_o_the = std::max(0.0f, n.inner(o));
+    float cos_i_the = std::max(0.0f, n.inner(i));
+    if (e8util::equals(cos_i_the, 0.0f) || e8util::equals(cos_o_the, 0.0f)) {
+        // We know that no radiance can be emitted.
         return 0.0f;
+    }
 
-    e8util::vec3 const &h = (i + o).normalize();
+    e8util::vec3 h = i + o;
+    if (e8util::equals(h, e8util::vec3{0.0f})) {
+        // Degenerated case.
+        return 0.0f;
+    }
+    h = h.normalize();
 
-    float F = fresnel(m_ior2, i, h);
-    float D = ggx_distri(beta2, n, h);
-    float G = ggx_shadow(beta2, i, o, n);
+    float f = fresnel(m_ior2, i, h);
+    float roughness = alpha2(uv);
+    float d = ggx_distri(roughness, n, h);
+    float g = ggx_shadow(roughness, i, o, n);
 
-    float c = (1 - F) * D * G * (1.0f / (4.0f * cos_the * cos_the2));
-    return c * albedo;
+    float c = f * d * g / (4.0f * cos_i_the * cos_o_the);
+    return c * albedo(uv);
 }
 
 e8util::vec3 e8::cook_torr::sample(e8util::rng *rng, float *cond_density, e8util::vec2 const &uv,
                                    e8util::vec3 const &n, e8util::vec3 const &o) const {
-    float beta2;
-    if (m_roughness_map != nullptr) {
-        float beta = m_roughness_map->map(uv);
-        beta2 = beta * beta;
-    } else {
-        beta2 = m_beta2;
-    }
+    float ms_slope = alpha2(uv);
 
     // sample over the ggx distribution.
     e8util::vec3 u, v;
@@ -221,16 +224,22 @@ e8util::vec3 e8::cook_torr::sample(e8util::rng *rng, float *cond_density, e8util
 
     float theta = 2.0f * static_cast<float>(M_PI) * rng->draw();
     float t = rng->draw();
-    float phi = std::atan(std::sqrt(m_beta2 * t / (1.0f - t)));
+    float phi = std::atan(std::sqrt(ms_slope * t / (1.0f - t)));
     float sin_phi = std::sin(phi);
     float cos_phi = std::cos(phi);
     float x = sin_phi * std::cos(theta);
     float y = sin_phi * std::sin(theta);
     float z = cos_phi;
 
-    e8util::vec3 const &m = u * x + v * y + n * z;
-    float m_dot_o = m.inner(o);
-    *cond_density = ggx_distri(beta2, n, m) * cos_phi / (4.0f * m_dot_o);
+    e8util::vec3 h = x * u + y * v + z * n;
+    float h_dot_o = h.inner(o);
+    e8util::vec3 i_sample = 2.0f * h_dot_o * h - o;
+    if (i_sample.inner(n) < 0.0f) {
+        // Invalid sample. The ray shoots into the surface.
+        *cond_density = 0.0f;
+        return 0.0f;
+    }
+    *cond_density = ggx_distri(ms_slope, n, h) * cos_phi / (4.0f * h_dot_o);
 
-    return 2.0f * m_dot_o * m - o;
+    return i_sample;
 }
