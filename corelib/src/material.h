@@ -3,6 +3,7 @@
 
 #include "obj.h"
 #include "tensor.h"
+#include <complex>
 
 namespace e8 {
 
@@ -171,7 +172,8 @@ class oren_nayar : public if_material {
  */
 class cook_torr : public if_material {
   public:
-    cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness, float ior,
+    cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness,
+              std::complex<float> const &ior,
               std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map = nullptr,
               std::shared_ptr<texture_map<float>> const &roughness_map = nullptr);
     cook_torr(cook_torr const &other);
@@ -191,10 +193,8 @@ class cook_torr : public if_material {
     std::shared_ptr<texture_map<float>> m_roughness_map;
 
     e8util::vec3 m_albedo;
+    std::complex<float> m_ior;
     float m_alpha2;
-    float m_ior2;
-
-    uint32_t m_padding;
 };
 
 } // namespace e8

@@ -1,13 +1,14 @@
 #include "material.h"
+#include <complex>
 #include <memory>
 
 namespace {
 
-float fresnel(float ior2, e8util::vec3 const &i, e8util::vec3 const &h) {
-    float c = i.inner(h);
-    float g = std::sqrt(ior2 - 1.0f + c * c);
-    float f = (g - c) / (g + c);
-    float d = (c * (g + c) - 1.0f) / (c * (g - c) + 1.0f);
+float fresnel(std::complex<float> const &ior, e8util::vec3 const &i, e8util::vec3 const &h) {
+    float cos_th = i.inner(h);
+    float g = std::sqrt(ior.real() * ior.real() - 1.0f + cos_th * cos_th);
+    float f = (g - cos_th) / (g + cos_th);
+    float d = (cos_th * (g + cos_th) - 1.0f) / (cos_th * (g - cos_th) + 1.0f);
     return 0.5f * f * f * (1.0f + d * d);
 }
 
@@ -163,14 +164,15 @@ e8util::vec3 e8::oren_nayar::sample(e8util::rng *rng, float *cond_density,
 }
 
 e8::cook_torr::cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness,
-                         float ior, std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
+                         std::complex<float> const &ior,
+                         std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
                          std::shared_ptr<texture_map<float>> const &roughness_map)
     : if_material(name), m_albedo_map(albedo_map), m_roughness_map(roughness_map), m_albedo(albedo),
-      m_alpha2(2 * roughness * roughness), m_ior2(ior * ior) {}
+      m_ior(ior), m_alpha2(2 * roughness * roughness) {}
 
 e8::cook_torr::cook_torr(cook_torr const &other)
-    : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_alpha2(other.m_alpha2),
-      m_ior2(other.m_ior2) {}
+    : if_material(other.id(), other.name()), m_albedo(other.m_albedo), m_ior(other.m_ior),
+      m_alpha2(other.m_alpha2) {}
 
 std::unique_ptr<e8::if_material> e8::cook_torr::copy() const {
     return std::make_unique<cook_torr>(*this);
@@ -205,7 +207,7 @@ e8util::vec3 e8::cook_torr::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
     }
     h = h.normalize();
 
-    float f = fresnel(m_ior2, i, h);
+    float f = fresnel(m_ior, i, h);
     float roughness = alpha2(uv);
     float d = ggx_distri(roughness, n, h);
     float g = ggx_shadow(roughness, i, o, n);
