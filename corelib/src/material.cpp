@@ -5,11 +5,14 @@
 namespace {
 
 float fresnel(std::complex<float> const &ior, e8util::vec3 const &i, e8util::vec3 const &h) {
-    float cos_th = i.inner(h);
-    float g = std::sqrt(ior.real() * ior.real() - 1.0f + cos_th * cos_th);
-    float f = (g - cos_th) / (g + cos_th);
-    float d = (cos_th * (g + cos_th) - 1.0f) / (cos_th * (g - cos_th) + 1.0f);
-    return 0.5f * f * f * (1.0f + d * d);
+    float cos_th_flip = 1.0f - i.inner(h);
+    float cos_th_flip2 = cos_th_flip * cos_th_flip;
+    float cos_th_flip4 = cos_th_flip2 * cos_th_flip2;
+    float cos_th_flip5 = cos_th_flip4 * cos_th_flip;
+    float a = (ior.real() - 1) * (ior.real() - 1) + 4 * ior.real() * cos_th_flip5 +
+              ior.imag() * ior.imag();
+    float b = (ior.real() + 1) * (ior.real() + 1) + ior.imag() * ior.imag();
+    return a / b;
 }
 
 float ggx_distri(float alpha2, e8util::vec3 const &n, e8util::vec3 const &h) {

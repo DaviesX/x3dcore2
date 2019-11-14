@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_material
     std::shared_ptr<e8::if_material> green =
         std::make_shared<e8::oren_nayar>("green", e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
     std::shared_ptr<e8::if_material> glossy = std::make_shared<e8::cook_torr>(
-        "glossy", e8util::vec3(0.95f), 0.2f, std::complex<float>(2.9f, 6.3f));
+        "glossy", e8util::vec3(0.95f), 0.2f, std::complex<float>(2.93f, 3.0f));
     std::shared_ptr<e8::if_material> light =
         std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
 
