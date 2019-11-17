@@ -71,7 +71,7 @@ e8util::vec3 e8::mat_fail_safe::eval(e8util::vec2 const & /*uv*/, e8util::vec3 c
 e8util::vec3 e8::mat_fail_safe::sample(e8util::rng *rng, float *cond_density,
                                        e8util::vec2 const & /*uv*/, e8util::vec3 const &n,
                                        e8util::vec3 const & /*o*/) const {
-    e8util::vec3 const &i = e8util::vec3_cos_hemisphere_sample(n, rng->draw(), rng->draw());
+    e8util::vec3 i = e8util::vec3_cos_hemisphere_sample(n, rng->draw(), rng->draw());
     *cond_density = i.inner(n) / static_cast<float>(M_PI);
     return i;
 }

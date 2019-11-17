@@ -15,7 +15,7 @@ void test::test_direct_renderer::run() const {
 
     e8util::flex_config config = pipeline.config_protocol();
     config.enum_sel["path_tracer"] = "direct";
-    config.int_val["samples_per_frame"] = 10;
+    config.int_val["samples_per_frame"] = 64;
     pipeline.update_pipeline(config);
 
     pipeline.render_frame();
