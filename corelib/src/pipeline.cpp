@@ -1,5 +1,19 @@
 #include "pipeline.h"
+#include "camera.h"
+#include "cinematics.h"
+#include "compositor.h"
+#include "frame.h"
+#include "lightsources.h"
+#include "obj.h"
+#include "pathspace.h"
+#include "pathtracerfact.h"
+#include "renderer.h"
+#include "resource.h"
 #include <cassert>
+#include <map>
+#include <set>
+#include <string>
+#include <sys/time.h>
 
 e8::if_render_pipeline::if_render_pipeline(if_frame *target)
     : m_frame(target), m_mutex(e8util::mutex()) {

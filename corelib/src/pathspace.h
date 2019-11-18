@@ -5,10 +5,12 @@
 #include "light.h"
 #include "material.h"
 #include "obj.h"
-#include "resource.h"
 #include "tensor.h"
 #include <map>
-#include <set>
+#include <memory>
+#include <stdint.h>
+#include <utility>
+#include <vector>
 
 namespace e8 {
 

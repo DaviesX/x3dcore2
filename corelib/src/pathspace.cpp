@@ -1,7 +1,10 @@
-#include "pathspace.h"
+#include "light.h"
+#include "lightsources.h"
+#include "material.h"
+#include "pathtracer.h"
 #include <algorithm>
-#include <cassert>
-#include <iostream>
+#include <ext/alloc_traits.h>
+#include <memory>
 
 e8::if_path_space::if_path_space() {}
 

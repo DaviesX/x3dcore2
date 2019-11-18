@@ -1,5 +1,6 @@
 #include "light.h"
 #include "tensor.h"
+#include <algorithm>
 #include <cmath>
 
 e8::if_light::if_light(std::string const &name) : m_name(name) {}

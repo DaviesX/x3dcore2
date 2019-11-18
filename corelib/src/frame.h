@@ -4,7 +4,7 @@
 #include "tensor.h"
 #include "thread.h"
 #include <QOpenGLWidget>
-#include <vector>
+#include <string>
 
 namespace e8 {
 

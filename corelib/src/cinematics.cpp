@@ -1,4 +1,6 @@
 #include "cinematics.h"
+#include "camera.h"
+#include <utility>
 
 e8::if_cinematics::if_cinematics(std::string const &name) : m_name(name) {}
 

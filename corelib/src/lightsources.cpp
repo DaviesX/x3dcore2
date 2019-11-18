@@ -1,4 +1,7 @@
 #include "lightsources.h"
+#include "light.h"
+#include <assert.h>
+#include <utility>
 
 e8::if_light_sources::if_light_sources() {}
 

@@ -1,10 +1,11 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "material.h"
 #include "obj.h"
 #include "tensor.h"
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace e8 {
 

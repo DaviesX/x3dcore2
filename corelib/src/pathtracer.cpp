@@ -1,4 +1,6 @@
 #include "pathtracer.h"
+#include "light.h"
+#include "lightsources.h"
 #include <iostream>
 
 namespace {

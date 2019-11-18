@@ -1,6 +1,9 @@
 #include "material.h"
+#include <algorithm>
 #include <complex>
+#include <math.h>
 #include <memory>
+#include <utility>
 
 namespace {
 

@@ -1,18 +1,21 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
+#include "objdb.h"
+#include "thread.h"
+#include "util.h"
 #include <ctime>
 #include <memory>
 
-#include "cinematics.h"
-#include "compositor.h"
-#include "frame.h"
-#include "objdb.h"
-#include "pathspace.h"
-#include "renderer.h"
-#include "resource.h"
-#include "thread.h"
-#include "util.h"
+namespace e8 {
+class aces_compositor;
+}
+namespace e8 {
+class if_frame;
+}
+namespace e8 {
+class pt_image_renderer;
+}
 
 namespace e8 {
 

@@ -3,10 +3,14 @@
 
 #include <map>
 #include <set>
+#include <string>
+#include <utility>
 
 namespace e8util {
-
 class flex_config;
+}
+
+namespace e8util {
 
 template <typename T> struct config_val_visitor {
     void operator()(T const & /* val */) {}

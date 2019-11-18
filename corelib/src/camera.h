@@ -3,8 +3,8 @@
 
 #include "obj.h"
 #include "tensor.h"
+#include <memory>
 #include <string>
-#include <vector>
 
 namespace e8 {
 

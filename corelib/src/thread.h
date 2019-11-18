@@ -1,11 +1,10 @@
 #ifndef THREAD_H_INCLUDED
 #define THREAD_H_INCLUDED
 
-#include <map>
 #include <pthread.h>
 #include <queue>
 #include <semaphore.h>
-#include <vector>
+#include <stdint.h>
 
 namespace e8util {
 

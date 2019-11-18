@@ -4,6 +4,9 @@
 #include "obj.h"
 #include "tensor.h"
 #include <complex>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace e8 {
 

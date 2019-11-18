@@ -1,5 +1,6 @@
 #include "objdb.h"
-#include <cassert>
+#include <type_traits>
+#include <utility>
 
 e8::objdb::objdb() {}
 

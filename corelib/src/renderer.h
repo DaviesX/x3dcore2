@@ -1,15 +1,20 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include <memory>
-
 #include "camera.h"
-#include "compositor.h"
 #include "frame.h"
 #include "pathspace.h"
 #include "pathtracer.h"
 #include "pathtracerfact.h"
+#include "tensor.h"
 #include "thread.h"
+#include "thread.h"
+#include <memory>
+#include <stdint.h>
+
+namespace e8 {
+class if_compositor;
+}
 
 namespace e8 {
 

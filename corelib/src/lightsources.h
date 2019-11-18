@@ -1,10 +1,15 @@
 #ifndef LIGHTSOURCES_H
 #define LIGHTSOURCES_H
 
-#include "light.h"
 #include "obj.h"
+#include "tensor.h"
 #include <map>
 #include <memory>
+#include <vector>
+
+namespace e8 {
+class if_light;
+}
 
 namespace e8 {
 

@@ -1,12 +1,13 @@
 #ifndef APP_H
 #define APP_H
 
-#include <memory>
-
+#include "../corelib/src/frame.h"
 #include "../corelib/src/pipeline.h"
+#include "../corelib/src/thread.h"
 #include <QMainWindow>
 #include <QTimer>
 #include <ctime>
+#include <memory>
 
 namespace Ui {
 class MainWindow;

@@ -1,7 +1,9 @@
 #ifndef PATHTRACERFACT_H
 #define PATHTRACERFACT_H
 
-#include "pathtracer.h"
+namespace e8 {
+class if_pathtracer;
+}
 
 namespace e8 {
 

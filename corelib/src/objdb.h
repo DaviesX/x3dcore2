@@ -2,9 +2,11 @@
 #define OBJDB_H
 
 #include "obj.h"
+#include "tensor.h"
 #include <map>
 #include <memory>
 #include <set>
+#include <vector>
 
 namespace e8 {
 

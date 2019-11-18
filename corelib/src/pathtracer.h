@@ -1,10 +1,17 @@
 #ifndef IF_PATHTRACER_H
 #define IF_PATHTRACER_H
 
-#include "lightsources.h"
 #include "pathspace.h"
 #include "tensor.h"
+#include <iosfwd>
 #include <vector>
+
+namespace e8 {
+class if_light;
+}
+namespace e8 {
+class if_light_sources;
+}
 
 namespace e8 {
 

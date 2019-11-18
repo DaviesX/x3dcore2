@@ -2,11 +2,18 @@
 #define OBJ_H
 
 #include "tensor.h"
+#include <deque>
 #include <exception>
 #include <memory>
-#include <queue>
 #include <set>
+#include <stdint.h>
+#include <string>
+#include <utility>
 #include <vector>
+
+namespace e8 {
+class if_obj;
+}
 
 namespace e8 {
 

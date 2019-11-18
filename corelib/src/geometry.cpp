@@ -1,5 +1,7 @@
 #include "geometry.h"
 #include "tensor.h"
+#include <cmath>
+#include <ext/alloc_traits.h>
 
 e8::if_geometry::if_geometry(std::string const &name) : m_name(name) {}
 

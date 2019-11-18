@@ -1,5 +1,3 @@
-#include <memory>
-
 #include "app.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>

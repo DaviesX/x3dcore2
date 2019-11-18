@@ -4,6 +4,9 @@
 #include "geometry.h"
 #include "obj.h"
 #include "tensor.h"
+#include <memory>
+#include <stdint.h>
+#include <string>
 
 namespace e8 {
 

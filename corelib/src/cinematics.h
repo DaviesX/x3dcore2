@@ -1,10 +1,15 @@
 #ifndef CINEMATICS_H
 #define CINEMATICS_H
 
-#include "camera.h"
 #include "obj.h"
+#include "tensor.h"
 #include <map>
+#include <memory>
 #include <string>
+
+namespace e8 {
+class if_camera;
+}
 
 namespace e8 {
 

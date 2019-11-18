@@ -1,5 +1,6 @@
 #include "testscene.h"
 #include "src/frame.h"
+#include "src/pathspace.h"
 #include "src/pipeline.h"
 #include <iostream>
 

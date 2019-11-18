@@ -1,8 +1,5 @@
-#include <cmath>
-
 #include "renderer.h"
-#include "tensor.h"
-#include "thread.h"
+#include "compositor.h"
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(
     e8util::data_id_t id, if_path_space const &path_space, if_light_sources const &light_sources,
