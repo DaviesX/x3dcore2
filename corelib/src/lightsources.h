@@ -9,7 +9,8 @@
 
 namespace e8 {
 class if_light;
-}
+class if_geometry;
+} // namespace e8
 
 namespace e8 {
 
@@ -21,19 +22,30 @@ class if_light_sources : public if_obj_manager {
     void load(if_obj const &obj, e8util::mat44 const &trans) override;
     void unload(if_obj const &obj) override;
     obj_protocol support() const override;
+    if_light const *obj_light(if_obj const &obj) const;
+
     virtual void commit() override = 0;
     virtual if_light const *sample_light(e8util::rng &rng, float &pdf) const = 0;
+    virtual std::vector<if_light const *>
+    get_relevant_lights(e8util::frustum const &frustum) const = 0;
 
   protected:
+    // Store all loaded lights.
     std::map<obj_id_t, std::unique_ptr<if_light>> m_lights;
+
+    // Fast lookup for lights that are attached an object.
+    std::map<obj_id_t, if_light *const> m_obj_lights_lookup;
 };
 
 class basic_light_sources : public if_light_sources {
   public:
     basic_light_sources();
     ~basic_light_sources() override;
-    void commit() override;
+
+    std::vector<if_light const *>
+    get_relevant_lights(e8util::frustum const &frustum) const override;
     if_light const *sample_light(e8util::rng &rng, float &pdf) const override;
+    void commit() override;
 
   private:
     struct light_cdf {

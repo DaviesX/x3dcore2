@@ -15,19 +15,14 @@ e8util::aabb e8::if_path_space::aabb() const { return m_bound; }
 void e8::if_path_space::load(if_obj const &obj, e8util::mat44 const &trans) {
     std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const &>(obj).transform(trans);
     std::vector<if_obj *> mats = obj.get_children(obj_protocol::obj_protocol_material);
-    std::vector<if_obj *> lights = obj.get_children(obj_protocol::obj_protocol_light);
 
-    assert(mats.size() == 1);
-    std::unique_ptr<if_material const> mat = static_cast<if_material *>(mats[0])->copy();
-
-    std::unique_ptr<if_light const> light;
-    if (!lights.empty()) {
-        assert(lights.size() == 1);
-        light = static_cast<if_light *>(lights[0])->copy();
-    }
+    assert(mats.size() <= 1);
+    std::unique_ptr<if_material const> mat =
+        !mats.empty() ? static_cast<if_material *>(mats[0])->copy()
+                      : std::make_unique<mat_fail_safe>(geo->name() + "/fail_safe_material");
 
     m_bound = m_bound + geo->aabb();
-    m_geometries.insert(std::make_pair(obj.id(), binded_geometry(geo, mat, light)));
+    m_geometries.insert(std::make_pair(obj.id(), binded_geometry(geo, mat)));
 }
 
 void e8::if_path_space::unload(if_obj const &obj) {
@@ -97,7 +92,7 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
             e8util::vec2 uv2 = texcoords[(*hit_tri)(2)];
             uv = (hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2).normalize();
         }
-        return intersect_info(t, vertex, normal, uv, hit_geo->mat.get(), hit_geo->light.get());
+        return intersect_info(t, vertex, normal, uv, hit_geo->geometry.get(), hit_geo->mat.get());
     } else {
         return intersect_info();
     }
@@ -127,11 +122,6 @@ bool e8::linear_path_space_layout::has_intersect(e8util::ray const &r, float t_m
 
 e8::batched_geometry
 e8::linear_path_space_layout::get_relevant_geometries(e8util::frustum const &) const {
-    throw std::string("Not implemented yet.");
-}
-
-std::vector<e8::if_light const *>
-e8::linear_path_space_layout::get_relevant_lights(e8util::frustum const &) const {
     throw std::string("Not implemented yet.");
 }
 
@@ -310,7 +300,6 @@ void e8::bvh_path_space_layout::commit() {
     this->linear_path_space_layout::commit();
 
     m_mat_list.clear();
-    m_light_list.clear();
     m_geo_list.clear();
     m_prims.clear();
     m_bvh.clear();
@@ -331,13 +320,13 @@ void e8::bvh_path_space_layout::commit() {
             }
         }
 
-        if (geo.second.light != nullptr) {
-            auto light_it = light2ind.find(geo.second.light.get());
-            if (light_it == light2ind.end()) {
-                light2ind.insert(std::make_pair(geo.second.light.get(), m_light_list.size()));
-                m_light_list.push_back(geo.second.light.get());
-            }
-        }
+        //        if (geo.second.light != nullptr) {
+        //            auto light_it = light2ind.find(geo.second.light.get());
+        //            if (light_it == light2ind.end()) {
+        //                light2ind.insert(std::make_pair(geo.second.light.get(),
+        //                m_light_list.size())); m_light_list.push_back(geo.second.light.get());
+        //            }
+        //        }
     }
     mat2ind.insert(std::make_pair(nullptr, 0xFFFF));
     light2ind.insert(std::make_pair(nullptr, 0xFFFF));
@@ -346,9 +335,9 @@ void e8::bvh_path_space_layout::commit() {
     std::vector<primitive_details> prims;
     for (std::pair<obj_id_t const, binded_geometry> const &p : m_geometries) {
         for (triangle const &tri : p.second.geometry->triangles()) {
-            prims.push_back(
-                primitive_details(tri, p.second.geometry.get(), geo2ind[p.second.geometry.get()],
-                                  mat2ind[p.second.mat.get()], light2ind[p.second.light.get()]));
+            prims.push_back(primitive_details(tri, p.second.geometry.get(),
+                                              geo2ind[p.second.geometry.get()],
+                                              mat2ind[p.second.mat.get()]));
         }
     }
 
@@ -447,10 +436,8 @@ e8::intersect_info e8::bvh_path_space_layout::intersect(e8util::ray const &r) co
             uv = (hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2).normalize();
         }
 
-        return intersect_info(t, vertex, normal, uv,
-                              hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat],
-                              hit_prim->i_light == 0xFFFF ? nullptr
-                                                          : m_light_list[hit_prim->i_light]);
+        return intersect_info(t, vertex, normal, uv, hit_geo,
+                              hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat]);
     } else {
         return intersect_info();
     }

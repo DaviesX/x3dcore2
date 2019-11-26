@@ -1,5 +1,6 @@
 #include "lightsources.h"
 #include "light.h"
+#include "util.h"
 #include <assert.h>
 #include <utility>
 
@@ -8,8 +9,13 @@ e8::if_light_sources::if_light_sources() {}
 e8::if_light_sources::~if_light_sources() {}
 
 void e8::if_light_sources::load(if_obj const &obj, e8util::mat44 const &trans) {
-    if_light const &light = static_cast<if_light const &>(obj);
-    m_lights.insert(std::make_pair(obj.id(), light.transform(trans)));
+    if_light const &light_obj = static_cast<if_light const &>(obj);
+    auto it = m_lights.insert(std::make_pair(obj.id(), light_obj.transform(trans))).first;
+
+    std::vector<if_obj *> objs = obj.get_children(obj_protocol::obj_protocol_all);
+    for (if_obj *obj : objs) {
+        m_obj_lights_lookup.insert(std::make_pair(obj->id(), it->second.get()));
+    }
 }
 
 void e8::if_light_sources::unload(if_obj const &obj) {
@@ -20,6 +26,15 @@ void e8::if_light_sources::unload(if_obj const &obj) {
 }
 
 e8::obj_protocol e8::if_light_sources::support() const { return obj_protocol::obj_protocol_light; }
+
+e8::if_light const *e8::if_light_sources::obj_light(if_obj const &obj) const {
+    auto it = m_obj_lights_lookup.find(obj.id());
+    if (it != m_obj_lights_lookup.end()) {
+        return it->second;
+    } else {
+        return nullptr;
+    }
+}
 
 e8::basic_light_sources::basic_light_sources() {}
 
@@ -35,6 +50,11 @@ void e8::basic_light_sources::commit() {
         m_total_power += light.second->power().norm();
         m_light_cdf.push_back(light_cdf(light.second.get(), m_total_power));
     }
+}
+
+std::vector<e8::if_light const *>
+e8::basic_light_sources::get_relevant_lights(e8util::frustum const &) const {
+    throw e8util::not_implemented_exception("get_relevant_lights");
 }
 
 e8::if_light const *e8::basic_light_sources::sample_light(e8util::rng &rng, float &pdf) const {

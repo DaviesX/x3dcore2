@@ -76,12 +76,12 @@ std::vector<std::shared_ptr<e8::if_material>> static cornell_scene_load_material
         {red, green, white, white, white, glossy, white, light});
 }
 
-std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_lights(
-    e8::if_geometry const &light_geo) {
-    return std::vector<std::shared_ptr<e8::if_light>>(
-        {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-         std::make_shared<e8::area_light>(light_geo,
-                                          e8util::vec3({0.911f, 0.660f, 0.345f}) * 15.0f)});
+std::shared_ptr<e8::if_light> static cornell_scene_load_lights(
+    std::shared_ptr<e8::if_geometry> const light_geo) {
+    std::shared_ptr<e8::if_light> light = std::make_shared<e8::area_light>(
+        "ceiling", light_geo, e8util::vec3{0.911f, 0.660f, 0.345f} * 15.0f);
+    light->add_child(light_geo);
+    return light;
 }
 
 std::vector<std::shared_ptr<e8::if_light>> static cornell_scene_load_virtual_lights() {
@@ -105,16 +105,13 @@ std::shared_ptr<e8::if_camera> static cornell_scene_load_camera() {
 std::vector<std::shared_ptr<e8::if_obj>> e8util::cornell_scene::load_roots() {
     std::vector<std::shared_ptr<e8::if_geometry>> geometries = cornell_scene_load_geometries();
     std::vector<std::shared_ptr<e8::if_material>> mats = cornell_scene_load_materials();
-    std::vector<std::shared_ptr<e8::if_light>> obj_lights =
-        cornell_scene_load_lights(*geometries[7]);
+    std::shared_ptr<e8::if_light> obj_light = cornell_scene_load_lights(geometries[7]);
     std::shared_ptr<e8::if_camera> cams = cornell_scene_load_camera();
     std::vector<std::shared_ptr<e8::if_obj>> roots;
     roots.push_back(cams);
+    roots.push_back(obj_light);
     for (unsigned i = 0; i < geometries.size(); i++) {
         geometries[i]->add_child(mats[i]);
-        if (obj_lights[i] != nullptr) {
-            geometries[i]->add_child(obj_lights[i]);
-        }
         roots.push_back(geometries[i]);
     }
     std::vector<std::shared_ptr<e8::if_light>> virtual_lights = cornell_scene_load_virtual_lights();
@@ -303,11 +300,12 @@ std::vector<std::shared_ptr<e8::if_obj>> e8util::wavefront_obj::load_roots() {
 }
 
 void e8util::wavefront_obj::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots) {
-    e8::visit_all_filtered(roots.begin(), roots.end(),
-                           [this](e8::if_obj const *obj) {
-                               this->save_geometry(static_cast<e8::if_geometry const *>(obj));
-                           },
-                           std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
+    e8::visit_all_filtered(
+        roots.begin(), roots.end(),
+        [this](e8::if_obj const *obj) {
+            this->save_geometry(static_cast<e8::if_geometry const *>(obj));
+        },
+        std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
 }
 
 class e8util::gltf_scene_internal {
@@ -362,10 +360,12 @@ e8util::gltf_scene_internal::gltf_scene_internal(std::string const &location) {
     }
 
     if (!res) {
-        throw e8util::res_io_exception("Failed to load " + location + "\n"
-                                                                      "\tError: " +
-                                       err + "\n"
-                                             "\tWarning: " +
+        throw e8util::res_io_exception("Failed to load " + location +
+                                       "\n"
+                                       "\tError: " +
+                                       err +
+                                       "\n"
+                                       "\tWarning: " +
                                        warn);
     }
 }

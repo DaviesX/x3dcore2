@@ -23,6 +23,7 @@ enum obj_protocol {
     obj_protocol_camera,
     obj_protocol_light,
     obj_protocol_material,
+    obj_protocol_all,
 };
 
 class incompat_obj_exception : public std::exception {

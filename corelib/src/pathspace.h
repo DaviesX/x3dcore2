@@ -14,20 +14,21 @@
 
 namespace e8 {
 
+// Represents a ray-surface intersection. The intersection is valid only when geo is present.
 struct intersect_info {
     intersect_info(float t, e8util::vec3 const &vertex, e8util::vec3 const &normal,
-                   e8util::vec2 const &uv, if_material const *mat, if_light const *light)
-        : valid(true), t(t), vertex(vertex), normal(normal), uv(uv), mat(mat), light(light) {}
+                   e8util::vec2 const &uv, if_geometry const *geo, if_material const *mat)
+        : geo(geo), t(t), vertex(vertex), normal(normal), uv(uv), mat(mat) {}
 
-    intersect_info() : valid(false), mat(nullptr), light(nullptr) {}
+    intersect_info() : geo(nullptr), mat(nullptr) {}
+    bool valid() const { return geo != nullptr; }
 
-    bool valid;
+    if_geometry const *geo;
     float t;
     e8util::vec3 vertex;
     e8util::vec3 normal;
     e8util::vec2 uv;
     if_material const *mat;
-    if_light const *light;
 };
 
 typedef std::map<if_material const *, std::vector<if_geometry const *>> batched_geometry;
@@ -41,15 +42,6 @@ class if_path_space : public if_obj_manager {
     virtual intersect_info intersect(e8util::ray const &r) const = 0;
     virtual bool has_intersect(e8util::ray const &r, float t_min, float t_max, float &t) const = 0;
     virtual batched_geometry get_relevant_geometries(e8util::frustum const &frustum) const = 0;
-    virtual std::vector<if_light const *>
-    get_relevant_lights(e8util::frustum const &frustum) const = 0;
-
-    //        void                                    add_geometry(std::unique_ptr<if_geometry>&
-    //        geometry);
-    //        void                                    bind(if_geometry const* geometry, if_material
-    //        const* mat);
-    //        void                                    bind(if_geometry const* geometry, if_light
-    //        const* light);
     e8util::aabb aabb() const;
 
     void load(if_obj const &obj, e8util::mat44 const &trans) override;
@@ -59,13 +51,11 @@ class if_path_space : public if_obj_manager {
   protected:
     struct binded_geometry {
         binded_geometry(std::unique_ptr<if_geometry const> &geometry,
-                        std::unique_ptr<if_material const> &mat,
-                        std::unique_ptr<if_light const> &light)
-            : geometry(std::move(geometry)), mat(std::move(mat)), light(std::move(light)) {}
+                        std::unique_ptr<if_material const> &mat)
+            : geometry(std::move(geometry)), mat(std::move(mat)) {}
 
         std::unique_ptr<if_geometry const> geometry;
         std::unique_ptr<if_material const> mat;
-        std::unique_ptr<if_light const> light;
     };
 
     std::map<obj_id_t, binded_geometry> m_geometries;
@@ -82,8 +72,6 @@ class linear_path_space_layout : public if_path_space {
     virtual bool has_intersect(e8util::ray const &r, float t_min, float t_max,
                                float &t) const override;
     virtual batched_geometry get_relevant_geometries(e8util::frustum const &frustum) const override;
-    virtual std::vector<if_light const *>
-    get_relevant_lights(e8util::frustum const &frustum) const override;
 };
 
 class bvh_path_space_layout : public linear_path_space_layout {
@@ -102,19 +90,18 @@ class bvh_path_space_layout : public linear_path_space_layout {
 
   private:
     struct primitive {
-        primitive(triangle const &tri, unsigned i_geo, unsigned short i_mat, unsigned short i_light)
-            : tri(tri), i_geo(i_geo), i_mat(i_mat), i_light(i_light) {}
+        primitive(triangle const &tri, unsigned i_geo, unsigned short i_mat)
+            : tri(tri), i_geo(i_geo), i_mat(i_mat) {}
 
         triangle tri;
         unsigned int i_geo;
         unsigned short i_mat;
-        unsigned short i_light;
     };
 
     struct primitive_details : public primitive {
         primitive_details(triangle const &tri, e8::if_geometry const *geo, unsigned i_geo,
-                          unsigned short i_mat, unsigned short i_light)
-            : primitive(tri, i_geo, i_mat, i_light) {
+                          unsigned short i_mat)
+            : primitive(tri, i_geo, i_mat) {
             std::vector<e8util::vec3> const &verts = geo->vertices();
             e8util::vec3 const &v0 = verts[tri(0)];
             e8util::vec3 const &v1 = verts[tri(1)];
@@ -202,7 +189,6 @@ class bvh_path_space_layout : public linear_path_space_layout {
     std::vector<primitive> m_prims;
     std::vector<if_geometry const *> m_geo_list;
     std::vector<if_material const *> m_mat_list;
-    std::vector<if_light const *> m_light_list;
 };
 
 } // namespace e8

@@ -99,7 +99,7 @@ bool e8::if_obj::remove_child(std::shared_ptr<if_obj> const &child) {
 std::vector<e8::if_obj *> e8::if_obj::get_children(obj_protocol const &interface_type) const {
     std::vector<e8::if_obj *> result;
     for (std::shared_ptr<if_obj> const &obj : m_children) {
-        if (obj->protocol() == interface_type) {
+        if (interface_type == obj_protocol::obj_protocol_all || obj->protocol() == interface_type) {
             result.push_back(obj.get());
         }
     }

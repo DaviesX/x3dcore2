@@ -29,7 +29,12 @@ class if_pathtracer {
     struct first_hits {
         first_hits(std::size_t size) : hits(size) {}
 
-        std::vector<intersect_info> hits;
+        struct hit {
+            intersect_info intersect;
+            if_light const *light;
+        };
+
+        std::vector<hit> hits;
     };
 
     /**
@@ -37,10 +42,12 @@ class if_pathtracer {
      * size. It will be beneficial to compute the first hits once then re-use across all samples.
      * @param rays The rays that gives the first hits.
      * @param path_space Path space container.
+     * @param light_sources Lights container.
      * @return See above.
      */
     static first_hits compute_first_hit(std::vector<e8util::ray> const &rays,
-                                        if_path_space const &path_space);
+                                        if_path_space const &path_space,
+                                        if_light_sources const &light_sources);
 
     /**
      * @brief sample Compute a single sample of the measurement function estimate.

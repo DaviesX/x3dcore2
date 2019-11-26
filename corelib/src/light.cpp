@@ -16,12 +16,10 @@ e8::obj_protocol e8::if_light::protocol() const { return obj_protocol::obj_proto
 e8::if_light::if_light(obj_id_t id, std::string const &name)
     : if_operable_obj<if_light>(id), m_name(name) {}
 
-e8::area_light::area_light(std::string const &name, if_geometry const &geo, e8util::vec3 const &rad)
+e8::area_light::area_light(std::string const &name, std::shared_ptr<if_geometry> const &geo,
+                           e8util::vec3 const &rad)
     : if_light(name), m_geo(geo), m_rad(rad),
-      m_power(static_cast<float>(M_PI) * m_geo.surface_area() * rad) {}
-
-e8::area_light::area_light(if_geometry const &geo, e8util::vec3 const &rad)
-    : area_light("Unkown_Area_Light_Name", geo, rad) {}
+      m_power(static_cast<float>(M_PI) * m_geo->surface_area() * rad) {}
 
 e8::area_light::area_light(area_light const &other)
     : if_light(other.id(), other.name()), m_geo(other.m_geo), m_rad(other.m_rad),
@@ -29,13 +27,13 @@ e8::area_light::area_light(area_light const &other)
 
 void e8::area_light::sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p,
                             e8util::vec3 &n, e8util::vec3 &w) const {
-    m_geo.sample(rng, p, n, p_pdf);
+    m_geo->sample(rng, p, n, p_pdf);
     w = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
     w_pdf = n.inner(w) / static_cast<float>(M_PI);
 }
 
 void e8::area_light::sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const {
-    m_geo.sample(rng, p, n, pdf);
+    m_geo->sample(rng, p, n, pdf);
 }
 
 e8util::vec3 e8::area_light::eval(e8util::vec3 const &i, e8util::vec3 const &n) const {

@@ -8,7 +8,6 @@
 #include "pathtracerfact.h"
 #include "tensor.h"
 #include "thread.h"
-#include "thread.h"
 #include <memory>
 #include <stdint.h>
 
@@ -132,4 +131,4 @@ class rt_image_renderer {
 
 } // namespace e8
 
-#endif // IF_RENDERER_H
+#endif // RENDERER_H

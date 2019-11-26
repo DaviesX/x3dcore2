@@ -23,8 +23,8 @@ e8::pt_image_renderer::sampling_task::sampling_task(sampling_task &&rhs) {
 
 e8::pt_image_renderer::sampling_task::~sampling_task() { delete m_pt; }
 
-e8::pt_image_renderer::sampling_task &e8::pt_image_renderer::sampling_task::
-operator=(sampling_task rhs) {
+e8::pt_image_renderer::sampling_task &
+e8::pt_image_renderer::sampling_task::operator=(sampling_task rhs) {
     m_estimate = rhs.m_estimate;
     m_rng = rhs.m_rng;
     std::swap(m_pt, rhs.m_pt);
@@ -116,7 +116,8 @@ e8::pt_image_renderer::render(if_compositor *compositor, if_path_space const &pa
         }
     }
 
-    if_pathtracer::first_hits first_hits = if_pathtracer::compute_first_hit(rays, path_space);
+    if_pathtracer::first_hits first_hits =
+        if_pathtracer::compute_first_hit(rays, path_space, light_sources);
 
     // Launch tasks.
     unsigned allocated_samps =

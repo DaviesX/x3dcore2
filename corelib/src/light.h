@@ -35,8 +35,8 @@ class if_light : public if_operable_obj<if_light> {
 
 class area_light : public if_light {
   public:
-    area_light(std::string const &name, if_geometry const &geo, e8util::vec3 const &rad);
-    area_light(if_geometry const &geo, e8util::vec3 const &rad);
+    area_light(std::string const &name, std::shared_ptr<if_geometry> const &geo,
+               e8util::vec3 const &rad);
     area_light(area_light const &other);
 
     void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p, e8util::vec3 &n,
@@ -49,7 +49,7 @@ class area_light : public if_light {
     std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override;
 
   private:
-    if_geometry const &m_geo;
+    std::shared_ptr<if_geometry> m_geo;
     e8util::vec3 m_rad;
     e8util::vec3 m_power;
 };
