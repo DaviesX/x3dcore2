@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
-SUBDIRS = corelib/corelib.pro \
-          corelib/test/material/material.pro \
-          demoplayer/demoplayer.pro \
-    corelib/test/pathtracer \
-    corelib/test/renderer
+SUBDIRS = demoplayer/demoplayer.pro \
+    corelib/corelib.pro \
+    corelib/test/tst_material \
+    corelib/test/tst_pathtracer \
+    corelib/test/tst_renderer
 
 CONFIG += ordered
