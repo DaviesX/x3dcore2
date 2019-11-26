@@ -3,14 +3,13 @@
 
 e8::if_frame::surface::surface() {}
 
-e8::if_frame::surface::~surface() { delete[] pixels; }
+e8::if_frame::surface::~surface() {}
 
 void e8::if_frame::surface::resize(unsigned w, unsigned h) {
     if (this->w != w || this->h != h) {
         this->w = w;
         this->h = h;
-        delete[] pixels;
-        pixels = new pixel[w * h];
+        pixels = std::make_unique<pixel[]>(w * h);
     }
 }
 

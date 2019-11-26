@@ -4,6 +4,7 @@
 #include "tensor.h"
 #include "thread.h"
 #include <QOpenGLWidget>
+#include <memory>
 #include <string>
 
 namespace e8 {
@@ -31,7 +32,7 @@ class if_frame {
         surface();
         ~surface();
 
-        pixel *pixels = nullptr;
+        std::unique_ptr<pixel[]> pixels;
         unsigned w = 0;
         unsigned h = 0;
 
