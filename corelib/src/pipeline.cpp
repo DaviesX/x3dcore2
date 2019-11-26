@@ -87,13 +87,13 @@ void e8::pt_render_pipeline::render_frame() {
 
 e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     e8util::flex_config config;
-    config.int_val["num_threads"] = 1;
+    config.int_val["num_threads"] = 0;
     config.str_val["scene_file"] = "cornellball";
     config.enum_vals["path_space"] = std::set<std::string>{"linear", "static_bvh"};
     config.enum_sel["path_space"] = "static_bvh";
     config.enum_vals["path_tracer"] = std::set<std::string>{
         "normal", "position", "direct", "unidirectional", "bidirectional_lt2", "bidirectional_mis"};
-    config.enum_sel["path_tracer"] = "bidirectional_mis";
+    config.enum_sel["path_tracer"] = "unidirectional";
     config.enum_vals["light_sources"] = std::set<std::string>{"basic"};
     config.enum_sel["light_sources"] = "basic";
     config.bool_val["auto_exposure"] = false;

@@ -1,35 +1,123 @@
+#include "src/camera.h"
+#include "src/compositor.h"
+#include "src/frame.h"
+#include "src/lightsources.h"
+#include "src/pathspace.h"
+#include "src/renderer.h"
+#include "src/resource.h"
+#include <QString>
 #include <QtTest>
+#include <memory>
 
-// add necessary includes here
-
-class cornellbox_rendering : public QObject
-{
+class tst_renderer : public QObject {
     Q_OBJECT
 
-public:
-    cornellbox_rendering();
-    ~cornellbox_rendering();
+  public:
+    tst_renderer() = default;
+    ~tst_renderer() = default;
 
-private slots:
-    void test_case1();
-
+  private slots:
+    void pt_render_cornel_balls();
 };
 
-cornellbox_rendering::cornellbox_rendering()
-{
+struct cornell_balls {
+    cornell_balls() = default;
+    ~cornell_balls() = default;
+    cornell_balls(cornell_balls &&) = default;
 
+    std::unique_ptr<e8::if_path_space> path_space;
+    std::unique_ptr<e8::if_light_sources> light_sources;
+    std::unique_ptr<e8::if_camera> camera;
+};
+
+cornell_balls cornell_box_path_space() {
+    cornell_balls scene;
+    scene.path_space = std::make_unique<e8::bvh_path_space_layout>();
+    scene.light_sources = std::make_unique<e8::basic_light_sources>();
+
+    std::shared_ptr<e8::if_material> white =
+        std::make_shared<e8::oren_nayar>("white", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
+    std::shared_ptr<e8::if_material> red =
+        std::make_shared<e8::oren_nayar>("red", e8util::vec3({0.630f, 0.065f, 0.050f}), 0.078f);
+    std::shared_ptr<e8::if_material> green =
+        std::make_shared<e8::oren_nayar>("green", e8util::vec3({0.140f, 0.450f, 0.091f}), 0.078f);
+    std::shared_ptr<e8::if_material> glossy = std::make_shared<e8::cook_torr>(
+        "glossy", e8util::vec3(0.95f), 0.2f, std::complex<float>(2.93f, 3.0f));
+    std::shared_ptr<e8::if_material> light_mat =
+        std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
+
+    std::shared_ptr<e8::if_geometry> left_wall =
+        e8util::wavefront_obj("testdata/cornellbox/left_wall.obj").load_geometry();
+    left_wall->add_child(red);
+    std::shared_ptr<e8::if_geometry> right_wall =
+        e8util::wavefront_obj("testdata/cornellbox/right_wall.obj").load_geometry();
+    right_wall->add_child(green);
+    std::shared_ptr<e8::if_geometry> back_wall =
+        e8util::wavefront_obj("testdata/cornellbox/back_wall.obj").load_geometry();
+    back_wall->add_child(white);
+    std::shared_ptr<e8::if_geometry> ceiling =
+        e8util::wavefront_obj("testdata/cornellbox/ceiling.obj").load_geometry();
+    ceiling->add_child(white);
+    std::shared_ptr<e8::if_geometry> floor =
+        e8util::wavefront_obj("testdata/cornellbox/floor.obj").load_geometry();
+    floor->add_child(white);
+    std::shared_ptr<e8::if_geometry> left_sphere =
+        e8util::wavefront_obj("testdata/cornellbox/left_sphere.obj").load_geometry();
+    left_sphere->add_child(glossy);
+    std::shared_ptr<e8::if_geometry> right_sphere =
+        e8util::wavefront_obj("testdata/cornellbox/right_sphere.obj").load_geometry();
+    right_sphere->add_child(white);
+    std::shared_ptr<e8::if_geometry> light_geo =
+        e8util::wavefront_obj("testdata/cornellbox/light.obj").load_geometry();
+    light_geo->add_child(light_mat);
+
+    scene.path_space->load(*left_wall, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*right_wall, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*back_wall, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*ceiling, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*floor, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*left_sphere, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*right_sphere, e8util::mat44_scale(1.0f));
+    scene.path_space->load(*light_geo, e8util::mat44_scale(1.0f));
+    scene.path_space->commit();
+
+    std::shared_ptr<e8::if_light> light = std::make_shared<e8::area_light>(
+        "light", light_geo, e8util::vec3{0.911f, 0.660f, 0.345f} * 15.0f);
+    light->add_child(light_geo);
+
+    scene.light_sources->load(*light, e8util::mat44_scale(1.0f));
+    scene.light_sources->commit();
+
+    e8util::mat44 trans = e8util::mat44_translate({0.0f, 0.795f, 3.4f});
+    e8util::mat44 rot = e8util::mat44_rotate(0.0f, {0, 0, 1});
+    scene.camera = std::make_unique<e8::pinhole_camera>("cornell_cam", 0.032f, 0.035f, 4.0f / 3.0f)
+                       ->transform(trans * rot);
+
+    return scene;
 }
 
-cornellbox_rendering::~cornellbox_rendering()
-{
+void tst_renderer::pt_render_cornel_balls() {
+    cornell_balls scene = cornell_box_path_space();
+    e8::pt_image_renderer renderer(std::make_unique<e8::pathtracer_factory>(
+        e8::pathtracer_factory::unidirect, e8::pathtracer_factory::options()));
+    e8::aces_compositor compositor(/*width=*/800, /*height=*/600);
+    renderer.render(&compositor, *scene.path_space, *scene.light_sources, *scene.camera,
+                    /*num_samps=*/16, /*firefly_filter=*/false);
 
+    for (unsigned j = 0; j < compositor.height(); j++) {
+        for (unsigned i = 0; i < compositor.width(); i++) {
+            QVERIFY(compositor(i, j)(0) >= 0);
+            QVERIFY(compositor(i, j)(1) >= 0);
+            QVERIFY(compositor(i, j)(2) >= 0);
+        }
+    }
+
+    e8::img_file_frame frame("result.png", 800, 600);
+    compositor.commit(&frame);
+
+    frame.commit();
 }
 
-void cornellbox_rendering::test_case1()
-{
+QTEST_APPLESS_MAIN(tst_renderer)
 
-}
-
-QTEST_APPLESS_MAIN(cornellbox_rendering)
-
-#include "tst_cornellbox_rendering.moc"
+#include "tst_renderer.moc"

@@ -12,7 +12,7 @@ class pathtracer_factory {
     enum pt_type { normal, position, direct, unidirect, bidirect_lt2, bidirect_mis };
 
     struct options {
-        int max_pathlen;
+        int max_pathlen = 8;
     };
 
     pathtracer_factory(pt_type type, options opts);

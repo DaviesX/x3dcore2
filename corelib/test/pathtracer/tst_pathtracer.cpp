@@ -1,5 +1,6 @@
 #include "src/pathspace.h"
 #include "src/pathtracer.h"
+#include "src/resource.h"
 #include <QString>
 #include <QtTest>
 #include <memory>
@@ -14,9 +15,7 @@ class tst_pathtracer : public QObject {
     void unidirect_positive_radiance();
 };
 
-std::unique_ptr<e8::if_path_space> cornell_box_path_space() {}
-
-void tst_pathtracer::unidirect_positive_radiance() { QVERIFY2(true, "Failure"); }
+void tst_pathtracer::unidirect_positive_radiance() {}
 
 QTEST_APPLESS_MAIN(tst_pathtracer)
 
