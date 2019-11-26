@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -79,6 +80,12 @@ void flex_config::find_enum(std::string const &key, ReadOpEnum read_op) const {
         read_op(it->second, config_it != enum_val_configs.end() ? &config_it->second : nullptr);
     }
 }
+
+class not_implemented_exception : public std::logic_error {
+  public:
+    not_implemented_exception();
+    not_implemented_exception(std::string const &func_name);
+};
 
 } // namespace e8util
 

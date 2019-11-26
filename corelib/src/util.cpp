@@ -43,3 +43,9 @@ e8util::flex_config e8util::flex_config::operator-(flex_config const &other) con
     }
     return diff_this_from_other;
 }
+
+e8util::not_implemented_exception::not_implemented_exception(std::string const &func_name)
+    : std::logic_error(func_name + "() has not been implemented.") {}
+
+e8util::not_implemented_exception::not_implemented_exception()
+    : std::logic_error("Function has not been implemented.") {}
