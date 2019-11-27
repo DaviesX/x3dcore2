@@ -8,6 +8,7 @@
 #include <QString>
 #include <QtTest>
 #include <memory>
+#include <string>
 
 class tst_renderer : public QObject {
     Q_OBJECT
@@ -100,22 +101,30 @@ void tst_renderer::pt_render_cornel_balls() {
     cornell_balls scene = cornell_box_path_space();
     e8::pt_image_renderer renderer(std::make_unique<e8::pathtracer_factory>(
         e8::pathtracer_factory::unidirect, e8::pathtracer_factory::options()));
-    e8::aces_compositor compositor(/*width=*/800, /*height=*/600);
-    renderer.render(&compositor, *scene.path_space, *scene.light_sources, *scene.camera,
-                    /*num_samps=*/16, /*firefly_filter=*/false);
+    for (unsigned k = 0; k < 4; k++) {
+        e8::clamp_compositor compositor(/*width=*/800, /*height=*/600);
+        renderer.render(&compositor, *scene.path_space, *scene.light_sources, *scene.camera,
+                        /*num_samps=*/1, /*firefly_filter=*/false);
 
-    for (unsigned j = 0; j < compositor.height(); j++) {
-        for (unsigned i = 0; i < compositor.width(); i++) {
-            QVERIFY(compositor(i, j)(0) >= 0);
-            QVERIFY(compositor(i, j)(1) >= 0);
-            QVERIFY(compositor(i, j)(2) >= 0);
+        e8util::vec3 irradiance;
+        for (unsigned j = 0; j < compositor.height(); j++) {
+            for (unsigned i = 0; i < compositor.width(); i++) {
+                QVERIFY(compositor(i, j)(0) >= 0);
+                QVERIFY(compositor(i, j)(1) >= 0);
+                QVERIFY(compositor(i, j)(2) >= 0);
+                irradiance += compositor(i, j).cart();
+            }
         }
+
+        QVERIFY(irradiance(0) > 0);
+        QVERIFY(irradiance(1) > 0);
+        QVERIFY(irradiance(2) > 0);
+
+        e8::img_file_frame frame("result_" + std::to_string(k) + ".png", 800, 600);
+        compositor.commit(&frame);
+
+        frame.commit();
     }
-
-    e8::img_file_frame frame("result.png", 800, 600);
-    compositor.commit(&frame);
-
-    frame.commit();
 }
 
 QTEST_APPLESS_MAIN(tst_renderer)
