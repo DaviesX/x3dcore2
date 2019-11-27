@@ -522,19 +522,24 @@ e8util::vec3 e8::unidirect_pathtracer::sample_indirect_illum(
         transport_direct_illum(rng, o, vert, path_space, light_sources, multi_light_samps);
 
     // indirect.
-    float mat_pdf;
+    float proj_solid_dens;
     e8util::vec3 multi_indirect;
     for (unsigned k = 0; k < multi_indirect_samps; k++) {
-        e8util::vec3 i = vert.mat->sample(&rng, &mat_pdf, vert.uv, vert.normal, o);
-        e8::intersect_info indirect_vert = path_space.intersect(e8util::ray(vert.vertex, i));
-        if (indirect_vert.valid() && indirect_vert.normal.inner(-i) > 0.0f) {
-            e8util::vec3 indirect =
-                sample_indirect_illum(rng, -i, indirect_vert, path_space, light_sources, depth + 1,
-                                      multi_light_samps, multi_indirect_samps);
-            e8util::vec3 brdf = vert.mat->eval(vert.uv, vert.normal, o, i);
-            float cos_w = vert.normal.inner(i);
-            multi_indirect += indirect * brdf * cos_w / mat_pdf;
+        e8util::vec3 i = vert.mat->sample(&rng, &proj_solid_dens, vert.uv, vert.normal, o);
+        if (proj_solid_dens == 0.0f) {
+            break;
         }
+        e8::intersect_info indirect_vert = path_space.intersect(e8util::ray(vert.vertex, i));
+        if (!indirect_vert.valid() || indirect_vert.normal.inner(-i) <= 0.0f) {
+            break;
+        }
+
+        e8util::vec3 indirect =
+            sample_indirect_illum(rng, -i, indirect_vert, path_space, light_sources, depth + 1,
+                                  multi_light_samps, multi_indirect_samps);
+        e8util::vec3 brdf = vert.mat->eval(vert.uv, vert.normal, o, i);
+        float cos_w = vert.normal.inner(i);
+        multi_indirect += indirect * brdf * cos_w / proj_solid_dens;
     }
 
     return (direct + multi_indirect / multi_indirect_samps) / p_survive;

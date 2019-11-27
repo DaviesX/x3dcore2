@@ -116,14 +116,9 @@ void tst_renderer::pt_render_cornel_balls() {
             }
         }
 
-        QVERIFY(irradiance(0) > 0);
-        QVERIFY(irradiance(1) > 0);
-        QVERIFY(irradiance(2) > 0);
-
-        e8::img_file_frame frame("result_" + std::to_string(k) + ".png", 800, 600);
-        compositor.commit(&frame);
-
-        frame.commit();
+        QVERIFY(irradiance(0) > 5000.0f);
+        QVERIFY(irradiance(1) > 5000.0f);
+        QVERIFY(irradiance(2) > 5000.0f);
     }
 }
 
