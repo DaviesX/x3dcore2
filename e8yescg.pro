@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
-SUBDIRS = demoplayer/demoplayer.pro \
+SUBDIRS = \
     corelib/corelib.pro \
+    demoplayer/demoplayer.pro \
     corelib/test/tst_material \
     corelib/test/tst_pathtracer \
     corelib/test/tst_renderer
