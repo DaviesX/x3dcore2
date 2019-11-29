@@ -1,5 +1,6 @@
 #include "src/material.h"
 #include <QtTest>
+#include <cmath>
 
 class tst_material : public QObject {
     Q_OBJECT
@@ -12,10 +13,12 @@ class tst_material : public QObject {
     void cook_torrance_name();
     void cook_torrance_sample_dir();
     void cook_torrance_radiance();
+    void cook_torrance_special_case();
 
     void oren_nayar_name();
     void oren_nayar_sample_dir();
     void oren_nayar_radiance();
+    void oren_nayar_special_case();
 };
 
 tst_material::tst_material() {}
@@ -68,7 +71,18 @@ void generic_validate_mat_radiance(e8::if_material const &mat) {
         e8util::vec3 normal{0.0f, 0.0f, 1.0f};
         e8util::vec3 o_ray{1.0f, 1.0f, 1.0f};
         e8util::vec3 radiance = mat.eval(/*uv=*/e8util::vec2(), normal, o_ray, i_ray);
-        QVERIFY(radiance(0) >= 0.0f && radiance(1) >= 0.0f && radiance(2) >= 0.0f);
+
+        QVERIFY(!std::isnan(radiance(0)));
+        QVERIFY(!std::isnan(radiance(1)));
+        QVERIFY(!std::isnan(radiance(2)));
+
+        QVERIFY(!std::isinf(radiance(0)));
+        QVERIFY(!std::isinf(radiance(1)));
+        QVERIFY(!std::isinf(radiance(2)));
+
+        QVERIFY(radiance(0) >= 0.0f);
+        QVERIFY(radiance(1) >= 0.0f);
+        QVERIFY(radiance(2) >= 0.0f);
     }
 }
 
@@ -100,6 +114,48 @@ void tst_material::oren_nayar_radiance() {
     e8::oren_nayar mat =
         e8::oren_nayar("test_oren_nayar", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
     generic_validate_mat_radiance(mat);
+}
+
+void tst_material::cook_torrance_special_case() {
+    e8::cook_torr mat =
+        e8::cook_torr("test_cook_torr", e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
+    e8util::vec3 i{0.983719f, 0.0456052f, 0.173832f};
+    e8util::vec3 o{0.687788f, 0.361631f, 0.629421f};
+    e8util::vec3 n{0.687654f, 0.361558f, 0.62961f};
+    e8util::vec3 density = mat.eval(e8util::vec2(), n, o, i);
+
+    QVERIFY(!std::isnan(density(0)));
+    QVERIFY(!std::isnan(density(1)));
+    QVERIFY(!std::isnan(density(2)));
+
+    QVERIFY(!std::isinf(density(0)));
+    QVERIFY(!std::isinf(density(1)));
+    QVERIFY(!std::isinf(density(2)));
+
+    QVERIFY(density(0) >= 0.0f);
+    QVERIFY(density(1) >= 0.0f);
+    QVERIFY(density(2) >= 0.0f);
+}
+
+void tst_material::oren_nayar_special_case() {
+    e8::oren_nayar mat =
+        e8::oren_nayar("test_oren_nayar", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
+    e8util::vec3 i{0.983719f, 0.0456052f, 0.173832f};
+    e8util::vec3 o{0.687788f, 0.361631f, 0.629421f};
+    e8util::vec3 n{0.687654f, 0.361558f, 0.62961f};
+    e8util::vec3 density = mat.eval(e8util::vec2(), n, o, i);
+
+    QVERIFY(!std::isnan(density(0)));
+    QVERIFY(!std::isnan(density(1)));
+    QVERIFY(!std::isnan(density(2)));
+
+    QVERIFY(!std::isinf(density(0)));
+    QVERIFY(!std::isinf(density(1)));
+    QVERIFY(!std::isinf(density(2)));
+
+    QVERIFY(density(0) >= 0.0f);
+    QVERIFY(density(1) >= 0.0f);
+    QVERIFY(density(2) >= 0.0f);
 }
 
 QTEST_APPLESS_MAIN(tst_material)

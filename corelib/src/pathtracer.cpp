@@ -554,8 +554,9 @@ e8::unidirect_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> cons
         e8util::ray const &ray = rays[i];
         if (first_hits.hits[i].intersect.valid()) {
             // compute radiance.
-            e8util::vec3 p2_inf = sample_indirect_illum(rng, -ray.v(), first_hits.hits[i].intersect,
-                                                        path_space, light_sources, 0, 1, 1);
+            e8util::vec3 p2_inf = sample_indirect_illum(
+                rng, -ray.v(), first_hits.hits[i].intersect, path_space, light_sources, /*depth=*/0,
+                /*multi_light_samps=*/1, /*multi_indirect_samps=*/1);
             if (first_hits.hits[i].light) {
                 rad[i] = p2_inf + first_hits.hits[i].light->emission(
                                       -ray.v(), first_hits.hits[i].intersect.normal);

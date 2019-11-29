@@ -7,6 +7,7 @@
 #include "src/resource.h"
 #include <QString>
 #include <QtTest>
+#include <cmath>
 #include <memory>
 #include <string>
 
@@ -99,9 +100,11 @@ cornell_balls cornell_box_path_space() {
 
 void tst_renderer::pt_render_cornel_balls() {
     cornell_balls scene = cornell_box_path_space();
-    e8::pt_image_renderer renderer(std::make_unique<e8::pathtracer_factory>(
-        e8::pathtracer_factory::unidirect, e8::pathtracer_factory::options()));
-    for (unsigned k = 0; k < 4; k++) {
+    e8::pt_image_renderer renderer(
+        std::make_unique<e8::pathtracer_factory>(e8::pathtracer_factory::unidirect,
+                                                 e8::pathtracer_factory::options()),
+        /*num_threads=*/1);
+    for (unsigned k = 0; k < 10; k++) {
         e8::clamp_compositor compositor(/*width=*/800, /*height=*/600);
         renderer.render(&compositor, *scene.path_space, *scene.light_sources, *scene.camera,
                         /*num_samps=*/1, /*firefly_filter=*/false);
@@ -109,9 +112,34 @@ void tst_renderer::pt_render_cornel_balls() {
         e8util::vec3 irradiance;
         for (unsigned j = 0; j < compositor.height(); j++) {
             for (unsigned i = 0; i < compositor.width(); i++) {
-                QVERIFY(compositor(i, j)(0) >= 0);
-                QVERIFY(compositor(i, j)(1) >= 0);
-                QVERIFY(compositor(i, j)(2) >= 0);
+                QVERIFY2(!std::isnan(compositor(i, j)(0)),
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j))
+                             .c_str());
+                QVERIFY2(!std::isnan(compositor(i, j)(1)),
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j))
+                             .c_str());
+                QVERIFY2(!std::isnan(compositor(i, j)(2)),
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j))
+                             .c_str());
+
+                QVERIFY2(!std::isinf(compositor(i, j)(0)),
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j))
+                             .c_str());
+                QVERIFY2(!std::isnan(compositor(i, j)(1)),
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j))
+                             .c_str());
+                QVERIFY2(!std::isnan(compositor(i, j)(2)),
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j))
+                             .c_str());
+
+                QVERIFY2(compositor(i, j)(1) >= 0,
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j) +
+                          "," + std::to_string(compositor(i, j)(1)))
+                             .c_str());
+                QVERIFY2(compositor(i, j)(2) >= 0,
+                         (std::to_string(k) + "," + std::to_string(i) + "," + std::to_string(j) +
+                          "," + std::to_string(compositor(i, j)(2)))
+                             .c_str());
                 irradiance += compositor(i, j).cart();
             }
         }

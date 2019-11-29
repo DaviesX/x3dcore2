@@ -191,7 +191,7 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const {
                         throw "Malformed data at line " + std::to_string(i + 1) +
                             " where vertex index is missing.";
                     else {
-                        unsigned iattri = std::stoul(s_index[0]) - 1;
+                        unsigned iattri = static_cast<unsigned>(std::stoul(s_index[0])) - 1;
                         if (iattri >= vertices.size())
                             throw "At line " + std::to_string(i + 1) + ", attribute " +
                                 std::to_string(v + 1) + " referenced vertex " +
@@ -200,7 +200,7 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const {
                     }
 
                     if (!s_index[1].empty()) {
-                        unsigned iattri = std::stoul(s_index[1]) - 1;
+                        unsigned iattri = static_cast<unsigned>(std::stoul(s_index[1])) - 1;
                         if (iattri >= texcoords.size())
                             throw "At line " + std::to_string(i + 1) + ", attribute " +
                                 std::to_string(v + 1) + " referenced texcoord " +
@@ -209,7 +209,7 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const {
                     }
 
                     if (!s_index[2].empty()) {
-                        unsigned iattri = std::stoul(s_index[2]) - 1;
+                        unsigned iattri = static_cast<unsigned>(std::stoul(s_index[2])) - 1;
                         if (iattri >= normals.size())
                             throw "At line " + std::to_string(i + 1) + ", attribute " +
                                 std::to_string(v + 1) + " referenced normal " +
@@ -229,7 +229,7 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const {
         throw std::string("The mesh doesn't contain vertex data");
 
     // Fill up the mesh.
-    std::shared_ptr<e8::trimesh> mesh = std::make_shared<e8::trimesh>();
+    std::shared_ptr<e8::trimesh> mesh = std::make_shared<e8::trimesh>(m_location);
 
     // Vertices are already in the right place.
     mesh->vertices(vertices);
@@ -242,7 +242,7 @@ std::shared_ptr<e8::if_geometry> e8util::wavefront_obj::load_geometry() const {
         triangles[f] = e8::triangle(&iverts[f * 3 + 0]);
 
         for (unsigned v = 3 * f + 0; v < 3 * f + 3; v++) {
-            packed_norms[inorms[v]] = normals[inorms[v]];
+            packed_norms[iverts[v]] = normals[inorms[v]];
             packed_tex[iverts[v]] = texcoords[itex[v]];
         }
     }
