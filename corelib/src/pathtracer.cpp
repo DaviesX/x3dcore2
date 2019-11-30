@@ -45,7 +45,7 @@ unsigned sample_path(e8util::rng *rng, sampled_pathlet *sampled_path,
     e8util::vec3 i = sampled_path[depth - 1].vert.mat->sample(
         rng, &w_dens, sampled_path[depth - 1].vert.uv, sampled_path[depth - 1].vert.normal,
         sampled_path[depth - 1].towards_prev());
-    if (i == e8util::vec3{0.0f}) {
+    if (e8util::equals(w_dens, 0.0f)) {
         return depth;
     }
 
@@ -119,20 +119,19 @@ e8util::vec3 transport_illum_source(e8::if_light const &light, e8util::vec3 cons
                                     e8::if_path_space const &path_space) {
     // construct light path.
     e8util::vec3 l = target_vert.vertex - p_illum;
-    e8util::vec3 illum = light.eval(l, n_illum);
-    if (illum == 0.0f)
+    e8util::vec3 illum = light.eval(l, n_illum, target_vert.normal);
+    if (e8util::equals(illum, e8util::vec3(0.0f))) {
         return 0.0f;
+    }
 
     float distance = l.norm();
     e8util::vec3 i = -l / distance;
 
     // evaluate.
-    float cos_w = i.inner(target_vert.normal);
     e8util::ray light_ray(target_vert.vertex, i);
     float t;
     if (!path_space.has_intersect(light_ray, 1e-4f, distance - 1e-3f, t)) {
-        return illum * target_vert.mat->eval(target_vert.uv, target_vert.normal, target_o_ray, i) *
-               cos_w;
+        return illum * target_vert.mat->eval(target_vert.uv, target_vert.normal, target_o_ray, i);
     } else {
         return 0.0f;
     }
@@ -230,9 +229,15 @@ template <bool IMPORTANCE> class light_transport_info {
         e8util::vec3 transport = 1.0f;
         m_prefix_transport[0] = 1.0f;
         for (unsigned k = 0; k < len - 1; k++) {
-            transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
-                                                path[k].towards_prev(), path[k + 1].towards()) *
-                         path[k].vert.normal.inner(path[k + 1].towards()) / path[k + 1].dens;
+            if (IMPORTANCE) {
+                transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
+                                                    path[k + 1].towards(), path[k].towards_prev()) *
+                             path[k].vert.normal.inner(path[k + 1].towards()) / path[k + 1].dens;
+            } else {
+                transport *= path[k].vert.mat->eval(path[k].vert.uv, path[k].vert.normal,
+                                                    path[k].towards_prev(), path[k + 1].towards()) *
+                             path[k].vert.normal.inner(path[k + 1].towards()) / path[k + 1].dens;
+            }
             m_prefix_transport[k + 1] = transport;
         }
 
@@ -377,22 +382,21 @@ e8util::vec3 transport_all_connectible_subpaths(
                 if (cos_wo > 0.0f && cos_wi > 0.0f &&
                     !path_space.has_intersect(join_ray, 1e-4f, join_distance - 1e-3f, t)) {
                     // compute light transportation for light subpath.
-                    e8util::vec3 light_importance =
-                        light.eval(light_path[0].towards() * light_path[0].vert.t, light_n) /
-                        (light_path[0].dens * light_p_dens);
+                    e8util::vec3 light_emission = light.emission(light_path[0].towards(), light_n) /
+                                                  (light_path[0].dens * light_p_dens);
                     e8util::vec3 light_subpath_importance =
-                        light_transport.transport(light_plen - 1, light_importance);
+                        light_transport.transport(light_plen - 1, light_emission);
 
                     // transport light over the join path.
                     float to_area_differential = cos_wi * cos_wo / (join_distance * join_distance);
-                    e8util::vec3 light_join_brdf = light_join_vert.vert.mat->eval(
+                    e8util::vec3 light_join_weight = light_join_vert.vert.mat->eval(
                         light_join_vert.vert.uv, light_join_vert.vert.normal, join_path,
                         light_join_vert.towards_prev());
-                    e8util::vec3 cam_join_brdf = cam_join_vert.vert.mat->eval(
+                    e8util::vec3 cam_join_weight = cam_join_vert.vert.mat->eval(
                         cam_join_vert.vert.uv, cam_join_vert.vert.normal, -join_path,
                         cam_join_vert.towards_prev());
                     e8util::vec3 transported_importance = light_subpath_importance *
-                                                          light_join_brdf * cam_join_brdf *
+                                                          light_join_weight * cam_join_weight *
                                                           to_area_differential;
 
                     // compute light transportation for camera subpath.

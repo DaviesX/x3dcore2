@@ -36,21 +36,26 @@ void e8::area_light::sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8uti
     m_geo->sample(rng, p, n, pdf);
 }
 
-e8util::vec3 e8::area_light::eval(e8util::vec3 const &i, e8util::vec3 const &n) const {
+e8util::vec3 e8::area_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
+                                  e8util::vec3 const &n_target) const {
     float r2 = i.inner(i);
-    float cos = (i / std::sqrt(r2)).inner(n);
-    if (cos > 0)
-        return cos / r2 * m_rad;
-    else
+    e8util::vec3 i_norm = i / std::sqrt(r2);
+    float cos_o = n_light.inner(i_norm);
+    float cos_i = n_target.inner(-i_norm);
+    if (cos_o > 0 && cos_i > 0) {
+        return m_rad * cos_i * cos_o / r2;
+    } else {
         return 0.0f;
+    }
 }
 
 e8util::vec3 e8::area_light::emission(e8util::vec3 const &w, e8util::vec3 const &n) const {
-    float cos = w.inner(n);
-    if (cos > 0)
+    float cos = n.inner(w);
+    if (cos > 0) {
         return m_rad * cos;
-    else
+    } else {
         return 0.0f;
+    }
 }
 
 e8util::vec3 e8::area_light::power() const { return m_power; }
@@ -99,9 +104,12 @@ void e8::sky_light::sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util
     pdf = z.inner(u) / static_cast<float>(M_PI);
 }
 
-e8util::vec3 e8::sky_light::eval(e8util::vec3 const &i, e8util::vec3 const &n) const {
-    float cos = i.normalize().inner(n);
-    return m_rad * std::max(cos, 0.0f);
+e8util::vec3 e8::sky_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
+                                 e8util::vec3 const &n_target) const {
+    e8util::vec3 i_norm = i.normalize();
+    float cos_o = n_light.inner(i_norm);
+    float cos_i = n_target.inner(-i_norm);
+    return m_rad * std::max(cos_o, 0.0f) * std::max(cos_i, 0.0f);
 }
 
 e8util::vec3 e8::sky_light::emission(e8util::vec3 const &w, e8util::vec3 const &n) const {

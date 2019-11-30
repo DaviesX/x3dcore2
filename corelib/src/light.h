@@ -19,7 +19,8 @@ class if_light : public if_operable_obj<if_light> {
     virtual void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p,
                         e8util::vec3 &n, e8util::vec3 &w) const = 0;
     virtual void sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const = 0;
-    virtual e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n) const = 0;
+    virtual e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
+                              e8util::vec3 const &n_target) const = 0;
     virtual e8util::vec3 emission(e8util::vec3 const &w, e8util::vec3 const &n) const = 0;
     virtual e8util::vec3 power() const = 0;
     virtual std::unique_ptr<if_light> copy() const override = 0;
@@ -42,7 +43,8 @@ class area_light : public if_light {
     void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p, e8util::vec3 &n,
                 e8util::vec3 &w) const override;
     void sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const override;
-    e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n) const override;
+    e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
+                      e8util::vec3 const &n_target) const override;
     e8util::vec3 emission(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 power() const override;
     std::unique_ptr<if_light> copy() const override;
@@ -64,7 +66,8 @@ class sky_light : public if_light {
     void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p, e8util::vec3 &n,
                 e8util::vec3 &w) const override;
     void sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const override;
-    e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n) const override;
+    e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
+                      e8util::vec3 const &n_target) const override;
     e8util::vec3 emission(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 power() const override;
     std::unique_ptr<if_light> copy() const override;
