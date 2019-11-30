@@ -12,12 +12,12 @@ class tst_material : public QObject {
   private slots:
     void cook_torrance_name();
     void cook_torrance_sample_dir();
-    void cook_torrance_radiance();
+    void cook_torrance_brdf();
     void cook_torrance_special_case();
 
     void oren_nayar_name();
     void oren_nayar_sample_dir();
-    void oren_nayar_radiance();
+    void oren_nayar_brdf();
     void oren_nayar_special_case();
 };
 
@@ -38,7 +38,7 @@ void tst_material::oren_nayar_name() {
 }
 
 void generic_validate_mat_dir(float *p_valid, std::vector<e8util::vec3> *samples,
-                              e8::if_material const &mat) {
+                              std::vector<float> *solid_angle_dens, e8::if_material const &mat) {
     samples->clear();
 
     e8util::vec3 normal{0.0f, 0.0f, 1.0f};
@@ -55,35 +55,55 @@ void generic_validate_mat_dir(float *p_valid, std::vector<e8util::vec3> *samples
         if (!e8util::equals(i_ray, e8util::vec3())) {
             QVERIFY(e8util::equals(i_ray.norm(), 1.0f));
             QVERIFY(i_ray.inner(normal) >= 0.0f);
-            samples->push_back(i_ray);
+            if (samples != nullptr) {
+                samples->push_back(i_ray);
+            }
+            if (solid_angle_dens != nullptr) {
+                solid_angle_dens->push_back(dens);
+            }
         }
     }
 
     *p_valid = static_cast<float>(samples->size()) / NUM_SAMPLES;
 }
 
-void generic_validate_mat_radiance(e8::if_material const &mat) {
+void generic_validate_mat_brdf(e8::if_material const &mat) {
     float p_valid;
     std::vector<e8util::vec3> samples;
-    generic_validate_mat_dir(&p_valid, &samples, mat);
+    std::vector<float> dens;
+    generic_validate_mat_dir(&p_valid, &samples, &dens, mat);
 
-    for (e8util::vec3 const &i_ray : samples) {
+    e8util::vec3 cumulative_density;
+    for (unsigned i = 0; i < samples.size(); i++) {
         e8util::vec3 normal{0.0f, 0.0f, 1.0f};
         e8util::vec3 o_ray{1.0f, 1.0f, 1.0f};
-        e8util::vec3 radiance = mat.eval(/*uv=*/e8util::vec2(), normal, o_ray, i_ray);
+        e8util::vec3 i_ray = samples[i];
+        e8util::vec3 weight = mat.eval(/*uv=*/e8util::vec2(), normal, o_ray, i_ray);
+        cumulative_density += weight * normal.inner(i_ray) / dens[i];
 
-        QVERIFY(!std::isnan(radiance(0)));
-        QVERIFY(!std::isnan(radiance(1)));
-        QVERIFY(!std::isnan(radiance(2)));
+        QVERIFY(!std::isnan(weight(0)));
+        QVERIFY(!std::isnan(weight(1)));
+        QVERIFY(!std::isnan(weight(2)));
 
-        QVERIFY(!std::isinf(radiance(0)));
-        QVERIFY(!std::isinf(radiance(1)));
-        QVERIFY(!std::isinf(radiance(2)));
+        QVERIFY(!std::isinf(weight(0)));
+        QVERIFY(!std::isinf(weight(1)));
+        QVERIFY(!std::isinf(weight(2)));
 
-        QVERIFY(radiance(0) >= 0.0f);
-        QVERIFY(radiance(1) >= 0.0f);
-        QVERIFY(radiance(2) >= 0.0f);
+        QVERIFY(weight(0) >= 0.0f);
+        QVERIFY(weight(1) >= 0.0f);
+        QVERIFY(weight(2) >= 0.0f);
+
+        e8util::vec3 reversed_weight = mat.eval(/*uv=*/e8util::vec2(), normal, i_ray, o_ray);
+
+        QVERIFY(e8util::equals(weight(0), reversed_weight(0)));
+        QVERIFY(e8util::equals(weight(1), reversed_weight(1)));
+        QVERIFY(e8util::equals(weight(2), reversed_weight(2)));
     }
+    cumulative_density *= 1.0f / static_cast<float>(samples.size());
+
+    QVERIFY(cumulative_density(0) < 1.0f);
+    QVERIFY(cumulative_density(1) < 1.0f);
+    QVERIFY(cumulative_density(2) < 1.0f);
 }
 
 void tst_material::cook_torrance_sample_dir() {
@@ -91,7 +111,7 @@ void tst_material::cook_torrance_sample_dir() {
         e8::cook_torr("test_cook_torr", e8util::vec3({0.787f, 0.787f, 0.787f}), 0.2f, 2.93f);
     float p_valid;
     std::vector<e8util::vec3> samples;
-    generic_validate_mat_dir(&p_valid, &samples, mat);
+    generic_validate_mat_dir(&p_valid, &samples, nullptr, mat);
     QVERIFY(p_valid >= .8f);
 }
 
@@ -100,20 +120,20 @@ void tst_material::oren_nayar_sample_dir() {
         e8::oren_nayar("test_oren_nayar", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
     float p_valid;
     std::vector<e8util::vec3> samples;
-    generic_validate_mat_dir(&p_valid, &samples, mat);
+    generic_validate_mat_dir(&p_valid, &samples, nullptr, mat);
     QVERIFY(p_valid == 1.0f);
 }
 
-void tst_material::cook_torrance_radiance() {
+void tst_material::cook_torrance_brdf() {
     e8::cook_torr mat =
         e8::cook_torr("test_cook_torr", e8util::vec3({0.787f, 0.787f, 0.787f}), 0.25f, 2.93f);
-    generic_validate_mat_radiance(mat);
+    generic_validate_mat_brdf(mat);
 }
 
-void tst_material::oren_nayar_radiance() {
+void tst_material::oren_nayar_brdf() {
     e8::oren_nayar mat =
         e8::oren_nayar("test_oren_nayar", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
-    generic_validate_mat_radiance(mat);
+    generic_validate_mat_brdf(mat);
 }
 
 void tst_material::cook_torrance_special_case() {
