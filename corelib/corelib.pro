@@ -51,7 +51,8 @@ SOURCES += \
     src/cinematics.cpp \
     test/testobjdb.cpp \
     src/lightsources.cpp \
-    test/testunidirectlt1renderer.cpp
+    test/testunidirectlt1renderer.cpp \
+    test/testunidirectrenderer.cpp
 
 
 HEADERS += \
@@ -79,7 +80,6 @@ HEADERS += \
     test/testframe.h \
     test/testscene.h \
     test/testdirectrenderer.h \
-    test/testunidirectrenderer.h \
     test/testbidirectmisrenderer.h \
     test/testbidirectlt2renderer.h \
     test/testgltfresource.h \
@@ -88,7 +88,9 @@ HEADERS += \
     src/pathspace.h \
     src/cinematics.h \
     test/testobjdb.h \
-    src/lightsources.h
+    src/lightsources.h \
+    test/testunidirectlt1renderer.h \
+    test/testunidirectrenderer.h
 
 win32 {
 LIBS += -lOpengl32

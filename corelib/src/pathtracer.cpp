@@ -439,10 +439,6 @@ e8::if_path_tracer::compute_first_hit(std::vector<e8util::ray> const &rays,
     return results;
 }
 
-e8::position_tracer::position_tracer() {}
-
-e8::position_tracer::~position_tracer() {}
-
 std::vector<e8util::vec3>
 e8::position_tracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const & /*rays*/,
                             first_hits const &first_hits, if_path_space const &path_space,
@@ -460,10 +456,6 @@ e8::position_tracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> cons
     return rad;
 }
 
-e8::normal_tracer::normal_tracer() {}
-
-e8::normal_tracer::~normal_tracer() {}
-
 std::vector<e8util::vec3>
 e8::normal_tracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const & /*rays*/,
                           first_hits const &first_hits, if_path_space const & /*path_space*/,
@@ -478,10 +470,6 @@ e8::normal_tracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const 
     }
     return rad;
 }
-
-e8::direct_path_tracer::direct_path_tracer() {}
-
-e8::direct_path_tracer::~direct_path_tracer() {}
 
 std::vector<e8util::vec3>
 e8::direct_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
@@ -502,9 +490,62 @@ e8::direct_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const 
     return rad;
 }
 
-e8::unidirect_lt1_path_tracer::unidirect_lt1_path_tracer() {}
+e8util::vec3 e8::unidirect_path_tracer::sample_indirect_illum(
+    e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &vert,
+    if_path_space const &path_space, if_light_sources const &light_sources, unsigned depth) const {
+    static const int mutate_depth = 2;
+    float p_survive = 0.5f;
+    if (depth >= mutate_depth) {
+        if (rng.draw() >= p_survive) {
+            return 0.0f;
+        }
+    } else {
+        p_survive = 1;
+    }
 
-e8::unidirect_lt1_path_tracer::~unidirect_lt1_path_tracer() {}
+    // Direct.
+    if_light const *light = light_sources.obj_light(*vert.geo);
+    e8util::vec3 irradiance;
+    if (light != nullptr) {
+        irradiance = light->irradiance(o, vert.normal);
+    }
+
+    // Indirect.
+    float proj_solid_dens;
+    e8util::vec3 i = vert.mat->sample(&rng, &proj_solid_dens, vert.uv, vert.normal, o);
+    if (proj_solid_dens == 0.0f) {
+        return irradiance / p_survive;
+    }
+    e8::intersect_info indirect_vert = path_space.intersect(e8util::ray(vert.vertex, i));
+    if (!indirect_vert.valid() || indirect_vert.normal.inner(-i) <= 0.0f) {
+        return irradiance / p_survive;
+    }
+
+    e8util::vec3 p_depth_to_inf =
+        sample_indirect_illum(rng, -i, indirect_vert, path_space, light_sources, depth + 1);
+    e8util::vec3 weight = vert.mat->eval(vert.uv, vert.normal, o, i);
+    float cos_w = vert.normal.inner(i);
+    e8util::vec3 indirect = p_depth_to_inf * weight * cos_w / proj_solid_dens;
+
+    return (irradiance + indirect) / p_survive;
+}
+
+std::vector<e8util::vec3>
+e8::unidirect_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
+                                  first_hits const &first_hits, if_path_space const &path_space,
+                                  if_light_sources const &light_sources) const {
+    std::vector<e8util::vec3> rad(rays.size());
+    for (unsigned i = 0; i < rays.size(); i++) {
+        e8util::ray const &ray = rays[i];
+        if (first_hits.hits[i].intersect.valid()) {
+            // compute radiance.
+            e8util::vec3 p_inf = sample_indirect_illum(rng, -ray.v(), first_hits.hits[i].intersect,
+                                                       path_space, light_sources, /*depth=*/0);
+            rad[i] = p_inf;
+        }
+    }
+    return rad;
+}
 
 e8util::vec3 e8::unidirect_lt1_path_tracer::sample_indirect_illum(
     e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &vert,
@@ -571,10 +612,6 @@ e8::unidirect_lt1_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray>
     }
     return rad;
 }
-
-e8::bidirect_lt2_path_tracer::bidirect_lt2_path_tracer() {}
-
-e8::bidirect_lt2_path_tracer::~bidirect_lt2_path_tracer() {}
 
 e8util::vec3 e8::bidirect_lt2_path_tracer::join_with_light_paths(
     e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &poi,
@@ -676,10 +713,6 @@ e8::bidirect_lt2_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> 
     }
     return rad;
 }
-
-e8::bidirect_mis_path_tracer::bidirect_mis_path_tracer() {}
-
-e8::bidirect_mis_path_tracer::~bidirect_mis_path_tracer() {}
 
 e8::if_light const *e8::bidirect_mis_path_tracer::sample_illum_source(
     e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, e8util::vec3 &w, float &density,

@@ -58,6 +58,15 @@ e8util::vec3 e8::area_light::emission(e8util::vec3 const &w, e8util::vec3 const 
     }
 }
 
+e8util::vec3 e8::area_light::irradiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
+    float cos = n.inner(w);
+    if (cos > 0) {
+        return m_rad;
+    } else {
+        return 0.0f;
+    }
+}
+
 e8util::vec3 e8::area_light::power() const { return m_power; }
 
 std::unique_ptr<e8::if_light> e8::area_light::copy() const {
@@ -114,6 +123,10 @@ e8util::vec3 e8::sky_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_li
 
 e8util::vec3 e8::sky_light::emission(e8util::vec3 const &w, e8util::vec3 const &n) const {
     return m_rad * std::max(w.inner(n), 0.0f);
+}
+
+e8util::vec3 e8::sky_light::irradiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
+    return m_rad;
 }
 
 e8util::vec3 e8::sky_light::power() const { return static_cast<float>(M_PI) * (m_dia * m_dia / 2); }

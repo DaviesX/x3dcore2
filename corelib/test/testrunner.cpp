@@ -10,6 +10,7 @@
 #include "testresource.h"
 #include "testscene.h"
 #include "testtensor.h"
+#include "testunidirectlt1renderer.h"
 #include "testunidirectrenderer.h"
 #include <cstring>
 #include <iostream>
@@ -59,6 +60,7 @@ test::test_runner test::load(int argc, char **argv) {
     runner.add("test_camera", new test_camera(), false);
     runner.add("test_path_space", new test_path_space(), false);
     runner.add("test_direct_renderer", new test_direct_renderer(), false);
+    runner.add("test_unidirect_lt1_renderer", new test_unidirect_lt1_renderer(), false);
     runner.add("test_unidirect_renderer", new test_unidirect_renderer(), false);
     runner.add("test_bidirect_lt2_renderer", new test_bidirect_lt2_renderer(), false);
     runner.add("test_bidirect_mis_renderer", new test_bidirect_mis_renderer(), false);

@@ -7,8 +7,8 @@ namespace test {
 
 class test_unidirect_renderer : public if_test {
   public:
-    test_unidirect_renderer();
-    ~test_unidirect_renderer() override;
+    test_unidirect_renderer() = default;
+    ~test_unidirect_renderer() override = default;
 
     void run() const override;
 };

@@ -70,8 +70,8 @@ class if_path_tracer {
  */
 class position_tracer : public if_path_tracer {
   public:
-    position_tracer();
-    ~position_tracer() override;
+    position_tracer() = default;
+    ~position_tracer() override = default;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -83,8 +83,8 @@ class position_tracer : public if_path_tracer {
  */
 class normal_tracer : public if_path_tracer {
   public:
-    normal_tracer();
-    ~normal_tracer() override;
+    normal_tracer() = default;
+    ~normal_tracer() override = default;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -97,8 +97,8 @@ class normal_tracer : public if_path_tracer {
  */
 class direct_path_tracer : public if_path_tracer {
   public:
-    direct_path_tracer();
-    ~direct_path_tracer() override;
+    direct_path_tracer() = default;
+    ~direct_path_tracer() override = default;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -107,12 +107,32 @@ class direct_path_tracer : public if_path_tracer {
 
 /**
  * @brief The unidirect_lt1_path_tracer class
+ * unidirectional tracer with unlimited throughput.
+ */
+class unidirect_path_tracer : public if_path_tracer {
+  public:
+    unidirect_path_tracer() = default;
+    ~unidirect_path_tracer() override = default;
+
+    std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
+                                     first_hits const &first_hits, if_path_space const &path_space,
+                                     if_light_sources const &light_sources) const override;
+
+  protected:
+    e8util::vec3 sample_indirect_illum(e8util::rng &rng, e8util::vec3 const &o,
+                                       e8::intersect_info const &vert,
+                                       if_path_space const &path_space,
+                                       if_light_sources const &light_sources, unsigned depth) const;
+};
+
+/**
+ * @brief The unidirect_lt1_path_tracer class
  * unidirectional tracer with unlimited throughput and direct light sampling.
  */
 class unidirect_lt1_path_tracer : public if_path_tracer {
   public:
-    unidirect_lt1_path_tracer();
-    ~unidirect_lt1_path_tracer() override;
+    unidirect_lt1_path_tracer() = default;
+    ~unidirect_lt1_path_tracer() override = default;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -124,9 +144,6 @@ class unidirect_lt1_path_tracer : public if_path_tracer {
                                        if_path_space const &path_space,
                                        if_light_sources const &light_sources, unsigned depth,
                                        unsigned n, unsigned m) const;
-
-  private:
-    static unsigned const m_max_path_len = 4;
 };
 
 /**
@@ -135,8 +152,8 @@ class unidirect_lt1_path_tracer : public if_path_tracer {
  */
 class bidirect_lt2_path_tracer : public if_path_tracer {
   public:
-    bidirect_lt2_path_tracer();
-    ~bidirect_lt2_path_tracer() override;
+    bidirect_lt2_path_tracer() = default;
+    ~bidirect_lt2_path_tracer() override = default;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -161,8 +178,8 @@ class bidirect_lt2_path_tracer : public if_path_tracer {
  */
 class bidirect_mis_path_tracer : public if_path_tracer {
   public:
-    bidirect_mis_path_tracer();
-    ~bidirect_mis_path_tracer() override;
+    bidirect_mis_path_tracer() = default;
+    ~bidirect_mis_path_tracer() override = default;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
