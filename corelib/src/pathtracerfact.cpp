@@ -16,7 +16,7 @@ e8::if_pathtracer *e8::pathtracer_factory::create() {
     case direct:
         return new e8::direct_pathtracer();
     case unidirect:
-        return new e8::unidirect_pathtracer();
+        return new e8::unidirect_lt1_path_tracer();
     case bidirect_lt2:
         return new e8::bidirect_lt2_pathtracer();
     case bidirect_mis:

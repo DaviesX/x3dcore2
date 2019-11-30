@@ -109,10 +109,10 @@ class direct_pathtracer : public if_pathtracer {
  * @brief The unidirect_pathtracer class
  * unidirectional tracer with unlimited throughput and direct light sampling.
  */
-class unidirect_pathtracer : public if_pathtracer {
+class unidirect_lt1_path_tracer : public if_pathtracer {
   public:
-    unidirect_pathtracer();
-    ~unidirect_pathtracer() override;
+    unidirect_lt1_path_tracer();
+    ~unidirect_lt1_path_tracer() override;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
