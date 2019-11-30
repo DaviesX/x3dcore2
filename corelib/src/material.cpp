@@ -210,7 +210,7 @@ e8util::vec3 e8::cook_torr::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
     }
 
     e8util::vec3 h = i + o;
-    if (e8util::equals(h, e8util::vec3{0.0f})) {
+    if (e8util::equals(h, e8util::vec3(0.0f))) {
         // Degenerated case.
         return 0.0f;
     }
