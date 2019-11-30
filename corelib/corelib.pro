@@ -42,7 +42,6 @@ SOURCES += \
     test/testframe.cpp \
     test/testscene.cpp \
     test/testdirectrenderer.cpp \
-    test/testunidirectrenderer.cpp \
     test/testbidirectmisrenderer.cpp \
     test/testbidirectlt2renderer.cpp \
     test/testgltfresource.cpp \
@@ -51,7 +50,8 @@ SOURCES += \
     src/pathspace.cpp \
     src/cinematics.cpp \
     test/testobjdb.cpp \
-    src/lightsources.cpp
+    src/lightsources.cpp \
+    test/testunidirectlt1renderer.cpp
 
 
 HEADERS += \

@@ -92,7 +92,8 @@ e8util::flex_config e8::pt_render_pipeline::config_protocol() const {
     config.enum_vals["path_space"] = std::set<std::string>{"linear", "static_bvh"};
     config.enum_sel["path_space"] = "static_bvh";
     config.enum_vals["path_tracer"] = std::set<std::string>{
-        "normal", "position", "direct", "unidirectional", "bidirectional_lt2", "bidirectional_mis"};
+        "normal",           "position", "direct", "unidirectional_lt1", "bidirectional_lt2",
+        "bidirectional_mis"};
     config.enum_sel["path_tracer"] = "unidirectional";
     config.enum_vals["light_sources"] = std::set<std::string>{"basic"};
     config.enum_sel["light_sources"] = "basic";
@@ -119,8 +120,8 @@ void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
             pt_type = e8::pathtracer_factory::pt_type::position;
         } else if (tracer_type == "direct") {
             pt_type = e8::pathtracer_factory::pt_type::direct;
-        } else if (tracer_type == "unidirectional") {
-            pt_type = e8::pathtracer_factory::pt_type::unidirect;
+        } else if (tracer_type == "unidirectional_lt1") {
+            pt_type = e8::pathtracer_factory::pt_type::unidirect_lt1;
         } else if (tracer_type == "bidirectional_lt2") {
             pt_type = e8::pathtracer_factory::pt_type::bidirect_lt2;
         } else if (tracer_type == "bidirectional_mis") {

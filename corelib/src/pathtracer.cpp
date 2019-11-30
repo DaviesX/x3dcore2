@@ -90,7 +90,7 @@ unsigned sample_path(e8util::rng *rng, sampled_pathlet *sampled_path, e8util::ra
  * @param first_hit The first deterministic intersection which bootstraps the sampling process.
  */
 unsigned sample_path(e8util::rng *rng, sampled_pathlet *sampled_path, e8util::ray const &r0,
-                     e8::if_pathtracer::first_hits::hit const &hit,
+                     e8::if_path_tracer::first_hits::hit const &hit,
                      e8::if_path_space const &path_space, unsigned max_depth) {
     if (!hit.intersect.valid() || max_depth == 0) {
         return 0;
@@ -421,10 +421,10 @@ e8util::vec3 transport_all_connectible_subpaths(
 
 } // namespace
 
-e8::if_pathtracer::first_hits
-e8::if_pathtracer::compute_first_hit(std::vector<e8util::ray> const &rays,
-                                     if_path_space const &path_space,
-                                     if_light_sources const &light_sources) {
+e8::if_path_tracer::first_hits
+e8::if_path_tracer::compute_first_hit(std::vector<e8util::ray> const &rays,
+                                      if_path_space const &path_space,
+                                      if_light_sources const &light_sources) {
     first_hits results(rays.size());
     for (unsigned i = 0; i < rays.size(); i++) {
         results.hits[i].intersect = path_space.intersect(rays[i]);
@@ -439,14 +439,14 @@ e8::if_pathtracer::compute_first_hit(std::vector<e8util::ray> const &rays,
     return results;
 }
 
-e8::position_pathtracer::position_pathtracer() {}
+e8::position_tracer::position_tracer() {}
 
-e8::position_pathtracer::~position_pathtracer() {}
+e8::position_tracer::~position_tracer() {}
 
 std::vector<e8util::vec3>
-e8::position_pathtracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const & /*rays*/,
-                                first_hits const &first_hits, if_path_space const &path_space,
-                                if_light_sources const & /*light_sources*/) const {
+e8::position_tracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const & /*rays*/,
+                            first_hits const &first_hits, if_path_space const &path_space,
+                            if_light_sources const & /*light_sources*/) const {
     e8util::aabb const &aabb = path_space.aabb();
     e8util::vec3 const &range = aabb.max() - aabb.min();
     std::vector<e8util::vec3> rad(first_hits.hits.size());
@@ -460,14 +460,14 @@ e8::position_pathtracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> 
     return rad;
 }
 
-e8::normal_pathtracer::normal_pathtracer() {}
+e8::normal_tracer::normal_tracer() {}
 
-e8::normal_pathtracer::~normal_pathtracer() {}
+e8::normal_tracer::~normal_tracer() {}
 
 std::vector<e8util::vec3>
-e8::normal_pathtracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const & /*rays*/,
-                              first_hits const &first_hits, if_path_space const & /*path_space*/,
-                              if_light_sources const & /*light_sources*/) const {
+e8::normal_tracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> const & /*rays*/,
+                          first_hits const &first_hits, if_path_space const & /*path_space*/,
+                          if_light_sources const & /*light_sources*/) const {
     std::vector<e8util::vec3> rad(first_hits.hits.size());
     for (unsigned i = 0; i < first_hits.hits.size(); i++) {
         if (first_hits.hits[i].intersect.valid()) {
@@ -479,14 +479,14 @@ e8::normal_pathtracer::sample(e8util::rng & /*rng*/, std::vector<e8util::ray> co
     return rad;
 }
 
-e8::direct_pathtracer::direct_pathtracer() {}
+e8::direct_path_tracer::direct_path_tracer() {}
 
-e8::direct_pathtracer::~direct_pathtracer() {}
+e8::direct_path_tracer::~direct_path_tracer() {}
 
 std::vector<e8util::vec3>
-e8::direct_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
-                              first_hits const &first_hits, if_path_space const &path_space,
-                              if_light_sources const &light_sources) const {
+e8::direct_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
+                               first_hits const &first_hits, if_path_space const &path_space,
+                               if_light_sources const &light_sources) const {
     std::vector<e8util::vec3> rad(first_hits.hits.size());
     for (unsigned i = 0; i < rays.size(); i++) {
         if (first_hits.hits[i].intersect.valid()) {
@@ -551,8 +551,8 @@ e8util::vec3 e8::unidirect_lt1_path_tracer::sample_indirect_illum(
 
 std::vector<e8util::vec3>
 e8::unidirect_lt1_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
-                                 first_hits const &first_hits, if_path_space const &path_space,
-                                 if_light_sources const &light_sources) const {
+                                      first_hits const &first_hits, if_path_space const &path_space,
+                                      if_light_sources const &light_sources) const {
     std::vector<e8util::vec3> rad(rays.size());
     for (unsigned i = 0; i < rays.size(); i++) {
         e8util::ray const &ray = rays[i];
@@ -572,11 +572,11 @@ e8::unidirect_lt1_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray>
     return rad;
 }
 
-e8::bidirect_lt2_pathtracer::bidirect_lt2_pathtracer() {}
+e8::bidirect_lt2_path_tracer::bidirect_lt2_path_tracer() {}
 
-e8::bidirect_lt2_pathtracer::~bidirect_lt2_pathtracer() {}
+e8::bidirect_lt2_path_tracer::~bidirect_lt2_path_tracer() {}
 
-e8util::vec3 e8::bidirect_lt2_pathtracer::join_with_light_paths(
+e8util::vec3 e8::bidirect_lt2_path_tracer::join_with_light_paths(
     e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &poi,
     if_path_space const &path_space, if_light_sources const &light_sources,
     unsigned cam_path_len) const {
@@ -625,7 +625,7 @@ e8util::vec3 e8::bidirect_lt2_pathtracer::join_with_light_paths(
     return p1_direct;
 }
 
-e8util::vec3 e8::bidirect_lt2_pathtracer::sample_indirect_illum(
+e8util::vec3 e8::bidirect_lt2_path_tracer::sample_indirect_illum(
     e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &vert,
     if_path_space const &path_space, if_light_sources const &light_sources, unsigned depth) const {
     static const unsigned mutate_depth = 1;
@@ -657,9 +657,9 @@ e8util::vec3 e8::bidirect_lt2_pathtracer::sample_indirect_illum(
 }
 
 std::vector<e8util::vec3>
-e8::bidirect_lt2_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
-                                    first_hits const &first_hits, if_path_space const &path_space,
-                                    if_light_sources const &light_sources) const {
+e8::bidirect_lt2_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
+                                     first_hits const &first_hits, if_path_space const &path_space,
+                                     if_light_sources const &light_sources) const {
     std::vector<e8util::vec3> rad(rays.size());
     for (unsigned i = 0; i < rays.size(); i++) {
         e8util::ray const &ray = rays[i];
@@ -677,14 +677,13 @@ e8::bidirect_lt2_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> c
     return rad;
 }
 
-e8::bidirect_mis_pathtracer::bidirect_mis_pathtracer() {}
+e8::bidirect_mis_path_tracer::bidirect_mis_path_tracer() {}
 
-e8::bidirect_mis_pathtracer::~bidirect_mis_pathtracer() {}
+e8::bidirect_mis_path_tracer::~bidirect_mis_path_tracer() {}
 
-e8::if_light const *
-e8::bidirect_mis_pathtracer::sample_illum_source(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n,
-                                                 e8util::vec3 &w, float &density, float &w_density,
-                                                 if_light_sources const &light_sources) const {
+e8::if_light const *e8::bidirect_mis_path_tracer::sample_illum_source(
+    e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, e8util::vec3 &w, float &density,
+    float &w_density, if_light_sources const &light_sources) const {
     // sample light.
     float light_dens;
     if_light const *light = light_sources.sample_light(rng, light_dens);
@@ -697,9 +696,9 @@ e8::bidirect_mis_pathtracer::sample_illum_source(e8util::rng &rng, e8util::vec3 
 }
 
 std::vector<e8util::vec3>
-e8::bidirect_mis_pathtracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
-                                    first_hits const &first_hits, if_path_space const &path_space,
-                                    if_light_sources const &light_sources) const {
+e8::bidirect_mis_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
+                                     first_hits const &first_hits, if_path_space const &path_space,
+                                     if_light_sources const &light_sources) const {
     std::vector<e8util::vec3> rad(rays.size());
 
     std::unique_ptr<sampled_pathlet[]> cam_path =

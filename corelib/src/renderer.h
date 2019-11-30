@@ -65,7 +65,7 @@ class pt_image_renderer {
         sampling_task_data(e8util::data_id_t id, if_path_space const &path_space,
                            if_light_sources const &light_sources,
                            std::vector<e8util::ray> const &rays,
-                           if_pathtracer::first_hits const &first_hits, unsigned num_samps,
+                           if_path_tracer::first_hits const &first_hits, unsigned num_samps,
                            unsigned width, unsigned height, bool firefly_filter);
 
         ~sampling_task_data() override = default;
@@ -77,7 +77,7 @@ class pt_image_renderer {
         std::vector<e8util::ray> const &rays;
 
         // Cache of the information about the first intersection.
-        if_pathtracer::first_hits const &first_hits;
+        if_path_tracer::first_hits const &first_hits;
 
         // Number of samples to compute to form the estimate.
         unsigned num_samps;
@@ -99,7 +99,7 @@ class pt_image_renderer {
       public:
         sampling_task();
         sampling_task(sampling_task &&rhs);
-        sampling_task(e8::if_pathtracer *pt, unsigned seed);
+        sampling_task(e8::if_path_tracer *pt, unsigned seed);
         ~sampling_task() override;
 
         sampling_task &operator=(sampling_task rhs);
@@ -110,7 +110,7 @@ class pt_image_renderer {
       private:
         std::vector<e8util::vec3> m_estimate;
         e8util::rng m_rng;
-        e8::if_pathtracer *m_pt;
+        e8::if_path_tracer *m_pt;
 
         // Minimum difference in squared intensity to possibly classify a sample as firefly outlier.
         static float constexpr FireFlyMinDiff = 1.5f;

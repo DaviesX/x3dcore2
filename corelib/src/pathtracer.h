@@ -16,12 +16,12 @@ class if_light_sources;
 namespace e8 {
 
 /**
- * @brief The if_pathtracer class CPU path-tracing interface.
+ * @brief The if_path_tracer class CPU path-tracing interface.
  */
-class if_pathtracer {
+class if_path_tracer {
   public:
-    if_pathtracer() = default;
-    virtual ~if_pathtracer() = default;
+    if_path_tracer() = default;
+    virtual ~if_path_tracer() = default;
 
     /**
      * @brief The first_hits struct Contains the intersection information about the first hit test.
@@ -66,12 +66,12 @@ class if_pathtracer {
 };
 
 /**
- * @brief The position_pathtracer class
+ * @brief The position_tracer class
  */
-class position_pathtracer : public if_pathtracer {
+class position_tracer : public if_path_tracer {
   public:
-    position_pathtracer();
-    ~position_pathtracer() override;
+    position_tracer();
+    ~position_tracer() override;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -79,12 +79,12 @@ class position_pathtracer : public if_pathtracer {
 };
 
 /**
- * @brief The normal_pathtracer class
+ * @brief The normal_tracer class
  */
-class normal_pathtracer : public if_pathtracer {
+class normal_tracer : public if_path_tracer {
   public:
-    normal_pathtracer();
-    ~normal_pathtracer() override;
+    normal_tracer();
+    ~normal_tracer() override;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -92,13 +92,13 @@ class normal_pathtracer : public if_pathtracer {
 };
 
 /**
- * @brief The direct_pathtracer class
+ * @brief The direct_path_tracer class
  * unidirectional tracer with throughput limited to 2.
  */
-class direct_pathtracer : public if_pathtracer {
+class direct_path_tracer : public if_path_tracer {
   public:
-    direct_pathtracer();
-    ~direct_pathtracer() override;
+    direct_path_tracer();
+    ~direct_path_tracer() override;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -106,10 +106,10 @@ class direct_pathtracer : public if_pathtracer {
 };
 
 /**
- * @brief The unidirect_pathtracer class
+ * @brief The unidirect_lt1_path_tracer class
  * unidirectional tracer with unlimited throughput and direct light sampling.
  */
-class unidirect_lt1_path_tracer : public if_pathtracer {
+class unidirect_lt1_path_tracer : public if_path_tracer {
   public:
     unidirect_lt1_path_tracer();
     ~unidirect_lt1_path_tracer() override;
@@ -130,13 +130,13 @@ class unidirect_lt1_path_tracer : public if_pathtracer {
 };
 
 /**
- * @brief The bidirect_lt2_pathtracer class
+ * @brief The bidirect_lt2_path_tracer class
  * bidirectional tracer with light throughput limited to 2.
  */
-class bidirect_lt2_pathtracer : public if_pathtracer {
+class bidirect_lt2_path_tracer : public if_path_tracer {
   public:
-    bidirect_lt2_pathtracer();
-    ~bidirect_lt2_pathtracer() override;
+    bidirect_lt2_path_tracer();
+    ~bidirect_lt2_path_tracer() override;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
@@ -155,14 +155,14 @@ class bidirect_lt2_pathtracer : public if_pathtracer {
 };
 
 /**
- * @brief The bidirect_mis_pathtracer class
+ * @brief The bidirect_mis_path_tracer class
  * bidirectional tracer with unlimited throughput and multiple importance
  * sampling over the path space.
  */
-class bidirect_mis_pathtracer : public if_pathtracer {
+class bidirect_mis_path_tracer : public if_path_tracer {
   public:
-    bidirect_mis_pathtracer();
-    ~bidirect_mis_pathtracer() override;
+    bidirect_mis_path_tracer();
+    ~bidirect_mis_path_tracer() override;
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,

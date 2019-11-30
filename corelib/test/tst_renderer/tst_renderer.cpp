@@ -101,7 +101,7 @@ cornell_balls cornell_box_path_space() {
 void tst_renderer::pt_render_cornel_balls() {
     cornell_balls scene = cornell_box_path_space();
     e8::pt_image_renderer renderer(
-        std::make_unique<e8::pathtracer_factory>(e8::pathtracer_factory::unidirect,
+        std::make_unique<e8::pathtracer_factory>(e8::pathtracer_factory::unidirect_lt1,
                                                  e8::pathtracer_factory::options()),
         /*num_threads=*/1);
     for (unsigned k = 0; k < 10; k++) {

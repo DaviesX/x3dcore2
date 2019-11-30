@@ -1,6 +1,6 @@
-#include "testunidirectrenderer.h"
 #include "src/frame.h"
 #include "src/pipeline.h"
+#include "testunidirectrenderer.h"
 
 test::test_unidirect_renderer::test_unidirect_renderer() {}
 
@@ -14,7 +14,7 @@ void test::test_unidirect_renderer::run() const {
     e8::pt_render_pipeline pipeline(&img);
 
     e8util::flex_config config = pipeline.config_protocol();
-    config.enum_sel["path_tracer"] = "unidirectional";
+    config.enum_sel["path_tracer"] = "unidirectional_lt1";
     config.int_val["samples_per_frame"] = 128;
     config.bool_val["firefly_filter"] = false;
     pipeline.update_pipeline(config);

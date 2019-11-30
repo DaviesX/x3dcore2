@@ -3,7 +3,7 @@
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(
     e8util::data_id_t id, if_path_space const &path_space, if_light_sources const &light_sources,
-    std::vector<e8util::ray> const &rays, if_pathtracer::first_hits const &first_hits,
+    std::vector<e8util::ray> const &rays, if_path_tracer::first_hits const &first_hits,
     unsigned num_samps, unsigned width, unsigned height, bool firefly_filter)
     : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources), rays(rays),
       first_hits(first_hits), num_samps(num_samps), width(width), height(height),
@@ -11,7 +11,7 @@ e8::pt_image_renderer::sampling_task_data::sampling_task_data(
 
 e8::pt_image_renderer::sampling_task::sampling_task() : e8util::if_task(false), m_pt(nullptr) {}
 
-e8::pt_image_renderer::sampling_task::sampling_task(e8::if_pathtracer *pt, unsigned seed)
+e8::pt_image_renderer::sampling_task::sampling_task(e8::if_path_tracer *pt, unsigned seed)
     : e8util::if_task(false), m_rng(seed), m_pt(pt) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task(sampling_task &&rhs) {
@@ -116,8 +116,8 @@ e8::pt_image_renderer::render(if_compositor *compositor, if_path_space const &pa
         }
     }
 
-    if_pathtracer::first_hits first_hits =
-        if_pathtracer::compute_first_hit(rays, path_space, light_sources);
+    if_path_tracer::first_hits first_hits =
+        if_path_tracer::compute_first_hit(rays, path_space, light_sources);
 
     // Launch tasks.
     unsigned allocated_samps =
