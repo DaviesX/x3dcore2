@@ -49,7 +49,7 @@ e8util::vec3 e8::area_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_l
     }
 }
 
-e8util::vec3 e8::area_light::emission(e8util::vec3 const &w, e8util::vec3 const &n) const {
+e8util::vec3 e8::area_light::projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
     float cos = n.inner(w);
     if (cos > 0) {
         return m_rad * cos;
@@ -58,7 +58,7 @@ e8util::vec3 e8::area_light::emission(e8util::vec3 const &w, e8util::vec3 const 
     }
 }
 
-e8util::vec3 e8::area_light::irradiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
+e8util::vec3 e8::area_light::radiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
     float cos = n.inner(w);
     if (cos > 0) {
         return m_rad;
@@ -121,11 +121,11 @@ e8util::vec3 e8::sky_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_li
     return m_rad * std::max(cos_o, 0.0f) * std::max(cos_i, 0.0f);
 }
 
-e8util::vec3 e8::sky_light::emission(e8util::vec3 const &w, e8util::vec3 const &n) const {
+e8util::vec3 e8::sky_light::projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
     return m_rad * std::max(w.inner(n), 0.0f);
 }
 
-e8util::vec3 e8::sky_light::irradiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
+e8util::vec3 e8::sky_light::radiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
     return m_rad;
 }
 
