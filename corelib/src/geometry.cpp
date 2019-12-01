@@ -39,26 +39,28 @@ std::vector<e8util::vec2> const &e8::trimesh::texcoords() const { return m_texco
 
 std::vector<e8::triangle> const &e8::trimesh::triangles() const { return m_tris; }
 
-void e8::trimesh::sample(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, float &pdf) const {
+e8::if_geometry::surface_sample e8::trimesh::sample(e8util::rng *rng) const {
     // select a triangle.
     // @todo: use cdf.
-    float q = rng.draw();
+    float q = rng->draw();
     unsigned i = static_cast<unsigned>(q * m_tris.size());
 
     e8::triangle const &t = m_tris[i];
 
-    float u = rng.draw();
-    float v = rng.draw();
+    float u = rng->draw();
+    float v = rng->draw();
 
     float r = std::sqrt(u);
     float b0 = 1 - r;
     float b1 = r * v;
     float b2 = 1 - b0 - b1;
 
-    p = b0 * m_verts[t(0)] + b1 * m_verts[t(1)] + b2 * m_verts[t(2)];
-    n = (b0 * m_norms[t(0)] + b1 * m_norms[t(1)] + b2 * m_norms[t(2)]).normalize();
+    surface_sample sample;
+    sample.p = b0 * m_verts[t(0)] + b1 * m_verts[t(1)] + b2 * m_verts[t(2)];
+    sample.n = (b0 * m_norms[t(0)] + b1 * m_norms[t(1)] + b2 * m_norms[t(2)]).normalize();
+    sample.area_dens = 1.0f / m_area;
 
-    pdf = 1.0f / m_area;
+    return sample;
 }
 
 float e8::trimesh::surface_area() const { return m_area; }

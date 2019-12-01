@@ -186,8 +186,8 @@ class bidirect_mis_path_tracer : public if_path_tracer {
                                      if_light_sources const &light_sources) const override;
 
   protected:
-    e8::if_light const *sample_illum_source(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n,
-                                            e8util::vec3 &w, float &density, float &w_density,
+    e8::if_light const *sample_illum_source(e8util::rng *rng,
+                                            if_light::emission_sample *emission_samp,
                                             if_light_sources const &light_sources) const;
 
   private:

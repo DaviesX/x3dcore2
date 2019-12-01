@@ -144,15 +144,8 @@ struct light_sample {
     // The selected light sample.
     e8::if_light const *light;
 
-    // The point sample selcted from the light sample.
-    e8util::vec3 p;
-
-    // Normal at p
-    e8util::vec3 n;
-
-    // Probability density at p.
-    float density;
-
+    // Emission sampled from the selected light.
+    e8::if_light::emission_surface_sample emission;
     unsigned align0;
 };
 
@@ -167,15 +160,16 @@ light_sample sample_light_source(e8util::rng &rng, e8::intersect_info const & /*
                                  e8::if_light_sources const &light_sources) {
     light_sample sample;
 
-    // sample light.
-    float light_pdf;
-    e8::if_light const *light = light_sources.sample_light(rng, light_pdf);
+    // Sample light.
+    float light_prob_mass;
+    e8::if_light const *light = light_sources.sample_light(&rng, &light_prob_mass);
 
-    float source_pdf;
-    light->sample(rng, source_pdf, sample.p, sample.n);
+    // Sample emission.
+    sample.emission = light->sample_emssion_surface(&rng);
+    sample.emission.surface.area_dens *= light_prob_mass;
 
-    sample.density = source_pdf * light_pdf;
     sample.light = light;
+
     return sample;
 }
 
@@ -199,9 +193,10 @@ e8util::vec3 transport_direct_illum(e8util::rng &rng, e8util::vec3 const &target
     for (unsigned k = 0; k < multi_light_samps; k++) {
         light_sample sample;
         sample = sample_light_source(rng, target_vert, light_sources);
-        rad += transport_illum_source(*sample.light, sample.p, sample.n, target_vert, target_o_ray,
+        rad += transport_illum_source(*sample.light, sample.emission.surface.p,
+                                      sample.emission.surface.n, target_vert, target_o_ray,
                                       path_space) /
-               sample.density;
+               sample.emission.surface.area_dens;
     }
     return rad / multi_light_samps;
 }
@@ -314,10 +309,11 @@ float subpath_density(float src_point_dens, /*float src_cos,*/ sampled_pathlet c
  * @param path_space Path space container.
  * @return A lower bound sample of the measure function.
  */
-e8util::vec3 transport_all_connectible_subpaths(
-    sampled_pathlet const *cam_path, unsigned max_cam_path_len, sampled_pathlet const *light_path,
-    unsigned max_light_path_len, e8util::vec3 const &light_p, e8util::vec3 const &light_n,
-    float light_p_dens, e8::if_light const &light, e8::if_path_space const &path_space) {
+e8util::vec3
+transport_all_connectible_subpaths(sampled_pathlet const *cam_path, unsigned max_cam_path_len,
+                                   sampled_pathlet const *light_path, unsigned max_light_path_len,
+                                   e8::if_light::emission_sample const &emission,
+                                   e8::if_light const &light, e8::if_path_space const &path_space) {
     if (max_cam_path_len == 0) {
         // Nothing to sample;
         return 0.0f;
@@ -348,21 +344,19 @@ e8util::vec3 transport_all_connectible_subpaths(
                 }
                 partition_weight_sum += cur_path_weight;
             } else if (light_plen == 0) {
-                //                sampled_pathlet cam_join_vert = cam_path[cam_plen - 1];
-                //                e8util::vec3 transported_importance =
-                //                    transport_illum_source(light, light_p, light_n,
-                //                    cam_join_vert.vert,
-                //                                           cam_join_vert.towards_prev(),
-                //                                           path_space) /
-                //                    light_p_dens; // direction was not chosen by random process.
+                sampled_pathlet cam_join_vert = cam_path[cam_plen - 1];
+                e8util::vec3 transported_importance =
+                    transport_illum_source(light, emission.surface.p, emission.surface.n,
+                                           cam_join_vert.vert, cam_join_vert.towards_prev(),
+                                           path_space) /
+                    emission.surface.area_dens; // direction was not chosen by random process.
 
-                //                // compute light transportation for camera subpath.
-                //                e8util::vec3 path_rad = transported_importance *
-                //                                        cam_transport.transport(cam_plen - 1) /
-                //                                        cam_path[0].dens;
+                // compute light transportation for camera subpath.
+                e8util::vec3 path_rad = transported_importance *
+                                        cam_transport.transport(cam_plen - 1) / cam_path[0].dens;
 
-                //                partition_rad_sum += cur_path_weight * path_rad;
-                //                partition_weight_sum += cur_path_weight;
+                partition_rad_sum += cur_path_weight * path_rad;
+                partition_weight_sum += cur_path_weight;
             } else if (cam_plen == 0) {
                 // The chance of the light path hitting the camera is zero.
                 ;
@@ -381,8 +375,8 @@ e8util::vec3 transport_all_connectible_subpaths(
                     !path_space.has_intersect(join_ray, 1e-3f, join_distance - 1e-3f, t)) {
                     // compute light transportation for light subpath.
                     e8util::vec3 light_emission =
-                        light.projected_radiance(light_path[0].towards(), light_n) /
-                        (light_path[0].dens * light_p_dens);
+                        light.projected_radiance(light_path[0].towards(), emission.surface.n) /
+                        (light_path[0].dens * emission.surface.area_dens);
                     e8util::vec3 light_subpath_importance =
                         light_emission * light_transport.transport(light_plen - 1);
 
@@ -621,21 +615,21 @@ e8util::vec3 e8::bidirect_lt2_path_tracer::join_with_light_paths(
         transport_direct_illum(rng, o, poi, path_space, light_sources, 1);
 
     // sample light.
-    float light_pdf, source_p_pdf, source_w_pdf;
-    if_light const *light = light_sources.sample_light(rng, light_pdf);
-    e8util::vec3 p, n, w;
-    light->sample(rng, source_p_pdf, source_w_pdf, p, n, w);
-    e8util::ray light_path(p, w);
+    float light_prob_mass;
+    if_light const *light = light_sources.sample_light(&rng, &light_prob_mass);
+    e8::if_light::emission_sample emission = light->sample_emssion(&rng);
+    e8util::ray light_path(emission.surface.p, emission.w);
     e8::intersect_info const &light_info = path_space.intersect(light_path);
     if (!light_info.valid())
         return 0.0f;
 
     // construct light path.
     e8util::vec3 const &illum =
-        light->projected_radiance(w, n) / (light_pdf * source_p_pdf * source_w_pdf);
+        light->projected_radiance(emission.w, emission.surface.n) /
+        (light_prob_mass * emission.surface.area_dens * emission.solid_angle_dens);
 
     e8::intersect_info terminate = light_info;
-    e8util::vec3 tray = -w;
+    e8util::vec3 tray = -emission.w;
     e8util::vec3 const &light_illum = illum;
 
     // evaluate the area integral.
@@ -715,17 +709,18 @@ e8::bidirect_lt2_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> 
     return rad;
 }
 
-e8::if_light const *e8::bidirect_mis_path_tracer::sample_illum_source(
-    e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, e8util::vec3 &w, float &spatial_density,
-    float &directional_density, if_light_sources const &light_sources) const {
-    // sample light.
-    float light_mass;
-    if_light const *light = light_sources.sample_light(rng, light_mass);
+e8::if_light const *
+e8::bidirect_mis_path_tracer::sample_illum_source(e8util::rng *rng,
+                                                  if_light::emission_sample *emission_samp,
+                                                  if_light_sources const &light_sources) const {
+    // Sample light.
+    float light_prob_mass;
+    if_light const *light = light_sources.sample_light(rng, &light_prob_mass);
 
-    float positional_dens;
-    light->sample(rng, positional_dens, directional_density, p, n, w);
+    // Sample emission.
+    *emission_samp = light->sample_emssion(rng);
+    emission_samp->surface.area_dens *= light_prob_mass;
 
-    spatial_density = positional_dens * light_mass;
     return light;
 }
 
@@ -742,28 +737,23 @@ e8::bidirect_mis_path_tracer::sample(e8util::rng &rng, std::vector<e8util::ray> 
         std::unique_ptr<sampled_pathlet[]>(new sampled_pathlet[m_max_path_len]);
 
     for (unsigned i = 0; i < rays.size(); i++) {
-        // Initiates the first pathlets for both camera and light.
+        // Initiates the first pathlets for both camera and light, then random walk over the path
+        // space.
         e8util::ray cam_path0 = rays[i];
-        e8util::vec3 light_p;
-        e8util::vec3 light_n;
-        e8util::vec3 light_w;
-        float light_dens;
-        float light_w_dens;
-        if_light const *light = sample_illum_source(rng, light_p, light_n, light_w, light_dens,
-                                                    light_w_dens, light_sources);
-        e8util::ray light_path0 = e8util::ray(light_p, light_w);
-
-        // Produce the camera and light paths.
         unsigned cam_path_len = sample_path(&rng, cam_path.get(), cam_path0, first_hits.hits[i],
                                             path_space, m_max_path_len);
 
-        unsigned light_path_len = sample_path(&rng, light_path.get(), light_path0, light_w_dens,
-                                              path_space, m_max_path_len);
+        if_light::emission_sample emission_sample;
+        if_light const *light = sample_illum_source(&rng, &emission_sample, light_sources);
+        e8util::ray light_path0 = e8util::ray(emission_sample.surface.p, emission_sample.w);
+        unsigned light_path_len =
+            sample_path(&rng, light_path.get(), light_path0, emission_sample.solid_angle_dens,
+                        path_space, m_max_path_len);
 
         // Compute radiance by combining different strategies.
-        rad[i] = transport_all_connectible_subpaths(cam_path.get(), cam_path_len, light_path.get(),
-                                                    light_path_len, light_p, light_n, light_dens,
-                                                    *light, path_space);
+        rad[i] =
+            transport_all_connectible_subpaths(cam_path.get(), cam_path_len, light_path.get(),
+                                               light_path_len, emission_sample, *light, path_space);
     }
 
     return rad;

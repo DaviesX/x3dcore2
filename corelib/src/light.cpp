@@ -25,15 +25,19 @@ e8::area_light::area_light(area_light const &other)
     : if_light(other.id(), other.name()), m_geo(other.m_geo), m_rad(other.m_rad),
       m_power(other.m_power) {}
 
-void e8::area_light::sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p,
-                            e8util::vec3 &n, e8util::vec3 &w) const {
-    m_geo->sample(rng, p, n, p_pdf);
-    w = e8util::vec3_cos_hemisphere_sample(n, rng.draw(), rng.draw());
-    w_pdf = n.inner(w) / static_cast<float>(M_PI);
+e8::if_light::emission_sample e8::area_light::sample_emssion(e8util::rng *rng) const {
+    emission_sample sample;
+    sample.surface = m_geo->sample(rng);
+    sample.w = e8util::vec3_cos_hemisphere_sample(sample.surface.n, rng->draw(), rng->draw());
+    sample.solid_angle_dens = sample.surface.n.inner(sample.w) / static_cast<float>(M_PI);
+    return sample;
 }
 
-void e8::area_light::sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const {
-    m_geo->sample(rng, p, n, pdf);
+e8::if_light::emission_surface_sample
+e8::area_light::sample_emssion_surface(e8util::rng *rng) const {
+    emission_surface_sample sample;
+    sample.surface = m_geo->sample(rng);
+    return sample;
 }
 
 e8util::vec3 e8::area_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
@@ -49,7 +53,8 @@ e8util::vec3 e8::area_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_l
     }
 }
 
-e8util::vec3 e8::area_light::projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
+e8util::vec3 e8::area_light::projected_radiance(e8util::vec3 const &w,
+                                                e8util::vec3 const &n) const {
     float cos = n.inner(w);
     if (cos > 0) {
         return m_rad * cos;
@@ -92,25 +97,33 @@ void e8::sky_light::set_scene_boundary(e8util::aabb const &bbox) {
     m_ref_p(2) = 0.0f;
 }
 
-void e8::sky_light::sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p,
-                           e8util::vec3 &n, e8util::vec3 &w) const {
-    e8util::vec3 z({0, 0, 1});
-    e8util::vec3 const &u = e8util::vec3_cos_hemisphere_sample(z, rng.draw(), rng.draw());
-    w = -u;
-    n = -u;
-    p = (u + m_ref_p) * m_dia;
+e8::if_light::emission_sample e8::sky_light::sample_emssion(e8util::rng *rng) const {
+    emission_sample sample;
 
-    p_pdf = z.inner(u) / static_cast<float>(M_PI);
-    w_pdf = 1.0f;
+    e8util::vec3 z{0, 0, 1};
+    e8util::vec3 u = e8util::vec3_cos_hemisphere_sample(z, rng->draw(), rng->draw());
+    sample.w = -u;
+    sample.solid_angle_dens = 1.0f;
+
+    sample.surface.n = -u;
+    sample.surface.p = (u + m_ref_p) * m_dia;
+    sample.surface.area_dens = z.inner(u) / static_cast<float>(M_PI);
+
+    return sample;
 }
 
-void e8::sky_light::sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const {
-    e8util::vec3 z({0, 0, 1});
-    e8util::vec3 const &u = e8util::vec3_cos_hemisphere_sample(z, rng.draw(), rng.draw());
-    n = -u;
-    p = (u + m_ref_p) * m_dia;
+e8::if_light::emission_surface_sample
+e8::sky_light::sample_emssion_surface(e8util::rng *rng) const {
+    emission_surface_sample sample;
 
-    pdf = z.inner(u) / static_cast<float>(M_PI);
+    e8util::vec3 z{0, 0, 1};
+    e8util::vec3 u = e8util::vec3_cos_hemisphere_sample(z, rng->draw(), rng->draw());
+
+    sample.surface.n = -u;
+    sample.surface.p = (u + m_ref_p) * m_dia;
+    sample.surface.area_dens = z.inner(u) / static_cast<float>(M_PI);
+
+    return sample;
 }
 
 e8util::vec3 e8::sky_light::eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
@@ -126,7 +139,11 @@ e8util::vec3 e8::sky_light::projected_radiance(e8util::vec3 const &w, e8util::ve
 }
 
 e8util::vec3 e8::sky_light::radiance(e8util::vec3 const &w, e8util::vec3 const &n) const {
-    return m_rad;
+    if (n.inner(w) > 0.0f) {
+        return m_rad;
+    } else {
+        return 0.0f;
+    }
 }
 
 e8util::vec3 e8::sky_light::power() const { return static_cast<float>(M_PI) * (m_dia * m_dia / 2); }

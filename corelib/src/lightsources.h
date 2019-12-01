@@ -25,7 +25,7 @@ class if_light_sources : public if_obj_manager {
     if_light const *obj_light(if_obj const &obj) const;
 
     virtual void commit() override = 0;
-    virtual if_light const *sample_light(e8util::rng &rng, float &pdf) const = 0;
+    virtual if_light const *sample_light(e8util::rng *rng, float *pdf) const = 0;
     virtual std::vector<if_light const *>
     get_relevant_lights(e8util::frustum const &frustum) const = 0;
 
@@ -44,7 +44,7 @@ class basic_light_sources : public if_light_sources {
 
     std::vector<if_light const *>
     get_relevant_lights(e8util::frustum const &frustum) const override;
-    if_light const *sample_light(e8util::rng &rng, float &pdf) const override;
+    if_light const *sample_light(e8util::rng *rng, float *prob_mass) const override;
     void commit() override;
 
   private:

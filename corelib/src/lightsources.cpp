@@ -57,18 +57,20 @@ e8::basic_light_sources::get_relevant_lights(e8util::frustum const &) const {
     throw e8util::not_implemented_exception("get_relevant_lights");
 }
 
-e8::if_light const *e8::basic_light_sources::sample_light(e8util::rng &rng, float &pdf) const {
+e8::if_light const *e8::basic_light_sources::sample_light(e8util::rng *rng,
+                                                          float *prob_mass) const {
     assert(!m_light_cdf.empty());
-    float e = rng.draw() * m_total_power;
+    float e = rng->draw() * m_total_power;
     unsigned lo = 0;
     unsigned hi = static_cast<unsigned>(m_light_cdf.size());
     while (lo < hi) {
         unsigned mi = (lo + hi) >> 1;
-        if (m_light_cdf[mi].cum_power < e)
+        if (m_light_cdf[mi].cum_power < e) {
             lo = mi + 1;
-        else
+        } else {
             hi = mi;
+        }
     }
-    pdf = m_light_cdf[lo].light->power().norm() / m_total_power;
+    *prob_mass = m_light_cdf[lo].light->power().norm() / m_total_power;
     return m_light_cdf[lo].light;
 }

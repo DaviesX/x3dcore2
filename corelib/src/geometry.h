@@ -39,7 +39,14 @@ class if_geometry : public if_operable_obj<if_geometry> {
     virtual std::vector<e8util::vec2> const &texcoords() const = 0;
 
     virtual std::vector<triangle> const &triangles() const = 0;
-    virtual void sample(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, float &pdf) const = 0;
+
+    struct surface_sample {
+        e8util::vec3 p;  // Spatial position on the sampled surface.
+        e8util::vec3 n;  // Normal vector at p.
+        float area_dens; // Area probability density of the sample.
+    };
+
+    virtual surface_sample sample(e8util::rng *rng) const = 0;
     virtual float surface_area() const = 0;
     virtual e8util::aabb aabb() const = 0;
     virtual std::unique_ptr<if_geometry> copy() const override = 0;
@@ -63,7 +70,7 @@ class trimesh : public if_geometry {
     std::vector<e8util::vec3> const &normals() const override;
     std::vector<e8util::vec2> const &texcoords() const override;
     std::vector<triangle> const &triangles() const override;
-    void sample(e8util::rng &rng, e8util::vec3 &p, e8util::vec3 &n, float &pdf) const override;
+    surface_sample sample(e8util::rng *rng) const override;
     float surface_area() const override;
     virtual e8util::aabb aabb() const override;
     std::unique_ptr<if_geometry> copy() const override;

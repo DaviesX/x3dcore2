@@ -16,9 +16,19 @@ class if_light : public if_operable_obj<if_light> {
     virtual ~if_light() override;
 
     virtual void set_scene_boundary(e8util::aabb const &bbox);
-    virtual void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p,
-                        e8util::vec3 &n, e8util::vec3 &w) const = 0;
-    virtual void sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const = 0;
+
+    struct emission_surface_sample {
+        if_geometry::surface_sample surface;
+    };
+    struct emission_direction_sample {
+        e8util::vec3 w; // Emission direction.
+        float solid_angle_dens;
+    };
+    struct emission_sample : public emission_surface_sample, emission_direction_sample {};
+
+    virtual emission_sample sample_emssion(e8util::rng *rng) const = 0;
+    virtual emission_surface_sample sample_emssion_surface(e8util::rng *rng) const = 0;
+
     virtual e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
                               e8util::vec3 const &n_target) const = 0;
     virtual e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const = 0;
@@ -41,9 +51,8 @@ class area_light : public if_light {
                e8util::vec3 const &rad);
     area_light(area_light const &other);
 
-    void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p, e8util::vec3 &n,
-                e8util::vec3 &w) const override;
-    void sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const override;
+    emission_sample sample_emssion(e8util::rng *rng) const override;
+    emission_surface_sample sample_emssion_surface(e8util::rng *rng) const override;
     e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
                       e8util::vec3 const &n_target) const override;
     e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
@@ -65,9 +74,8 @@ class sky_light : public if_light {
     sky_light(sky_light const &other);
 
     void set_scene_boundary(e8util::aabb const &bbox) override;
-    void sample(e8util::rng &rng, float &p_pdf, float &w_pdf, e8util::vec3 &p, e8util::vec3 &n,
-                e8util::vec3 &w) const override;
-    void sample(e8util::rng &rng, float &pdf, e8util::vec3 &p, e8util::vec3 &n) const override;
+    emission_sample sample_emssion(e8util::rng *rng) const override;
+    emission_surface_sample sample_emssion_surface(e8util::rng *rng) const override;
     e8util::vec3 eval(e8util::vec3 const &i, e8util::vec3 const &n_light,
                       e8util::vec3 const &n_target) const override;
     e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
