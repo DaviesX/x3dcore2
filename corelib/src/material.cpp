@@ -138,8 +138,8 @@ e8util::vec3 e8::oren_nayar::albedo(e8util::vec2 const &uv) const {
 e8util::vec3 e8::oren_nayar::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
                                   e8util::vec3 const &o, e8util::vec3 const &i) const {
     // Clamp within the range of cosine to avoid numerical problem.
-    float cos_thei = std::clamp(i.inner(n), 0.0f, 1.0f);
-    float cos_theo = std::clamp(o.inner(n), 0.0f, 1.0f);
+    float cos_thei = CLAMP(i.inner(n), 0.0f, 1.0f);
+    float cos_theo = CLAMP(o.inner(n), 0.0f, 1.0f);
     if (e8util::equals(cos_thei, 0.0f) || e8util::equals(cos_theo, 0.0f)) {
         // No radiance can be emitted.
         return 0.0f;
