@@ -65,10 +65,12 @@ struct ray {
 
 struct material {
     material() = default;
-    virtual ~material() = default;
+    virtual ~material();
     virtual vec eval(const vec &n, const vec &o, const vec &i) const = 0;
     virtual void sample(const vec &n, const vec &o, vec &i, float &pdf) const = 0;
 };
+
+material::~material() {}
 
 /*
  * Utility functions
@@ -76,7 +78,7 @@ struct material {
 
 inline float clamp(float x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
-inline int to_int(float x) { return static_cast<int>(std::pow(clamp(x), 1.0 / 2.2) * 255 + .5); }
+inline int to_int(float x) { return static_cast<int>(std::pow(clamp(x), 1.0f / 2.2f) * 255 + .5f); }
 
 /*
  * Shapes
@@ -86,6 +88,7 @@ struct sphere {
     vec p, e;             // position, emitted radiance
     const material &brdf; // BRDF
     float rad;            // radius
+    unsigned padding_;
 
     sphere(float rad, vec p, vec e, const material &brdf) : p(p), e(e), brdf(brdf), rad(rad) {}
 
@@ -116,12 +119,13 @@ inline void create_local_coord(const vec &n, vec &u, vec &v) {
 // Ideal diffuse BRDF
 struct lambertian_material : public material {
     lambertian_material(vec kd_) : kd(kd_) {}
+    ~lambertian_material() override;
 
-    vec eval(const vec & /*n*/, const vec & /*o*/, const vec & /*i*/) const {
+    vec eval(const vec & /*n*/, const vec & /*o*/, const vec & /*i*/) const override {
         return kd * (1.0f / static_cast<float>(M_PI));
     }
 
-    void sample(const vec &n, const vec & /*o*/, vec &i, float &pdf) const {
+    void sample(const vec &n, const vec & /*o*/, vec &i, float &pdf) const override {
         float z = std::sqrt(rng());
         float r = std::sqrt(1.0f - z * z);
         float phi = 2.0f * static_cast<float>(M_PI) * rng();
@@ -136,13 +140,17 @@ struct lambertian_material : public material {
     }
 
     vec kd;
+    unsigned padding_;
 };
+
+lambertian_material::~lambertian_material() {}
 
 // Ideal reflection.
 struct mirror_material : public material {
     mirror_material(vec ks_) : ks(ks_) {}
+    ~mirror_material() override;
 
-    vec eval(const vec &n, const vec &o, const vec &i) const {
+    vec eval(const vec &n, const vec &o, const vec &i) const override {
         vec r = n * 2.0 * n.dot(o) - o;
         if (std::abs(r.dot(i) - 1) < 1e-2f)
             return ks * (1 / n.dot(i));
@@ -150,19 +158,23 @@ struct mirror_material : public material {
             return 0;
     }
 
-    void sample(const vec &n, const vec &o, vec &i, float &pdf) const {
+    void sample(const vec &n, const vec &o, vec &i, float &pdf) const override {
         i = n * 2.0 * n.dot(o) - o;
         pdf = 1.0;
     }
 
     vec ks;
+    unsigned padding_;
 };
+
+mirror_material::~mirror_material() {}
 
 // Oren-nayar
 struct oren_nayar_material : public material {
-    oren_nayar_material(vec kd, double roughness) : kd(kd), roughness(roughness) {}
+    oren_nayar_material(vec kd, float roughness) : kd(kd), roughness(roughness) {}
+    ~oren_nayar_material() override;
 
-    vec eval(const vec &n, const vec &o, const vec &i) const {
+    vec eval(const vec &n, const vec &o, const vec &i) const override {
         const float A = 1.0f - 0.5f * roughness / (roughness + 0.33f);
         const float B = 0.45f * roughness / (roughness + 0.09f);
 
@@ -188,7 +200,7 @@ struct oren_nayar_material : public material {
                (A + B * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
     }
 
-    void sample(const vec &n, const vec &o, vec &i, float &pdf) const {
+    void sample(const vec &n, const vec & /*o*/, vec &i, float &pdf) const override {
         float z = std::sqrt(rng());
         float r = std::sqrt(1.0f - z * z);
         float phi = 2.0f * static_cast<float>(M_PI) * rng();
@@ -206,9 +218,12 @@ struct oren_nayar_material : public material {
     float roughness;
 };
 
+oren_nayar_material::~oren_nayar_material() {}
+
 // Cook Torrance
 struct cook_torr_material : public material {
-    cook_torr_material(vec ks, double beta, double ior) : ks(ks), beta(beta), ior(ior) {}
+    cook_torr_material(vec ks, float beta, float ior) : ks(ks), beta(beta), ior(ior) {}
+    ~cook_torr_material() override;
 
     float fresnel(const vec &i, const vec &h) const {
         float c = i.dot(h);
@@ -238,7 +253,7 @@ struct cook_torr_material : public material {
         return ggx_shadow1(i, h) * ggx_shadow1(o, h);
     }
 
-    vec eval(const vec &n, const vec &o, const vec &i) const {
+    vec eval(const vec &n, const vec &o, const vec &i) const override {
         const float bias = 1e-4f;
         vec h = (i + o).normalize();
         float cos_the = std::max(n.dot(i), 0.0f);
@@ -252,7 +267,7 @@ struct cook_torr_material : public material {
         return ks * cook;
     }
 
-    void sample(const vec &n, const vec &o, vec &i, float &pdf) const {
+    void sample(const vec &n, const vec &o, vec &i, float &pdf) const override {
         vec b1, b2;
         create_local_coord(n, b1, b2);
 
@@ -275,27 +290,20 @@ struct cook_torr_material : public material {
     vec ks;
     float beta;
     float ior;
+    unsigned padding_;
 };
+
+cook_torr_material::~cook_torr_material() {}
 
 /*
  * Scene configuration
  */
-
-// Pre-defined BRDFs
-/*
-const DiffuseBRDF leftWall(Vec(.75,.25,.25)),
-rightWall(Vec(.25,.25,.75)),
-otherWall(Vec(.75,.75,.75)),
-blackSurf(Vec(0.0,0.0,0.0)),
-brightSurf(Vec(0.9,0.9,0.9));
-*/
-
-const oren_nayar_material leftWall(vec(.75, .25, .25), 0.8), rightWall(vec(.25, .25, .75), 0.8),
-    otherWall(vec(.75, .75, .75), 0.8), blackSurf(vec(0.0, 0.0, 0.0), 0.8),
-    brightSurf(vec(0.9f, 0.9f, 0.9f), 0.8);
+const oren_nayar_material leftWall(vec(.75, .25, .25), 0.8f), rightWall(vec(.25, .25, .75), 0.8f),
+    otherWall(vec(.75, .75, .75), 0.8f), blackSurf(vec(0.0, 0.0, 0.0), 0.8f),
+    brightSurf(vec(0.9f, 0.9f, 0.9f), 0.8f);
 
 // const MirrorBRDF mirrorSurf(Vec(0.9,0.9,0.9));
-const cook_torr_material metalSurf(vec(1.0, 1.0, 1.0), 0.01, 1.8);
+const cook_torr_material metalSurf(vec(1.0, 1.0, 1.0), 0.01f, 1.8f);
 
 // Scene: list of spheres
 const sphere spheres[] = {
@@ -453,7 +461,8 @@ int main(int argc, char *argv[]) {
     omp_set_num_threads(nworkers);
     rng.init(static_cast<size_t>(nworkers));
 
-    unsigned w = 1024, h = 768, samps = argc == 2 ? atoi(argv[1]) / 4 : 32; // # samples
+    unsigned w = 1024, h = 768;
+    unsigned samps = argc == 2 ? static_cast<unsigned>(atoi(argv[1]) / 4) : 128; // # samples
     vec cx = vec(w * .5135f / h), cy = (cx.cross(cam.d)).normalize() * .5135f;
     std::vector<vec> c(w * h);
 
