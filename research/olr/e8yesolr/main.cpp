@@ -301,24 +301,23 @@ cook_torr_material::~cook_torr_material() {}
 /*
  * Scene configuration
  */
-const oren_nayar_material leftWall(vec(.75, .25, .25), 0.8);
-const oren_nayar_material rightWall(vec(.25, .25, .75), 0.8);
-const oren_nayar_material otherWall(vec(.75, .75, .75), 0.8);
-const oren_nayar_material blackSurf(vec(0.0, 0.0, 0.0), 0.8);
-const oren_nayar_material brightSurf(vec(0.9, 0.9, 0.9), 0.8);
-
-const cook_torr_material metalSurf(vec(.9, .9, .9), 0.01, std::complex<double>(2.93, 3.0));
+const oren_nayar_material left_wall(vec(.75, .25, .25), 0.8);
+const oren_nayar_material right_wall(vec(.25, .25, .75), 0.8);
+const oren_nayar_material other_wall(vec(.75, .75, .75), 0.8);
+const oren_nayar_material black_surf(vec(0.0, 0.0, 0.0), 0.8);
+const oren_nayar_material bright_surf(vec(0.9, 0.9, 0.9), 0.8);
+const cook_torr_material metal_surf(vec(.9, .9, .9), 0.01, std::complex<double>(2.93, 3.0));
 
 // Scene: list of spheres
 const sphere spheres[] = {
-    sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), leftWall),      // Left
-    sphere(1e5, vec(-1e5 + 99, 40.8, 81.6), vec(), rightWall),   // Right
-    sphere(1e5, vec(50, 40.8, 1e5), vec(), otherWall),           // Back
-    sphere(1e5, vec(50, 1e5, 81.6), vec(), otherWall),           // Bottom
-    sphere(1e5, vec(50, -1e5 + 81.6, 81.6), vec(), otherWall),   // Top
-    sphere(16.5, vec(27, 16.5, 47), vec(), brightSurf),          // Ball 1
-    sphere(16.5, vec(73, 16.5, 78), vec(), metalSurf),           // Ball 2
-    sphere(5.0, vec(50, 70.0, 81.6), vec(50, 50, 50), blackSurf) // Light
+    sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), left_wall),      // Left
+    sphere(1e5, vec(-1e5 + 99, 40.8, 81.6), vec(), right_wall),   // Right
+    sphere(1e5, vec(50, 40.8, 1e5), vec(), other_wall),           // Back
+    sphere(1e5, vec(50, 1e5, 81.6), vec(), other_wall),           // Bottom
+    sphere(1e5, vec(50, -1e5 + 81.6, 81.6), vec(), other_wall),   // Top
+    sphere(16.5, vec(27, 16.5, 47), vec(), bright_surf),          // Ball 1
+    sphere(16.5, vec(73, 16.5, 78), vec(), metal_surf),           // Ball 2
+    sphere(5.0, vec(50, 70.0, 81.6), vec(50, 50, 50), black_surf) // Light
 };
 
 // Camera position & direction
