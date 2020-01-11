@@ -307,7 +307,7 @@ const oren_nayar_material otherWall(vec(.75, .75, .75), 0.8);
 const oren_nayar_material blackSurf(vec(0.0, 0.0, 0.0), 0.8);
 const oren_nayar_material brightSurf(vec(0.9, 0.9, 0.9), 0.8);
 
-const cook_torr_material metalSurf(vec(.9, .9, .9), 0.01, std::complex<double>(2.93f, 3.0f));
+const cook_torr_material metalSurf(vec(.9, .9, .9), 0.01, std::complex<double>(2.93, 3.0));
 
 // Scene: list of spheres
 const sphere spheres[] = {
