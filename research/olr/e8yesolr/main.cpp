@@ -340,8 +340,7 @@ bool intersect(const ray &r, double &t, int &id) {
 /*
  * KEY FUNCTION: radiance estimator
  */
-
-vec received_radiance(const ray &r, int depth, bool flag);
+vec pt_received_radiance(const ray &r, int depth);
 
 vec direct(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int id) {
     const sphere &light = spheres[7];
@@ -384,7 +383,7 @@ vec indirect(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, in
     vec i;
     double pdf;
     obj.brdf.sample(n, o, i, pdf);
-    vec li = received_radiance(ray(p_hit, i), depth + 1, true);
+    vec li = pt_received_radiance(ray(p_hit, i), depth + 1);
 
     double cos_the = i.dot(n);
     return obj.brdf.eval(n, o, i).mult(li) * (cos_the / pdf);
@@ -394,7 +393,7 @@ vec radiance(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, in
     return obj.e + direct(n, o, p_hit, obj, id) + indirect(n, o, p_hit, obj, 2);
 }
 
-vec received_radiance(const ray &r, int depth, bool /*flag*/) {
+vec pt_received_radiance(const ray &r, int depth) {
     double t;   // Distance to intersection
     int id = 0; // id of intersected sphere
 
@@ -430,6 +429,47 @@ vec received_radiance(const ray &r, int depth, bool /*flag*/) {
     vec L = Ld + Li * (1 / p_survive);
     return L;
 }
+
+/*
+ * BDPT.
+ */
+struct path {
+    struct vertex {
+        vec hit_point;
+        vec hit_point_normal;
+        vec dir_to_prev;
+        material const *mat = nullptr;
+    };
+
+    std::vector<vertex> vertices;
+};
+
+path sample_path(const ray &r, unsigned max_depth) {
+    path p;
+    for (unsigned i = 0; i < max_depth; i++) {
+        double t;
+        int id;
+        if (!intersect(r, t, id)) {
+            break;
+        }
+        const sphere &obj = spheres[id];
+        vec x = r.o + r.d * t;
+        vec o = (vec() - r.d).normalize();
+        vec n = (x - obj.p).normalize();
+        if (n.dot(o) < 0)
+            n = n * -1.0;
+
+        path::vertex v;
+        v.dir_to_prev = o;
+        v.hit_point = x;
+        v.hit_point_normal = n;
+        v.mat = &obj.brdf;
+        p.vertices.push_back(v);
+    }
+    return p;
+}
+
+vec bdpt_received_radiance(const ray &r, unsigned depth) {}
 
 double to_lum(const vec &c) { return c.x * 0.299 + c.y * 0.587 + c.z * 0.114; }
 
@@ -480,8 +520,7 @@ int main(int argc, char *argv[]) {
                     for (unsigned s = 0; s < samps; s++) {
                         vec d = cx * (((sx + .5) / 2 + x) / w - .5) +
                                 cy * (((sy + .5) / 2 + y) / h - .5) + cam.d;
-                        r = r +
-                            received_radiance(ray(cam.o, d.normalize()), 1, true) * (1. / samps);
+                        r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. / samps);
                     }
                     c[i] = c[i] + vec(r.x, r.y, r.z) * .25;
                 }
