@@ -61,7 +61,7 @@ struct vec {
 
 struct ray {
     vec o, d;
-    ray(vec o_, vec d_) : o(o_), d(d_) {}
+    ray(vec const &o, vec const &d) : o(o), d(d) {}
 };
 
 struct material {
@@ -467,6 +467,30 @@ path sample_path(const ray &r, unsigned max_depth) {
         p.vertices.push_back(v);
     }
     return p;
+}
+
+ray sample_light_ray(double *density) {
+    sphere const &light_ball = spheres[7];
+
+    double phi = 2 * M_PI * rng();
+    double the = M_PI * rng();
+
+    vec vec_on_unit_sphere(/*x=*/std::cos(phi) * std::sin(the),
+                           /*y=*/std::sin(phi) * std::sin(the),
+                           /*z=*/std::cos(the));
+    double dir_z = std::sqrt(rng());
+    double rad = std::sqrt(1.0 - dir_z * dir_z);
+    phi = 2.0 * M_PI * rng();
+    double dir_x = rad * std::cos(phi);
+    double dir_y = rad * std::sin(phi);
+
+    vec b1, b2;
+    create_local_coord(vec_on_unit_sphere, b1, b2);
+
+    ray r(light_ball.p + vec_on_unit_sphere * light_ball.rad,
+          b1 * dir_x + b2 * dir_y + vec_on_unit_sphere * dir_z);
+    *density = 1.0 / (2 * M_PI) * 1.0 / M_PI * r.d.dot(vec_on_unit_sphere) / M_PI;
+    return r;
 }
 
 vec bdpt_received_radiance(const ray &r, unsigned depth) {}
