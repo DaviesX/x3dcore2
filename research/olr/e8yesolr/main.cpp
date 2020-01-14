@@ -438,49 +438,67 @@ struct path {
         vec hit_point;
         vec hit_point_normal;
         vec dir_to_prev;
-        material const *mat = nullptr;
+        sphere const *obj = nullptr;
+        vec light_transport;
+        int id;
+        unsigned padding_;
     };
+
+    unsigned length() const { return static_cast<unsigned>(vertices.size()); }
 
     std::vector<vertex> vertices;
 };
 
-path sample_path(const ray &r, unsigned max_depth) {
+path sample_path(ray r, unsigned max_depth) {
     path p;
+    vec light_transport(1.0, 1.0, 1.0);
     for (unsigned i = 0; i < max_depth; i++) {
         double t;
         int id;
         if (!intersect(r, t, id)) {
             break;
         }
-        const sphere &obj = spheres[id];
+        sphere obj = spheres[id];
         vec x = r.o + r.d * t;
-        vec o = (vec() - r.d).normalize();
+        vec dir_to_prev = r.d * -1.0;
         vec n = (x - obj.p).normalize();
-        if (n.dot(o) < 0)
+        if (n.dot(dir_to_prev) < 0)
             n = n * -1.0;
 
         path::vertex v;
-        v.dir_to_prev = o;
+        v.dir_to_prev = dir_to_prev;
         v.hit_point = x;
         v.hit_point_normal = n;
-        v.mat = &obj.brdf;
+        v.obj = &obj;
+        v.id = id;
+        v.light_transport = light_transport;
         p.vertices.push_back(v);
+
+        double path_dens;
+        vec dir_to_next;
+        obj.brdf.sample(n, dir_to_prev, dir_to_next, path_dens);
+        r = ray(x, dir_to_next);
+        light_transport =
+            light_transport.mult(obj.brdf.eval(n, dir_to_prev, dir_to_next) * dir_to_next.dot(n)) *
+            (1.0 / path_dens);
     }
     return p;
 }
 
-ray sample_light_ray(double *density) {
+ray sample_light_ray(double *spatial_dens, double *dir_dens) {
     sphere const &light_ball = spheres[7];
 
-    double phi = 2 * M_PI * rng();
-    double the = M_PI * rng();
+    double u = rng();
+    double v = rng();
 
-    vec vec_on_unit_sphere(/*x=*/std::cos(phi) * std::sin(the),
-                           /*y=*/std::sin(phi) * std::sin(the),
-                           /*z=*/std::cos(the));
+    double pos_z = 2 * u - 1;
+    double pos_x = std::sqrt(1 - pos_z * pos_z) * std::cos(2 * M_PI * v);
+    double pos_y = std::sqrt(1 - pos_z * pos_z) * std::sin(2 * M_PI * v);
+    vec vec_on_unit_sphere(pos_x, pos_y, pos_z);
+
     double dir_z = std::sqrt(rng());
     double rad = std::sqrt(1.0 - dir_z * dir_z);
-    phi = 2.0 * M_PI * rng();
+    double phi = 2.0 * M_PI * rng();
     double dir_x = rad * std::cos(phi);
     double dir_y = rad * std::sin(phi);
 
@@ -489,11 +507,131 @@ ray sample_light_ray(double *density) {
 
     ray r(light_ball.p + vec_on_unit_sphere * light_ball.rad,
           b1 * dir_x + b2 * dir_y + vec_on_unit_sphere * dir_z);
-    *density = 1.0 / (2 * M_PI) * 1.0 / M_PI * r.d.dot(vec_on_unit_sphere) / M_PI;
+
+    *spatial_dens = 1.0 / (4 * M_PI * light_ball.rad * light_ball.rad);
+    *dir_dens = r.d.dot(vec_on_unit_sphere) / M_PI;
     return r;
 }
 
-vec bdpt_received_radiance(const ray &r, unsigned depth) {}
+vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray const &light_ray,
+                              double light_spatial_dens, double light_dir_dens) {
+    vec rad;
+    for (unsigned path_len = 1; path_len <= cam_path.length() + light_path.length() + 1;
+         path_len++) {
+        unsigned cam_plen = std::min(path_len - 1, cam_path.length());
+        unsigned light_plen = path_len - 1 - cam_plen;
+
+        vec partition_rad_sum;
+        double partition_weight_sum = 0.0;
+        while (static_cast<int>(cam_plen) >= 0 && light_plen <= light_path.length()) {
+            if (light_plen == 0 && cam_plen == 0) {
+                // We have only the connection path, if it exists, which connects one vertex from
+                // the camera and one vertex from the light.
+                if (cam_path.vertices[cam_plen].id == 7) {
+                    partition_rad_sum = partition_rad_sum + cam_path.vertices[cam_plen].obj->e;
+                }
+                partition_weight_sum += 1;
+            } else if (light_plen == 0) {
+                path::vertex cam_join_vert = cam_path.vertices[cam_plen - 1];
+
+                vec i = light_ray.o - cam_join_vert.hit_point;
+                double d2 = i.dot(i);
+                double d = std::sqrt(d2);
+
+                i = i * (1.0 / d);
+
+                // Occlusion test.
+                double t;
+                int id2;
+                intersect(ray(cam_join_vert.hit_point, i), t, id2);
+                if (t < d - 1e-5)
+                    return 0.0;
+
+                if (cam_join_vert.id == 7)
+                    return 0;
+
+                double inv_d2 = 1.0 / d2;
+                vec transported_importance;
+                //                double cos_the = i.dot(n);
+                //                double cos_phi = i.dot(w * -1.0);
+                //                vec transported_importance = cam_join_vert.obj.brdf.eval(n, o,
+                //                i).mult(light.e) * cos_the * cos_phi * inv_d2 *
+                //                (1.0f/light_spatial_dens));
+
+                // compute light transportation for camera subpath.
+                vec path_rad = transported_importance.mult(cam_join_vert.light_transport);
+                partition_rad_sum = partition_rad_sum + path_rad;
+                partition_weight_sum += 1;
+            } else if (cam_plen == 0) {
+                // The chance of the light path hitting the camera is zero.
+                ;
+            } else {
+                //                sampled_pathlet light_join_vert = light_path[light_plen - 1];
+                //                sampled_pathlet cam_join_vert = cam_path[cam_plen - 1];
+                //                e8util::vec3 join_path = cam_join_vert.vert.vertex -
+                //                light_join_vert.vert.vertex; float join_distance =
+                //                join_path.norm(); join_path = join_path / join_distance;
+
+                //                e8util::ray join_ray(light_join_vert.vert.vertex, join_path);
+                //                float cos_wo = light_join_vert.vert.normal.inner(join_path);
+                //                float cos_wi = cam_join_vert.vert.normal.inner(-join_path);
+                //                float t;
+                //                if (cos_wo > 0.0f && cos_wi > 0.0f &&
+                //                    !path_space.has_intersect(join_ray, 1e-3f, join_distance -
+                //                    1e-3f, t)) {
+                //                    // compute light transportation for light subpath.
+                //                    e8util::vec3 light_emission =
+                //                        light.projected_radiance(light_path[0].towards(),
+                //                        emission.surface.n) / (light_path[0].dens *
+                //                        emission.surface.area_dens);
+                //                    e8util::vec3 light_subpath_importance =
+                //                        light_emission * light_transport.transport(light_plen -
+                //                        1);
+
+                //                    // transport light over the join path.
+                //                    float to_area_differential = cos_wi * cos_wo / (join_distance
+                //                    * join_distance); e8util::vec3 light_join_weight =
+                //                    light_join_vert.vert.mat->eval(
+                //                        light_join_vert.vert.uv, light_join_vert.vert.normal,
+                //                        join_path, light_join_vert.towards_prev());
+                //                    e8util::vec3 cam_join_weight = cam_join_vert.vert.mat->eval(
+                //                        cam_join_vert.vert.uv, cam_join_vert.vert.normal,
+                //                        cam_join_vert.towards_prev(), -join_path);
+                //                    e8util::vec3 transported_importance = light_subpath_importance
+                //                    *
+                //                                                          light_join_weight *
+                //                                                          cam_join_weight *
+                //                                                          to_area_differential;
+
+                //                    // compute light transportation for camera subpath.
+                //                    e8util::vec3 cam_subpath_radiance = transported_importance *
+                //                                                        cam_transport.transport(cam_plen
+                //                                                        - 1) / cam_path[0].dens;
+
+                //                    partition_rad_sum += cur_path_weight * cam_subpath_radiance;
+                //                }
+                //                partition_weight_sum += cur_path_weight;
+            }
+
+            light_plen++;
+            cam_plen--;
+        }
+
+        if (partition_weight_sum > 0) {
+            rad = rad + partition_rad_sum * (1.0 / partition_weight_sum);
+        }
+    }
+    return rad;
+}
+
+vec bdpt_received_radiance(const ray &r) {
+    path cam_path = sample_path(r, /*max_depth=*/4);
+    double light_spatial_dens, light_dir_dens;
+    ray light_ray = sample_light_ray(&light_spatial_dens, &light_dir_dens);
+    path light_path = sample_path(light_ray, /*max_depth=*/4);
+    return bdpt_connect_and_estimate(cam_path, light_path, light_ray, light_spatial_dens,
+                                     light_dir_dens);
+}
 
 double to_lum(const vec &c) { return c.x * 0.299 + c.y * 0.587 + c.z * 0.114; }
 
