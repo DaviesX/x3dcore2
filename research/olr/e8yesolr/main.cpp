@@ -16,10 +16,12 @@ struct rng {
     rng() : distrb(0.0, 1.0), engines() {}
 
     void init(size_t nworkers) {
-        std::random_device rd;
         engines.resize(nworkers);
-        for (size_t i = 0; i < nworkers; ++i)
-            engines[i].seed(rd());
+        size_t s = 23;
+        for (size_t i = 0; i < nworkers; ++i) {
+            s = (s * 33) ^ (i + 1);
+            engines[i].seed(s);
+        }
     }
 
     double operator()() {
@@ -435,13 +437,16 @@ vec pt_received_radiance(const ray &r, int depth) {
  */
 struct path {
     struct vertex {
+        vertex() = default;
+        vertex(vertex const &) = default;
         vec hit_point;
         vec hit_point_normal;
         vec dir_to_prev;
         sphere const *obj = nullptr;
         vec light_transport;
+        double t = 0;
         int id;
-        unsigned padding_;
+        unsigned padding_ = 0;
     };
 
     unsigned length() const { return static_cast<unsigned>(vertices.size()); }
@@ -458,7 +463,7 @@ path sample_path(ray r, unsigned max_depth) {
         if (!intersect(r, t, id)) {
             break;
         }
-        sphere obj = spheres[id];
+        sphere const &obj = spheres[id];
         vec x = r.o + r.d * t;
         vec dir_to_prev = r.d * -1.0;
         vec n = (x - obj.p).normalize();
@@ -470,6 +475,7 @@ path sample_path(ray r, unsigned max_depth) {
         v.hit_point = x;
         v.hit_point_normal = n;
         v.obj = &obj;
+        v.t = t;
         v.id = id;
         v.light_transport = light_transport;
         p.vertices.push_back(v);
@@ -485,7 +491,7 @@ path sample_path(ray r, unsigned max_depth) {
     return p;
 }
 
-ray sample_light_ray(double *spatial_dens, double *dir_dens) {
+ray sample_light_ray(vec *normal, double *spatial_dens, double *dir_dens) {
     sphere const &light_ball = spheres[7];
 
     double u = rng();
@@ -494,7 +500,7 @@ ray sample_light_ray(double *spatial_dens, double *dir_dens) {
     double pos_z = 2 * u - 1;
     double pos_x = std::sqrt(1 - pos_z * pos_z) * std::cos(2 * M_PI * v);
     double pos_y = std::sqrt(1 - pos_z * pos_z) * std::sin(2 * M_PI * v);
-    vec vec_on_unit_sphere(pos_x, pos_y, pos_z);
+    *normal = vec(pos_x, pos_y, pos_z);
 
     double dir_z = std::sqrt(rng());
     double rad = std::sqrt(1.0 - dir_z * dir_z);
@@ -503,18 +509,18 @@ ray sample_light_ray(double *spatial_dens, double *dir_dens) {
     double dir_y = rad * std::sin(phi);
 
     vec b1, b2;
-    create_local_coord(vec_on_unit_sphere, b1, b2);
+    create_local_coord(*normal, b1, b2);
 
-    ray r(light_ball.p + vec_on_unit_sphere * light_ball.rad,
-          b1 * dir_x + b2 * dir_y + vec_on_unit_sphere * dir_z);
+    ray r(light_ball.p + *normal * light_ball.rad, b1 * dir_x + b2 * dir_y + *normal * dir_z);
 
     *spatial_dens = 1.0 / (4 * M_PI * light_ball.rad * light_ball.rad);
-    *dir_dens = r.d.dot(vec_on_unit_sphere) / M_PI;
+    *dir_dens = r.d.dot(*normal) / M_PI;
     return r;
 }
 
 vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray const &light_ray,
-                              double light_spatial_dens, double light_dir_dens) {
+                              vec const &light_normal, double light_spatial_dens,
+                              double light_dir_dens) {
     vec rad;
     for (unsigned path_len = 1; path_len <= cam_path.length() + light_path.length() + 1;
          path_len++) {
@@ -541,22 +547,20 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 i = i * (1.0 / d);
 
                 // Occlusion test.
+                vec transported_importance;
                 double t;
                 int id2;
                 intersect(ray(cam_join_vert.hit_point, i), t, id2);
-                if (t < d - 1e-5)
-                    return 0.0;
-
-                if (cam_join_vert.id == 7)
-                    return 0;
 
                 double inv_d2 = 1.0 / d2;
-                vec transported_importance;
-                //                double cos_the = i.dot(n);
-                //                double cos_phi = i.dot(w * -1.0);
-                //                vec transported_importance = cam_join_vert.obj.brdf.eval(n, o,
-                //                i).mult(light.e) * cos_the * cos_phi * inv_d2 *
-                //                (1.0f/light_spatial_dens));
+                double cos_hit = i.dot(cam_join_vert.hit_point_normal);
+                double cos_light = (i * -1).dot(light_normal);
+                if (t > d - 1e-5 && cos_light > 0) {
+                    vec distri = cam_join_vert.obj->brdf.eval(cam_join_vert.hit_point_normal,
+                                                              cam_join_vert.dir_to_prev, i);
+                    transported_importance = distri.mult(spheres[7].e) * cos_hit * cos_light *
+                                             inv_d2 * (1.0 / light_spatial_dens);
+                }
 
                 // compute light transportation for camera subpath.
                 vec path_rad = transported_importance.mult(cam_join_vert.light_transport);
@@ -627,10 +631,11 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
 vec bdpt_received_radiance(const ray &r) {
     path cam_path = sample_path(r, /*max_depth=*/4);
     double light_spatial_dens, light_dir_dens;
-    ray light_ray = sample_light_ray(&light_spatial_dens, &light_dir_dens);
+    vec light_normal;
+    ray light_ray = sample_light_ray(&light_normal, &light_spatial_dens, &light_dir_dens);
     path light_path = sample_path(light_ray, /*max_depth=*/4);
-    return bdpt_connect_and_estimate(cam_path, light_path, light_ray, light_spatial_dens,
-                                     light_dir_dens);
+    return bdpt_connect_and_estimate(cam_path, light_path, light_ray, light_normal,
+                                     light_spatial_dens, light_dir_dens);
 }
 
 double to_lum(const vec &c) { return c.x * 0.299 + c.y * 0.587 + c.z * 0.114; }
@@ -660,6 +665,7 @@ void aces_tonemap(std::vector<vec> &c, double exposure) {
 /*
  * Main function (do not modify)
  */
+#define NDEBUG 1
 
 int main(int argc, char *argv[]) {
     int nworkers = omp_get_num_procs();
@@ -671,7 +677,9 @@ int main(int argc, char *argv[]) {
     vec cx = vec(w * .5135 / h), cy = (cx.cross(cam.d)).normalize() * .5135;
     std::vector<vec> c(w * h);
 
+#if !defined(NDEBUG)
 #pragma omp parallel for schedule(dynamic, 1)
+#endif
     for (unsigned y = 0; y < h; y++) {
         for (unsigned x = 0; x < w; x++) {
             const unsigned i = (h - y - 1) * w + x;
@@ -682,13 +690,17 @@ int main(int argc, char *argv[]) {
                     for (unsigned s = 0; s < samps; s++) {
                         vec d = cx * (((sx + .5) / 2 + x) / w - .5) +
                                 cy * (((sy + .5) / 2 + y) / h - .5) + cam.d;
-                        r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. / samps);
+                        // r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. /
+                        // samps);
+                        r = r + bdpt_received_radiance(ray(cam.o, d.normalize())) * (1. / samps);
                     }
                     c[i] = c[i] + vec(r.x, r.y, r.z) * .25;
                 }
             }
         }
+#if !defined(NDEBUG)
 #pragma omp critical
+#endif
         fprintf(stderr, "\rRendering (%d spp) %6.2f%%", samps * 4, 100. * y / (h - 1));
     }
     fprintf(stderr, "\n");
