@@ -570,51 +570,41 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 // The chance of the light path hitting the camera is zero.
                 ;
             } else {
-                //                sampled_pathlet light_join_vert = light_path[light_plen - 1];
-                //                sampled_pathlet cam_join_vert = cam_path[cam_plen - 1];
-                //                e8util::vec3 join_path = cam_join_vert.vert.vertex -
-                //                light_join_vert.vert.vertex; float join_distance =
-                //                join_path.norm(); join_path = join_path / join_distance;
+                path::vertex light_join_vert = light_path.vertices[light_plen - 1];
+                path::vertex cam_join_vert = cam_path.vertices[cam_plen - 1];
+                vec join_path = cam_join_vert.hit_point - light_join_vert.hit_point;
+                double join_distance = std::sqrt(join_path.dot(join_path));
+                join_path = join_path * (1.0 / join_distance);
 
-                //                e8util::ray join_ray(light_join_vert.vert.vertex, join_path);
-                //                float cos_wo = light_join_vert.vert.normal.inner(join_path);
-                //                float cos_wi = cam_join_vert.vert.normal.inner(-join_path);
-                //                float t;
-                //                if (cos_wo > 0.0f && cos_wi > 0.0f &&
-                //                    !path_space.has_intersect(join_ray, 1e-3f, join_distance -
-                //                    1e-3f, t)) {
-                //                    // compute light transportation for light subpath.
-                //                    e8util::vec3 light_emission =
-                //                        light.projected_radiance(light_path[0].towards(),
-                //                        emission.surface.n) / (light_path[0].dens *
-                //                        emission.surface.area_dens);
-                //                    e8util::vec3 light_subpath_importance =
-                //                        light_emission * light_transport.transport(light_plen -
-                //                        1);
+                ray join_ray(light_join_vert.hit_point, join_path);
+                double t;
+                int id2;
+                intersect(join_ray, t, id2);
+                double cos_wo = light_join_vert.hit_point_normal.dot(join_path);
+                double cos_wi = cam_join_vert.hit_point_normal.dot(join_path * -1);
+                if (cos_wo > 0.0 && cos_wi > 0.0 && t > join_distance - 1e-5) {
+                    // compute light transportation for light subpath.
+                    vec light_emission = spheres[7].e * (1 / (light_dir_dens * light_spatial_dens));
+                    vec light_subpath_importance =
+                        light_emission.mult(light_join_vert.light_transport);
 
-                //                    // transport light over the join path.
-                //                    float to_area_differential = cos_wi * cos_wo / (join_distance
-                //                    * join_distance); e8util::vec3 light_join_weight =
-                //                    light_join_vert.vert.mat->eval(
-                //                        light_join_vert.vert.uv, light_join_vert.vert.normal,
-                //                        join_path, light_join_vert.towards_prev());
-                //                    e8util::vec3 cam_join_weight = cam_join_vert.vert.mat->eval(
-                //                        cam_join_vert.vert.uv, cam_join_vert.vert.normal,
-                //                        cam_join_vert.towards_prev(), -join_path);
-                //                    e8util::vec3 transported_importance = light_subpath_importance
-                //                    *
-                //                                                          light_join_weight *
-                //                                                          cam_join_weight *
-                //                                                          to_area_differential;
+                    // transport light over the join path.
+                    double to_area_differential = cos_wi * cos_wo / (join_distance * join_distance);
+                    vec light_join_weight = light_join_vert.obj->brdf.eval(
+                        light_join_vert.hit_point_normal, join_path, light_join_vert.dir_to_prev);
+                    vec cam_join_weight = cam_join_vert.obj->brdf.eval(
+                        cam_join_vert.hit_point_normal, cam_join_vert.dir_to_prev, join_path * -1);
+                    vec transported_importance =
+                        light_subpath_importance.mult(light_join_weight).mult(cam_join_weight) *
+                        to_area_differential;
 
-                //                    // compute light transportation for camera subpath.
-                //                    e8util::vec3 cam_subpath_radiance = transported_importance *
-                //                                                        cam_transport.transport(cam_plen
-                //                                                        - 1) / cam_path[0].dens;
+                    // compute light transportation for camera subpath.
+                    vec cam_subpath_radiance =
+                        transported_importance.mult(cam_join_vert.light_transport);
 
-                //                    partition_rad_sum += cur_path_weight * cam_subpath_radiance;
-                //                }
-                //                partition_weight_sum += cur_path_weight;
+                    partition_rad_sum = partition_rad_sum + cam_subpath_radiance;
+                }
+                partition_weight_sum += 1;
             }
 
             light_plen++;
@@ -665,7 +655,7 @@ void aces_tonemap(std::vector<vec> &c, double exposure) {
 /*
  * Main function (do not modify)
  */
-#define NDEBUG 1
+#define NDEBUG 0
 
 int main(int argc, char *argv[]) {
     int nworkers = omp_get_num_procs();
@@ -677,7 +667,7 @@ int main(int argc, char *argv[]) {
     vec cx = vec(w * .5135 / h), cy = (cx.cross(cam.d)).normalize() * .5135;
     std::vector<vec> c(w * h);
 
-#if !defined(NDEBUG)
+#if NDEBUG
 #pragma omp parallel for schedule(dynamic, 1)
 #endif
     for (unsigned y = 0; y < h; y++) {
@@ -690,15 +680,15 @@ int main(int argc, char *argv[]) {
                     for (unsigned s = 0; s < samps; s++) {
                         vec d = cx * (((sx + .5) / 2 + x) / w - .5) +
                                 cy * (((sy + .5) / 2 + y) / h - .5) + cam.d;
-                        // r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. /
-                        // samps);
+                        //                        r = r + pt_received_radiance(ray(cam.o,
+                        //                        d.normalize()), 1) * (1. / samps);
                         r = r + bdpt_received_radiance(ray(cam.o, d.normalize())) * (1. / samps);
                     }
                     c[i] = c[i] + vec(r.x, r.y, r.z) * .25;
                 }
             }
         }
-#if !defined(NDEBUG)
+#if NDEBUG
 #pragma omp critical
 #endif
         fprintf(stderr, "\rRendering (%d spp) %6.2f%%", samps * 4, 100. * y / (h - 1));
