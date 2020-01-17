@@ -584,7 +584,8 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 double cos_wi = cam_join_vert.hit_point_normal.dot(join_path * -1);
                 if (cos_wo > 0.0 && cos_wi > 0.0 && t > join_distance - 1e-5) {
                     // compute light transportation for light subpath.
-                    vec light_emission = spheres[7].e * (1 / (light_dir_dens * light_spatial_dens));
+                    vec light_emission = spheres[7].e * (light_normal.dot(light_ray.d) /
+                                                         (light_dir_dens * light_spatial_dens));
                     vec light_subpath_importance =
                         light_emission.mult(light_join_vert.light_transport);
 
@@ -655,7 +656,7 @@ void aces_tonemap(std::vector<vec> &c, double exposure) {
 /*
  * Main function (do not modify)
  */
-#define NDEBUG 0
+#define NDEBUG 1
 
 int main(int argc, char *argv[]) {
     int nworkers = omp_get_num_procs();
