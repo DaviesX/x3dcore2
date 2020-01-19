@@ -183,8 +183,14 @@ struct oren_nayar_material : public material {
 
         double cos_thei = i.dot(n);
         double cos_theo = o.dot(n);
-        double cos_alpha, cos_beta;
+        cos_thei = clamp(cos_thei);
+        cos_theo = clamp(cos_theo);
+        if (std::abs(cos_thei) < 1e-4 || std::abs(cos_theo) < 1e-4) {
+            // No radiance can be emitted.
+            return vec();
+        }
 
+        double cos_alpha, cos_beta;
         if (cos_thei < cos_theo) {
             cos_alpha = cos_thei;
             cos_beta = cos_theo;
