@@ -264,6 +264,9 @@ struct cook_torr_material : public material {
         vec h = (i + o).normalize();
         double cos_the = std::max(n.dot(i), 0.0);
         double b_cos_the = cos_the + (cos_the == 0.0 ? bias : 0.0);
+        if (std::abs(cos_the) < 1e-4 || std::abs(b_cos_the) < 1e-4 || std::abs(h.dot(h)) < 1e-4) {
+            return vec();
+        }
 
         double F = fresnel(i, h);
         double D = ggx_distri(n, h);
@@ -289,6 +292,9 @@ struct cook_torr_material : public material {
         vec m = b1 * x + b2 * y + n * z;
         double m_dot_o = std::abs(m.dot(o));
         i = m * m_dot_o * 2.0 - o;
+        if (i.dot(n) < 0) {
+            pdf = 0;
+        }
 
         pdf = ggx_distri(n, m) * std::abs(cos_phi) / (4.0 * m_dot_o);
     }
@@ -385,10 +391,17 @@ vec indirect(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, in
     vec i;
     double pdf;
     obj.brdf.sample(n, o, i, pdf);
-    vec li = pt_received_radiance(ray(p_hit, i), depth + 1);
-
-    double cos_the = i.dot(n);
-    return obj.brdf.eval(n, o, i).mult(li) * (cos_the / pdf);
+    if (std::abs(pdf) < 1e-4) {
+        return vec();
+    } else {
+        vec distri = obj.brdf.eval(n, o, i);
+        if (distri.dot(distri) < 1e-4) {
+            return vec();
+        }
+        vec li = pt_received_radiance(ray(p_hit, i), depth + 1);
+        double cos_the = i.dot(n);
+        return distri.mult(li) * (cos_the / pdf);
+    }
 }
 
 vec radiance(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int id) {
@@ -483,10 +496,15 @@ path sample_path(ray r, unsigned max_depth) {
         double path_dens;
         vec dir_to_next;
         obj.brdf.sample(n, dir_to_prev, dir_to_next, path_dens);
+        if (std::abs(path_dens) < 1e-4) {
+            break;
+        }
         r = ray(x, dir_to_next);
-        light_transport =
-            light_transport.mult(obj.brdf.eval(n, dir_to_prev, dir_to_next) * dir_to_next.dot(n)) *
-            (1.0 / path_dens);
+        vec distri = obj.brdf.eval(n, dir_to_prev, dir_to_next);
+        if (std::abs(distri.dot(distri)) < 1e-4) {
+            break;
+        }
+        light_transport = light_transport.mult(distri * dir_to_next.dot(n)) * (1.0 / path_dens);
     }
     return p;
 }
@@ -681,9 +699,9 @@ int main(int argc, char *argv[]) {
                     for (unsigned s = 0; s < samps; s++) {
                         vec d = cx * (((sx + .5) / 2 + x) / w - .5) +
                                 cy * (((sy + .5) / 2 + y) / h - .5) + cam.d;
-                        //                        r = r + pt_received_radiance(ray(cam.o,
-                        //                        d.normalize()), 1) * (1. / samps);
-                        r = r + bdpt_received_radiance(ray(cam.o, d.normalize())) * (1. / samps);
+                        r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. / samps);
+                        //                        r = r + bdpt_received_radiance(ray(cam.o,
+                        //                        d.normalize())) * (1. / samps);
                     }
                     c[i] = c[i] + vec(r.x, r.y, r.z) * .25;
                 }
