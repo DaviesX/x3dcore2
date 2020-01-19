@@ -384,7 +384,11 @@ vec direct(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int 
 
     double cos_the = i.dot(n);
     double cos_phi = i.dot(w * -1.0);
-    return obj.brdf.eval(n, o, i).mult(light.e) * cos_the * cos_phi * inv_d2 * inv_p;
+    if (cos_the > 0 && cos_phi > 0) {
+        return obj.brdf.eval(n, o, i).mult(light.e) * cos_the * cos_phi * inv_d2 * inv_p;
+    } else {
+        return vec();
+    }
 }
 
 vec indirect(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int depth) {
@@ -499,12 +503,12 @@ path sample_path(ray r, unsigned max_depth) {
         if (std::abs(path_dens) < 1e-4) {
             break;
         }
-        r = ray(x, dir_to_next);
         vec distri = obj.brdf.eval(n, dir_to_prev, dir_to_next);
         if (std::abs(distri.dot(distri)) < 1e-4) {
             break;
         }
         light_transport = light_transport.mult(distri * dir_to_next.dot(n)) * (1.0 / path_dens);
+        r = ray(x, dir_to_next);
     }
     return p;
 }
@@ -573,7 +577,7 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 double inv_d2 = 1.0 / d2;
                 double cos_hit = i.dot(cam_join_vert.hit_point_normal);
                 double cos_light = (i * -1).dot(light_normal);
-                if (t > d - 1e-5 && cos_light > 0) {
+                if (t > d - 1e-5 && cos_light > 0 && cos_hit > 0) {
                     vec distri = cam_join_vert.obj->brdf.eval(cam_join_vert.hit_point_normal,
                                                               cam_join_vert.dir_to_prev, i);
                     transported_importance = distri.mult(spheres[7].e) * cos_hit * cos_light *
@@ -699,9 +703,9 @@ int main(int argc, char *argv[]) {
                     for (unsigned s = 0; s < samps; s++) {
                         vec d = cx * (((sx + .5) / 2 + x) / w - .5) +
                                 cy * (((sy + .5) / 2 + y) / h - .5) + cam.d;
-                        r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. / samps);
-                        //                        r = r + bdpt_received_radiance(ray(cam.o,
-                        //                        d.normalize())) * (1. / samps);
+                        // r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. /
+                        // samps);
+                        r = r + bdpt_received_radiance(ray(cam.o, d.normalize())) * (1. / samps);
                     }
                     c[i] = c[i] + vec(r.x, r.y, r.z) * .25;
                 }
