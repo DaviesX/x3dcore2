@@ -1,4 +1,5 @@
-﻿#include <cmath>
+﻿#include <algorithm>
+#include <cmath>
 #include <complex>
 #include <omp.h>
 #include <random>
@@ -61,6 +62,26 @@ struct vec {
     }
 };
 
+struct spectrum {
+    float r, g, b;
+
+    spectrum(float r = 0, float g = 0, float b = 0) : r(r), g(g), b(b) {}
+
+    spectrum operator+(const spectrum &other) const {
+        return spectrum(r + other.r, g + other.g, b + other.b);
+    }
+    spectrum operator-(const spectrum &other) const {
+        return spectrum(r - other.r, g - other.g, b - other.b);
+    }
+    spectrum operator*(float scale) const { return spectrum(scale * r, scale * g, scale * b); }
+
+    spectrum mult(const spectrum &other) const {
+        return spectrum(r * other.r, g * other.g, b * other.b);
+    }
+
+    bool black() const { return r == 0 && g == 0 && b == 0; }
+};
+
 struct ray {
     vec o, d;
     ray(vec const &o, vec const &d) : o(o), d(d) {}
@@ -69,7 +90,7 @@ struct ray {
 struct material {
     material() = default;
     virtual ~material();
-    virtual vec eval(const vec &n, const vec &o, const vec &i) const = 0;
+    virtual spectrum eval(const vec &n, const vec &o, const vec &i) const = 0;
     virtual void sample(const vec &n, const vec &o, vec &i, double &pdf) const = 0;
 };
 
@@ -79,20 +100,23 @@ material::~material() {}
  * Utility functions
  */
 
-inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+inline float clamp(float x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
-inline int to_int(double x) { return static_cast<int>(std::pow(clamp(x), 1.0 / 2.2) * 255 + .5); }
+inline int to_int(float x) { return static_cast<int>(std::pow(clamp(x), 1.0f / 2.2f) * 255 + .5f); }
 
 /*
  * Shapes
  */
 
 struct sphere {
-    vec p, e;             // position, emitted radiance
+    vec p;                // position
     const material &brdf; // BRDF
     double rad;           // radius
+    spectrum e;           // emitted radiance
+    unsigned padding_ = 0;
 
-    sphere(double rad, vec p, vec e, const material &brdf) : p(p), e(e), brdf(brdf), rad(rad) {}
+    sphere(double rad, vec p, spectrum e, const material &brdf)
+        : p(p), brdf(brdf), rad(rad), e(e) {}
 
     double intersect(const ray &r) const { // returns distance, 0 if nohit
         vec op = p - r.o;                  // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
@@ -123,11 +147,11 @@ inline void create_local_coord(const vec &n, vec &u, vec &v) {
 
 // Ideal diffuse BRDF
 struct lambertian_material : public material {
-    lambertian_material(vec kd_) : kd(kd_) {}
+    lambertian_material(spectrum const &kd_) : kd(kd_) {}
     ~lambertian_material() override;
 
-    vec eval(const vec & /*n*/, const vec & /*o*/, const vec & /*i*/) const override {
-        return kd * (1.0 / M_PI);
+    spectrum eval(const vec & /*n*/, const vec & /*o*/, const vec & /*i*/) const override {
+        return kd * static_cast<float>(1.0 / M_PI);
     }
 
     void sample(const vec &n, const vec & /*o*/, vec &i, double &pdf) const override {
@@ -144,20 +168,21 @@ struct lambertian_material : public material {
         pdf = i.dot(n) / M_PI;
     }
 
-    vec kd;
+    spectrum kd;
+    unsigned padding_ = 0;
 };
 
 lambertian_material::~lambertian_material() {}
 
 // Ideal reflection.
 struct mirror_material : public material {
-    mirror_material(vec ks_) : ks(ks_) {}
+    mirror_material(spectrum const &ks_) : ks(ks_) {}
     ~mirror_material() override;
 
-    vec eval(const vec &n, const vec &o, const vec &i) const override {
+    spectrum eval(const vec &n, const vec &o, const vec &i) const override {
         vec r = n * 2.0 * n.dot(o) - o;
         if (std::abs(r.dot(i) - 1) < 1e-2)
-            return ks * (1 / n.dot(i));
+            return ks * static_cast<float>(1 / n.dot(i));
         else
             return 0;
     }
@@ -167,30 +192,31 @@ struct mirror_material : public material {
         pdf = 1.0;
     }
 
-    vec ks;
+    spectrum ks;
+    unsigned padding_;
 };
 
 mirror_material::~mirror_material() {}
 
 // Oren-nayar
 struct oren_nayar_material : public material {
-    oren_nayar_material(vec kd, double roughness) : kd(kd), roughness(roughness) {}
+    oren_nayar_material(spectrum const &kd, float roughness) : kd(kd), roughness(roughness) {}
     ~oren_nayar_material() override;
 
-    vec eval(const vec &n, const vec &o, const vec &i) const override {
-        const double A = 1.0 - 0.5 * roughness / (roughness + 0.33);
-        const double B = 0.45 * roughness / (roughness + 0.09);
+    spectrum eval(const vec &n, const vec &o, const vec &i) const override {
+        const float A = 1.0f - 0.5f * roughness / (roughness + 0.33f);
+        const float B = 0.45f * roughness / (roughness + 0.09f);
 
-        double cos_thei = i.dot(n);
-        double cos_theo = o.dot(n);
-        cos_thei = clamp(cos_thei);
-        cos_theo = clamp(cos_theo);
-        if (std::abs(cos_thei) < 1e-4 || std::abs(cos_theo) < 1e-4) {
+        float cos_thei = static_cast<float>(i.dot(n));
+        float cos_theo = static_cast<float>(o.dot(n));
+        cos_thei = std::clamp(cos_thei, 0.0f, 1.0f);
+        cos_theo = std::clamp(cos_theo, 0.0f, 1.0f);
+        if (std::abs(cos_thei) < 1e-4f || std::abs(cos_theo) < 1e-4f) {
             // No radiance can be emitted.
-            return vec();
+            return spectrum();
         }
 
-        double cos_alpha, cos_beta;
+        float cos_alpha, cos_beta;
         if (cos_thei < cos_theo) {
             cos_alpha = cos_thei;
             cos_beta = cos_theo;
@@ -199,13 +225,14 @@ struct oren_nayar_material : public material {
             cos_beta = cos_thei;
         }
 
-        double sin_alpha = std::sqrt(1.0 - cos_alpha * cos_alpha);
-        double sin_beta = std::sqrt(1.0 - cos_beta * cos_beta);
-        double tan_beta = sin_beta / cos_beta;
+        float sin_alpha = std::sqrt(1.0f - cos_alpha * cos_alpha);
+        float sin_beta = std::sqrt(1.0f - cos_beta * cos_beta);
+        float tan_beta = sin_beta / cos_beta;
 
-        double cos_theio = cos_alpha * cos_beta + sin_alpha * sin_beta;
+        float cos_theio = cos_alpha * cos_beta + sin_alpha * sin_beta;
 
-        return kd * (1.0 / M_PI) * (A + B * std::max(0.0, cos_theio) * sin_alpha * tan_beta);
+        return kd * static_cast<float>(1.0 / M_PI) *
+               (A + B * std::max(0.0f, cos_theio) * sin_alpha * tan_beta);
     }
 
     void sample(const vec &n, const vec & /*o*/, vec &i, double &pdf) const override {
@@ -222,63 +249,64 @@ struct oren_nayar_material : public material {
         pdf = i.dot(n) / M_PI;
     }
 
-    vec kd;
-    double roughness;
+    spectrum kd;
+    float roughness;
 };
 
 oren_nayar_material::~oren_nayar_material() {}
 
 // Cook Torrance
 struct cook_torr_material : public material {
-    cook_torr_material(vec ks, double beta, std::complex<double> const &ior)
+    cook_torr_material(spectrum const &ks, float beta, std::complex<float> const &ior)
         : ks(ks), beta(beta), ior(ior) {}
     ~cook_torr_material() override;
 
-    double fresnel(vec const &i, vec const &h) const {
-        double cos_th_flip = 1.0 - i.dot(h);
-        double cos_th_flip2 = cos_th_flip * cos_th_flip;
-        double cos_th_flip4 = cos_th_flip2 * cos_th_flip2;
-        double cos_th_flip5 = cos_th_flip4 * cos_th_flip;
-        double a = (ior.real() - 1) * (ior.real() - 1) + 4 * ior.real() * cos_th_flip5 +
-                   ior.imag() * ior.imag();
-        double b = (ior.real() + 1) * (ior.real() + 1) + ior.imag() * ior.imag();
+    float fresnel(vec const &i, vec const &h) const {
+        float cos_th_flip = 1 - static_cast<float>(i.dot(h));
+        float cos_th_flip2 = cos_th_flip * cos_th_flip;
+        float cos_th_flip4 = cos_th_flip2 * cos_th_flip2;
+        float cos_th_flip5 = cos_th_flip4 * cos_th_flip;
+        float a = (ior.real() - 1) * (ior.real() - 1) + 4 * ior.real() * cos_th_flip5 +
+                  ior.imag() * ior.imag();
+        float b = (ior.real() + 1) * (ior.real() + 1) + ior.imag() * ior.imag();
         return a / b;
     }
 
-    double ggx_distri(const vec &n, const vec &h) const {
-        double cos_th = n.dot(h);
-        double cos_th2 = cos_th * cos_th;
-        double tan_th2 = 1.0 / cos_th2 - 1.0;
-        double b2 = beta * beta;
-        double c = b2 + tan_th2;
-        return b2 / (M_PI * cos_th2 * cos_th2 * c * c);
+    float ggx_distri(const vec &n, const vec &h) const {
+        float cos_th = static_cast<float>(n.dot(h));
+        float cos_th2 = cos_th * cos_th;
+        float tan_th2 = 1.0f / cos_th2 - 1.0f;
+        float b2 = beta * beta;
+        float c = b2 + tan_th2;
+        return b2 / (static_cast<float>(M_PI) * cos_th2 * cos_th2 * c * c);
     }
 
-    double ggx_shadow1(const vec &v, const vec &h) const {
-        double cos_vh = v.dot(h);
-        double tan_tv2 = 1.0 / (cos_vh * cos_vh) - 1.0;
-        double b2 = beta * beta;
-        return 2.0 / (1.0 + std::sqrt(1.0 + b2 * tan_tv2));
+    float ggx_shadow1(const vec &v, const vec &h) const {
+        float cos_vh = static_cast<float>(v.dot(h));
+        float tan_tv2 = 1.0f / (cos_vh * cos_vh) - 1;
+        float b2 = beta * beta;
+        return 2.0f / (1 + std::sqrt(1 + b2 * tan_tv2));
     }
 
-    double ggx_shadow(const vec &i, const vec &o, const vec &h) const {
+    float ggx_shadow(const vec &i, const vec &o, const vec &h) const {
         return ggx_shadow1(i, h) * ggx_shadow1(o, h);
     }
 
-    vec eval(const vec &n, const vec &o, const vec &i) const override {
-        const double bias = 1e-4;
+    spectrum eval(const vec &n, const vec &o, const vec &i) const override {
+        const float bias = 1e-4f;
         vec h = (i + o).normalize();
-        double cos_the = std::max(n.dot(i), 0.0);
-        double b_cos_the = cos_the + (cos_the == 0.0 ? bias : 0.0);
-        if (std::abs(cos_the) < 1e-4 || std::abs(b_cos_the) < 1e-4 || std::abs(h.dot(h)) < 1e-4) {
-            return vec();
+        float cos_the = static_cast<float>(std::max(n.dot(i), 0.0));
+        float b_cos_the = cos_the + (std::abs(cos_the) < bias ? bias : 0);
+        if (std::abs(cos_the) < 1e-4f || std::abs(b_cos_the) < 1e-4f ||
+            std::abs(static_cast<float>(h.dot(h))) < 1e-4f) {
+            return spectrum();
         }
 
-        double F = fresnel(i, h);
-        double D = ggx_distri(n, h);
-        double G = ggx_shadow(i, o, n);
+        float F = fresnel(i, h);
+        float D = ggx_distri(n, h);
+        float G = ggx_shadow(i, o, n);
 
-        double cook = F * D * G * (1.0 / (4.0 * b_cos_the * n.dot(o)));
+        float cook = F * D * G * (1.0f / (4 * b_cos_the * static_cast<float>(n.dot(o))));
         return ks * cook;
     }
 
@@ -288,7 +316,7 @@ struct cook_torr_material : public material {
 
         double theta = 2.0 * M_PI * rng();
         double t = rng();
-        double phi = std::atan(beta * std::sqrt(t / (1.0 - t)));
+        double phi = std::atan(static_cast<double>(beta) * std::sqrt(t / (1.0 - t)));
         double sin_phi = std::sin(phi);
         double cos_phi = std::cos(phi);
         double x = sin_phi * std::cos(theta);
@@ -302,12 +330,12 @@ struct cook_torr_material : public material {
             pdf = 0;
         }
 
-        pdf = ggx_distri(n, m) * std::abs(cos_phi) / (4.0 * m_dot_o);
+        pdf = static_cast<double>(ggx_distri(n, m)) * std::abs(cos_phi) / (4.0 * m_dot_o);
     }
 
-    vec ks;
-    double beta;
-    std::complex<double> ior;
+    spectrum ks;
+    float beta;
+    std::complex<float> ior;
 };
 
 cook_torr_material::~cook_torr_material() {}
@@ -315,23 +343,24 @@ cook_torr_material::~cook_torr_material() {}
 /*
  * Scene configuration
  */
-const oren_nayar_material left_wall(vec(.75, .25, .25), 0.8);
-const oren_nayar_material right_wall(vec(.25, .25, .75), 0.8);
-const oren_nayar_material other_wall(vec(.75, .75, .75), 0.8);
-const oren_nayar_material black_surf(vec(0.0, 0.0, 0.0), 0.8);
-const oren_nayar_material bright_surf(vec(0.9, 0.9, 0.9), 0.8);
-const cook_torr_material metal_surf(vec(.9, .9, .9), 0.01, std::complex<double>(2.93, 3.0));
+const oren_nayar_material left_wall(spectrum(.75, .25, .25), 0.8f);
+const oren_nayar_material right_wall(spectrum(.25, .25, .75), 0.8f);
+const oren_nayar_material other_wall(spectrum(.75, .75, .75), 0.8f);
+const oren_nayar_material black_surf(spectrum(0.0, 0.0, 0.0), 0.8f);
+const oren_nayar_material bright_surf(spectrum(0.9f, 0.9f, 0.9f), 0.8f);
+const cook_torr_material metal_surf(spectrum(.9f, .9f, .9f), 0.01f,
+                                    std::complex<float>(2.93f, 3.0));
 
 // Scene: list of spheres
 const sphere spheres[] = {
-    sphere(1e5, vec(1e5 + 1, 40.8, 81.6), vec(), left_wall),      // Left
-    sphere(1e5, vec(-1e5 + 99, 40.8, 81.6), vec(), right_wall),   // Right
-    sphere(1e5, vec(50, 40.8, 1e5), vec(), other_wall),           // Back
-    sphere(1e5, vec(50, 1e5, 81.6), vec(), other_wall),           // Bottom
-    sphere(1e5, vec(50, -1e5 + 81.6, 81.6), vec(), other_wall),   // Top
-    sphere(16.5, vec(27, 16.5, 47), vec(), bright_surf),          // Ball 1
-    sphere(16.5, vec(73, 16.5, 78), vec(), metal_surf),           // Ball 2
-    sphere(5.0, vec(50, 70.0, 81.6), vec(50, 50, 50), black_surf) // Light
+    sphere(1e5, vec(1e5 + 1, 40.8, 81.6), spectrum(), left_wall),      // Left
+    sphere(1e5, vec(-1e5 + 99, 40.8, 81.6), spectrum(), right_wall),   // Right
+    sphere(1e5, vec(50, 40.8, 1e5), spectrum(), other_wall),           // Back
+    sphere(1e5, vec(50, 1e5, 81.6), spectrum(), other_wall),           // Bottom
+    sphere(1e5, vec(50, -1e5 + 81.6, 81.6), spectrum(), other_wall),   // Top
+    sphere(16.5, vec(27, 16.5, 47), spectrum(), bright_surf),          // Ball 1
+    sphere(16.5, vec(73, 16.5, 78), spectrum(), metal_surf),           // Ball 2
+    sphere(5.0, vec(50, 70.0, 81.6), spectrum(50, 50, 50), black_surf) // Light
 };
 
 // Camera position & direction
@@ -354,9 +383,9 @@ bool intersect(const ray &r, double &t, int &id) {
 /*
  * KEY FUNCTION: radiance estimator
  */
-vec pt_received_radiance(const ray &r, int depth);
+spectrum pt_received_radiance(const ray &r, int depth);
 
-vec direct(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int id) {
+spectrum direct(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int id) {
     const sphere &light = spheres[7];
 
     double u = rng();
@@ -391,39 +420,40 @@ vec direct(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int 
     double cos_the = i.dot(n);
     double cos_phi = i.dot(w * -1.0);
     if (cos_the > 0 && cos_phi > 0) {
-        return obj.brdf.eval(n, o, i).mult(light.e) * cos_the * cos_phi * inv_d2 * inv_p;
+        return obj.brdf.eval(n, o, i).mult(light.e) *
+               static_cast<float>(cos_the * cos_phi * inv_d2 * inv_p);
     } else {
-        return vec();
+        return spectrum();
     }
 }
 
-vec indirect(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int depth) {
+spectrum indirect(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int depth) {
     vec i;
     double pdf;
     obj.brdf.sample(n, o, i, pdf);
     if (std::abs(pdf) < 1e-4) {
-        return vec();
+        return spectrum();
     } else {
-        vec distri = obj.brdf.eval(n, o, i);
-        if (distri.dot(distri) < 1e-4) {
-            return vec();
+        spectrum distri = obj.brdf.eval(n, o, i);
+        if (distri.black()) {
+            return spectrum();
         }
-        vec li = pt_received_radiance(ray(p_hit, i), depth + 1);
+        spectrum li = pt_received_radiance(ray(p_hit, i), depth + 1);
         double cos_the = i.dot(n);
-        return distri.mult(li) * (cos_the / pdf);
+        return distri.mult(li) * static_cast<float>(cos_the / pdf);
     }
 }
 
-vec radiance(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int id) {
+spectrum radiance(const vec &n, const vec &o, const vec &p_hit, const sphere &obj, int id) {
     return obj.e + direct(n, o, p_hit, obj, id) + indirect(n, o, p_hit, obj, 2);
 }
 
-vec pt_received_radiance(const ray &r, int depth) {
+spectrum pt_received_radiance(const ray &r, int depth) {
     double t;   // Distance to intersection
     int id = 0; // id of intersected sphere
 
     if (!intersect(r, t, id))
-        return vec();                // if miss, return black
+        return spectrum();           // if miss, return black
     const sphere &obj = spheres[id]; // the hit object
 
     vec x = r.o + r.d * t;             // The intersection point
@@ -438,7 +468,7 @@ vec pt_received_radiance(const ray &r, int depth) {
         return radiance(n, o, x, obj, id);
 
     // Direct illuminant.
-    vec Ld = direct(n, o, x, obj, id);
+    spectrum Ld = direct(n, o, x, obj, id);
 
     // Mutation.
     static const int mutate_depth = 3;
@@ -450,8 +480,8 @@ vec pt_received_radiance(const ray &r, int depth) {
         p_survive = 1;
 
     // Indirect illuminant.
-    vec Li = indirect(n, o, x, obj, depth);
-    vec L = Ld + Li * (1 / p_survive);
+    spectrum Li = indirect(n, o, x, obj, depth);
+    spectrum L = Ld + Li * static_cast<float>(1 / p_survive);
     return L;
 }
 
@@ -466,10 +496,9 @@ struct path {
         vec hit_point_normal;
         vec dir_to_prev;
         sphere const *obj = nullptr;
-        vec light_transport;
         double t = 0;
+        spectrum light_transport;
         int id;
-        unsigned padding_ = 0;
     };
 
     unsigned length() const { return static_cast<unsigned>(vertices.size()); }
@@ -479,7 +508,7 @@ struct path {
 
 path sample_path(ray r, unsigned max_depth) {
     path p;
-    vec light_transport(1.0, 1.0, 1.0);
+    spectrum light_transport(1.0, 1.0, 1.0);
     for (unsigned i = 0; i < max_depth; i++) {
         double t;
         int id;
@@ -509,11 +538,12 @@ path sample_path(ray r, unsigned max_depth) {
         if (std::abs(path_dens) < 1e-4) {
             break;
         }
-        vec distri = obj.brdf.eval(n, dir_to_prev, dir_to_next);
-        if (std::abs(distri.dot(distri)) < 1e-4) {
+        spectrum distri = obj.brdf.eval(n, dir_to_prev, dir_to_next);
+        if (distri.black()) {
             break;
         }
-        light_transport = light_transport.mult(distri * dir_to_next.dot(n)) * (1.0 / path_dens);
+        light_transport = light_transport.mult(distri * static_cast<float>(dir_to_next.dot(n))) *
+                          static_cast<float>(1.0 / path_dens);
         r = ray(x, dir_to_next);
     }
     return p;
@@ -546,17 +576,17 @@ ray sample_light_ray(vec *normal, double *spatial_dens, double *dir_dens) {
     return r;
 }
 
-vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray const &light_ray,
-                              vec const &light_normal, double light_spatial_dens,
-                              double light_dir_dens) {
-    vec rad;
+spectrum bdpt_connect_and_estimate(path const &cam_path, path const &light_path,
+                                   ray const &light_ray, vec const &light_normal,
+                                   double light_spatial_dens, double light_dir_dens) {
+    spectrum rad;
     for (unsigned path_len = 1; path_len <= cam_path.length() + light_path.length() + 1;
          path_len++) {
         unsigned cam_plen = std::min(path_len - 1, cam_path.length());
         unsigned light_plen = path_len - 1 - cam_plen;
 
-        vec partition_rad_sum;
-        double partition_weight_sum = 0.0;
+        spectrum partition_rad_sum;
+        float partition_weight_sum = 0;
         while (static_cast<int>(cam_plen) >= 0 && light_plen <= light_path.length()) {
             if (light_plen == 0 && cam_plen == 0) {
                 // We have only the connection path, if it exists, which connects one vertex from
@@ -575,7 +605,7 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 i = i * (1.0 / d);
 
                 // Occlusion test.
-                vec transported_importance;
+                spectrum transported_importance;
                 double t;
                 int id2;
                 intersect(ray(cam_join_vert.hit_point, i), t, id2);
@@ -584,14 +614,15 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 double cos_hit = i.dot(cam_join_vert.hit_point_normal);
                 double cos_light = (i * -1).dot(light_normal);
                 if (t > d - 1e-5 && cos_light > 0 && cos_hit > 0) {
-                    vec distri = cam_join_vert.obj->brdf.eval(cam_join_vert.hit_point_normal,
-                                                              cam_join_vert.dir_to_prev, i);
-                    transported_importance = distri.mult(spheres[7].e) * cos_hit * cos_light *
-                                             inv_d2 * (1.0 / light_spatial_dens);
+                    spectrum distri = cam_join_vert.obj->brdf.eval(cam_join_vert.hit_point_normal,
+                                                                   cam_join_vert.dir_to_prev, i);
+                    transported_importance = distri.mult(spheres[7].e) *
+                                             static_cast<float>(cos_hit * cos_light * inv_d2 *
+                                                                (1.0 / light_spatial_dens));
                 }
 
                 // compute light transportation for camera subpath.
-                vec path_rad = transported_importance.mult(cam_join_vert.light_transport);
+                spectrum path_rad = transported_importance.mult(cam_join_vert.light_transport);
                 partition_rad_sum = partition_rad_sum + path_rad;
                 partition_weight_sum += 1;
             } else if (cam_plen == 0) {
@@ -612,23 +643,25 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
                 double cos_wi = cam_join_vert.hit_point_normal.dot(join_path * -1);
                 if (cos_wo > 0.0 && cos_wi > 0.0 && t > join_distance - 1e-5) {
                     // compute light transportation for light subpath.
-                    vec light_emission = spheres[7].e * (light_normal.dot(light_ray.d) /
-                                                         (light_dir_dens * light_spatial_dens));
-                    vec light_subpath_importance =
+                    spectrum light_emission =
+                        spheres[7].e * static_cast<float>(light_normal.dot(light_ray.d) /
+                                                          (light_dir_dens * light_spatial_dens));
+                    spectrum light_subpath_importance =
                         light_emission.mult(light_join_vert.light_transport);
 
                     // transport light over the join path.
-                    double to_area_differential = cos_wi * cos_wo / (join_distance * join_distance);
-                    vec light_join_weight = light_join_vert.obj->brdf.eval(
+                    float to_area_differential =
+                        static_cast<float>(cos_wi * cos_wo / (join_distance * join_distance));
+                    spectrum light_join_weight = light_join_vert.obj->brdf.eval(
                         light_join_vert.hit_point_normal, join_path, light_join_vert.dir_to_prev);
-                    vec cam_join_weight = cam_join_vert.obj->brdf.eval(
+                    spectrum cam_join_weight = cam_join_vert.obj->brdf.eval(
                         cam_join_vert.hit_point_normal, cam_join_vert.dir_to_prev, join_path * -1);
-                    vec transported_importance =
+                    spectrum transported_importance =
                         light_subpath_importance.mult(light_join_weight).mult(cam_join_weight) *
                         to_area_differential;
 
                     // compute light transportation for camera subpath.
-                    vec cam_subpath_radiance =
+                    spectrum cam_subpath_radiance =
                         transported_importance.mult(cam_join_vert.light_transport);
 
                     partition_rad_sum = partition_rad_sum + cam_subpath_radiance;
@@ -641,13 +674,13 @@ vec bdpt_connect_and_estimate(path const &cam_path, path const &light_path, ray 
         }
 
         if (partition_weight_sum > 0) {
-            rad = rad + partition_rad_sum * (1.0 / partition_weight_sum);
+            rad = rad + partition_rad_sum * (1.0f / partition_weight_sum);
         }
     }
     return rad;
 }
 
-vec bdpt_received_radiance(const ray &r) {
+spectrum bdpt_received_radiance(const ray &r) {
     path cam_path = sample_path(r, /*max_depth=*/4);
     double light_spatial_dens, light_dir_dens;
     vec light_normal;
@@ -694,7 +727,7 @@ int main(int argc, char *argv[]) {
     unsigned w = 1024, h = 768;
     unsigned samps = argc == 2 ? static_cast<unsigned>(atoi(argv[1]) / 4) : 128; // # samples
     vec cx = vec(w * .5135 / h), cy = (cx.cross(cam.d)).normalize() * .5135;
-    std::vector<vec> c(w * h);
+    std::vector<spectrum> c(w * h);
 
 #if NDEBUG
 #pragma omp parallel for schedule(dynamic, 1)
@@ -705,15 +738,15 @@ int main(int argc, char *argv[]) {
 
             for (unsigned sy = 0; sy < 2; ++sy) {
                 for (unsigned sx = 0; sx < 2; ++sx) {
-                    vec r;
+                    spectrum r;
                     for (unsigned s = 0; s < samps; s++) {
                         vec d = cx * (((sx + .5) / 2 + x) / w - .5) +
                                 cy * (((sy + .5) / 2 + y) / h - .5) + cam.d;
-                        // r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1. /
+                        r = r + pt_received_radiance(ray(cam.o, d.normalize()), 1) * (1.f / samps);
+                        // r = r + bdpt_received_radiance(ray(cam.o, d.normalize())) * (1.f /
                         // samps);
-                        r = r + bdpt_received_radiance(ray(cam.o, d.normalize())) * (1. / samps);
                     }
-                    c[i] = c[i] + vec(r.x, r.y, r.z) * .25;
+                    c[i] = c[i] + spectrum(r.r, r.g, r.b) * .25;
                 }
             }
         }
@@ -730,9 +763,9 @@ int main(int argc, char *argv[]) {
     FILE *f = fopen("image.ppm", "w");
     fprintf(f, "P3\n%d %d\n%d\n", w, h, 255);
     for (unsigned i = 0; i < w * h; i++) {
-        int x = to_int(c[i].x);
-        int y = to_int(c[i].y);
-        int z = to_int(c[i].z);
+        int x = to_int(c[i].r);
+        int y = to_int(c[i].g);
+        int z = to_int(c[i].b);
         fprintf(f, "%d %d %d ", x, y, z);
     }
     fclose(f);
