@@ -52,7 +52,8 @@ SOURCES += \
     test/testobjdb.cpp \
     src/lightsources.cpp \
     test/testunidirectlt1renderer.cpp \
-    test/testunidirectrenderer.cpp
+    test/testunidirectrenderer.cpp \
+    src/geobuf.cpp
 
 
 HEADERS += \
@@ -90,7 +91,10 @@ HEADERS += \
     test/testobjdb.h \
     src/lightsources.h \
     test/testunidirectlt1renderer.h \
-    test/testunidirectrenderer.h
+    test/testunidirectrenderer.h \
+    src/geobuf.h
+
+LIBS += -lvulkan
 
 win32 {
 LIBS += -lOpengl32
