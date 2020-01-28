@@ -6,4 +6,4 @@ A basic 3D renderer for simple scenes.
 
 ## Build prerequisites (on Linux).
 ### Vulkan
-apt install libvulkan-dev mesa-vulkan-drivers vulkan-utils
+```apt install libvulkan-dev mesa-vulkan-drivers vulkan-utils```
