@@ -7,6 +7,13 @@ typedef unsigned buffer_location;
 typedef unsigned shader_location;
 typedef unsigned program_location;
 
+/**
+ * @brief The normal_raster class
+ */
+class normal_raster {
+  public:
+};
+
 class if_raster {
   public:
     if_raster();
