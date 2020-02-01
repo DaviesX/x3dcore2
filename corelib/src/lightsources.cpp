@@ -12,9 +12,8 @@ void e8::if_light_sources::load(if_obj const &obj, e8util::mat44 const &trans) {
     if_light const &light_obj = static_cast<if_light const &>(obj);
     auto it = m_lights.insert(std::make_pair(obj.id(), light_obj.transform(trans))).first;
 
-    std::vector<if_obj *> objs = obj.get_children(obj_protocol::obj_protocol_all);
-    for (if_obj *obj : objs) {
-        m_obj_lights_lookup.insert(std::make_pair(obj->id(), it->second.get()));
+    for (if_geometry const *geo : light_obj.geometries()) {
+        m_obj_lights_lookup.insert(std::make_pair(geo->id(), it->second.get()));
     }
 }
 
@@ -27,7 +26,7 @@ void e8::if_light_sources::unload(if_obj const &obj) {
 
 e8::obj_protocol e8::if_light_sources::support() const { return obj_protocol::obj_protocol_light; }
 
-e8::if_light const *e8::if_light_sources::obj_light(if_obj const &obj) const {
+e8::if_light const *e8::if_light_sources::obj_light(if_geometry const &obj) const {
     auto it = m_obj_lights_lookup.find(obj.id());
     if (it != m_obj_lights_lookup.end()) {
         return it->second;

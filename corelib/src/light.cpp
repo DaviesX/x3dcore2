@@ -82,6 +82,10 @@ std::unique_ptr<e8::if_light> e8::area_light::transform(e8util::mat44 const & /*
     return copy();
 }
 
+std::vector<e8::if_geometry const *> const e8::area_light::geometries() const {
+    return std::vector<if_geometry const *>{m_geo.get()};
+}
+
 e8::sky_light::sky_light(std::string const &name, e8util::vec3 const &rad)
     : if_light(name), m_rad(rad) {}
 
@@ -154,4 +158,8 @@ std::unique_ptr<e8::if_light> e8::sky_light::copy() const {
 
 std::unique_ptr<e8::if_light> e8::sky_light::transform(e8util::mat44 const & /* trans */) const {
     return copy();
+}
+
+std::vector<e8::if_geometry const *> const e8::sky_light::geometries() const {
+    return std::vector<if_geometry const *>();
 }
