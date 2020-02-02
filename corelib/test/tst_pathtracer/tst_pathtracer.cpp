@@ -16,6 +16,7 @@ class tst_pathtracer : public QObject {
 
   private Q_SLOTS:
     void unidirect_tracer();
+    void unidirect_lt1_tracer();
 };
 
 struct sphere_scene {
@@ -23,9 +24,10 @@ struct sphere_scene {
         std::shared_ptr<e8::if_material> material =
             std::make_shared<e8::oren_nayar>("material", albedo, /*roughness=*/0.0f);
 
-        std::shared_ptr<e8::if_geometry> sphere = std::make_shared<e8::uv_sphere>(
+        std::shared_ptr<e8::uv_sphere> sphere = std::make_shared<e8::uv_sphere>(
             /*name=*/"sphere", /*o=*/e8util::vec3{0.0f, 0.0f, 0.0f}, /*r=*/10.0f,
             /*res=*/30, /*flip_normal=*/true);
+        sphere->update();
         sphere->add_child(material);
 
         std::shared_ptr<e8::if_light> light =
@@ -79,6 +81,10 @@ void inner_sphere_validation(e8::if_path_tracer const &tracer, unsigned num_samp
 
 void tst_pathtracer::unidirect_tracer() {
     inner_sphere_validation(e8::unidirect_path_tracer(), /*num_samps_per_dir=*/256);
+}
+
+void tst_pathtracer::unidirect_lt1_tracer() {
+    inner_sphere_validation(e8::unidirect_lt1_path_tracer(), /*num_samps_per_dir=*/128);
 }
 
 QTEST_APPLESS_MAIN(tst_pathtracer)
