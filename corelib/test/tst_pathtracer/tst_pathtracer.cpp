@@ -76,20 +76,20 @@ void inner_sphere_validation(e8::if_path_tracer const &tracer, unsigned num_samp
     float n = k * num_samps_per_dir;
     float mu = sum_x / n;
     float exp_x = (scene.light_rad / (e8util::vec3(1) - scene.albedo)).sum();
-    QVERIFY2(std::sqrt((mu - exp_x) * (mu - exp_x)) < 0.2f,
+    QVERIFY2(std::sqrt((mu - exp_x) * (mu - exp_x)) < 0.3f,
              ("mu=" + std::to_string(mu) + "|exp{x}=" + std::to_string(exp_x)).c_str());
 }
 
 void tst_pathtracer::unidirect_tracer() {
-    inner_sphere_validation(e8::unidirect_path_tracer(), /*num_samps_per_dir=*/512);
+    inner_sphere_validation(e8::unidirect_path_tracer(), /*num_samps_per_dir=*/2048);
 }
 
 void tst_pathtracer::unidirect_lt1_tracer() {
-    inner_sphere_validation(e8::unidirect_lt1_path_tracer(), /*num_samps_per_dir=*/512);
+    inner_sphere_validation(e8::unidirect_lt1_path_tracer(), /*num_samps_per_dir=*/256);
 }
 
 void tst_pathtracer::bidirect_tracer() {
-    inner_sphere_validation(e8::bidirect_mis_path_tracer(), /*num_samps_per_dir=*/512);
+    inner_sphere_validation(e8::bidirect_mis_path_tracer(), /*num_samps_per_dir=*/8);
 }
 
 QTEST_APPLESS_MAIN(tst_pathtracer)
