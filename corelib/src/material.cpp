@@ -231,7 +231,7 @@ e8util::vec3 e8::cook_torr::sample(e8util::rng *rng, float *cond_density, e8util
 
     // sample over the ggx distribution.
     e8util::vec3 u, v;
-    e8util::vec3_basis(n, u, v);
+    e8util::vec3_basis(n, &u, &v);
 
     float theta = 2.0f * static_cast<float>(M_PI) * rng->draw();
     float t = rng->draw();

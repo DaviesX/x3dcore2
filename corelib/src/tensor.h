@@ -56,6 +56,7 @@ template <unsigned N, typename T = float> class vec {
     T inner(vec const &rhs) const;
     vec outer(vec const &rhs) const;
 
+    T sum() const;
     T norm() const;
     T norm2() const;
     vec normalize() const;
@@ -212,6 +213,14 @@ template <unsigned N, typename T> vec<N, T> vec<N, T>::outer(vec const &rhs) con
 template <unsigned N, typename T> T vec<N, T>::norm2() const { return this->inner(*this); }
 
 template <unsigned N, typename T> T vec<N, T>::norm() const { return std::sqrt(this->norm2()); }
+
+template <unsigned N, typename T> T vec<N, T>::sum() const {
+    T s = (*this)(0);
+    for (unsigned i = 1; i < N; i++) {
+        s += (*this)(i);
+    }
+    return s;
+}
 
 template <unsigned N, typename T> vec<N, T> vec<N, T>::normalize() const {
     return 1.0f / norm() * (*this);
@@ -628,10 +637,10 @@ void mat<M, N, T>::lu_solve(mat const &l, mat const &u, vec<N, T> const &b, T *x
 
     for (int i = M - 1; i >= 0; i--) {
         T r = 0.0;
-        for (unsigned k = i + 1; k < N; k++) {
-            r += u(i, k) * x[k];
+        for (unsigned k = static_cast<unsigned>(i + 1); k < N; k++) {
+            r += u(static_cast<unsigned>(i), k) * x[k];
         }
-        x[i] = d(i) - r;
+        x[i] = d(static_cast<unsigned>(i)) - r;
     }
 }
 
@@ -845,7 +854,7 @@ inline mat44 mat44_basis(vec3 const &u, vec3 const &v, vec3 const &w) {
 inline mat44 mat44_rotate(float a, vec3 const &axis) {
     vec3 const &w = axis.normalize();
 
-    vec3 const &ref = std::abs(w(1) - 1) < 1e-5 ? vec3({1, 0, 0}) : vec3({0, 1, 0});
+    vec3 const &ref = std::abs(w(1) - 1) < 1e-5f ? vec3({1, 0, 0}) : vec3({0, 1, 0});
 
     vec3 const &u = w.outer(ref).normalize();
     vec3 const &v = w.outer(u).normalize();
@@ -923,24 +932,52 @@ inline mat44 mat44_viewport(float x, float y, float height, float width) {
 
 inline mat44 mat44_normal(mat44 const &affine) { return ~(affine ^ (-1)); }
 
-inline float rad2deg(float rad) { return rad / M_PI * 180; }
+inline float rad2deg(float rad) { return rad / static_cast<float>(M_PI) * 180; }
 
-inline float deg2rad(float deg) { return deg / 180 * M_PI; }
+inline float deg2rad(float deg) { return deg / 180 * static_cast<float>(M_PI); }
 
-inline void vec3_basis(vec3 const &n, vec3 &u, vec3 &v) {
-    u = ((std::abs(n(0)) > .1 ? vec3({0.0f, 1.0f, 0.0f}) : vec3({1.0f, 1.0f, 1.0f})).outer(n))
-            .normalize();
-    v = n.outer(u);
+inline void vec3_basis(vec3 const &n, vec3 *u, vec3 *v) {
+    *u = ((std::abs(n(0)) > .1f ? vec3({0.0f, 1.0f, 0.0f}) : vec3({1.0f, 1.0f, 1.0f})).outer(n))
+             .normalize();
+    *v = n.outer(*u);
+}
+
+inline vec3 vec3_sphere_sample(float e0, float e1) {
+    float z = 2 * e1 - 1;
+
+    float r = std::sqrt(1 - z * z);
+    float phi = e0 * 2 * static_cast<float>(M_PI);
+
+    float x = r * std::cos(phi);
+    float y = r * std::sin(phi);
+
+    return vec3{x, y, z};
+}
+
+inline vec3 vec3_hemisphere_sample(vec3 const &n, float e0, float e1) {
+    e8util::vec3 u, v;
+    e8util::vec3_basis(n, &u, &v);
+
+    float z = e1;
+
+    float r = std::sqrt(1 - z * z);
+    float phi = e0 * 2 * static_cast<float>(M_PI);
+
+    float x = r * std::cos(phi);
+    float y = r * std::sin(phi);
+
+    return x * u + y * v + z * n;
 }
 
 inline vec3 vec3_cos_hemisphere_sample(vec3 const &n, float e0, float e1) {
     e8util::vec3 u, v;
-    e8util::vec3_basis(n, u, v);
-
-    float phi = e0 * 2 * M_PI;
+    e8util::vec3_basis(n, &u, &v);
 
     float z = std::sqrt(e1);
-    float r = std::sqrt(1.0f - z * z);
+
+    float r = std::sqrt(1 - z * z);
+    float phi = e0 * 2 * static_cast<float>(M_PI);
+
     float x = r * std::cos(phi);
     float y = r * std::sin(phi);
 

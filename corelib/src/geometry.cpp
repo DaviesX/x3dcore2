@@ -158,35 +158,47 @@ e8::triangle_fragment::~triangle_fragment() {}
 
 // sphere
 e8::uv_sphere::uv_sphere(std::string const &name, e8util::vec3 const &o, float r,
-                         unsigned const res)
+                         unsigned const res, bool flip_normal)
     : trimesh(name) {
     // vertex generation.
     // south pole.
     m_verts.push_back(e8util::vec3({0, 0, -r}) + o);
-    m_norms.push_back(e8util::vec3({0, 0, -1}));
+    if (!flip_normal) {
+        m_norms.push_back(e8util::vec3({0, 0, -1}));
+    } else {
+        m_norms.push_back(e8util::vec3({0, 0, 1}));
+    }
     m_texcoords.push_back((e8util::vec2({0, 0})));
 
     // rings.
     for (unsigned j = 1; j < res - 1; j++) {
         float u = static_cast<float>(j) / res;
-        float phi = u * static_cast<float>(M_PI) - static_cast<float>(M_PI / 2);
+        float phi = (1 - u) * static_cast<float>(M_PI);
 
         for (unsigned i = 0; i < res; i++) {
             float v = static_cast<float>(i) / res;
             float theta = v * static_cast<float>(2 * M_PI);
 
-            float x = std::cos(phi) * std::cos(theta);
-            float y = std::cos(phi) * std::sin(theta);
-            float z = std::sin(phi);
+            float x = std::sin(phi) * std::cos(theta);
+            float y = std::sin(phi) * std::sin(theta);
+            float z = std::cos(phi);
             m_verts.push_back(r * e8util::vec3({x, y, z}) + o);
-            m_norms.push_back(e8util::vec3({x, y, z}));
+            if (!flip_normal) {
+                m_norms.push_back(e8util::vec3({x, y, z}));
+            } else {
+                m_norms.push_back(-1.0f * e8util::vec3({x, y, z}));
+            }
             m_texcoords.push_back(e8util::vec2({u, v}));
         }
     }
 
     // north pole.
     m_verts.push_back(e8util::vec3({0, 0, r}) + o);
-    m_norms.push_back(e8util::vec3({0, 0, 1}));
+    if (!flip_normal) {
+        m_norms.push_back(e8util::vec3({0, 0, 1}));
+    } else {
+        m_norms.push_back(e8util::vec3({0, 0, -1}));
+    }
     m_texcoords.push_back((e8util::vec2({1, 1})));
 
     // face generation.
@@ -225,8 +237,5 @@ e8::uv_sphere::uv_sphere(std::string const &name, e8util::vec3 const &o, float r
         m_tris.push_back(triangle({v2, v1, v0}));
     }
 }
-
-e8::uv_sphere::uv_sphere(e8util::vec3 const &o, float r, unsigned const res)
-    : uv_sphere("Unknown_Uv_Sphere_Trimesh_Geometry_Name", o, r, res) {}
 
 e8::uv_sphere::~uv_sphere() {}

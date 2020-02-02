@@ -105,8 +105,8 @@ class triangle_fragment : public trimesh {
 
 class uv_sphere : public trimesh {
   public:
-    uv_sphere(std::string const &name, e8util::vec3 const &o, float r, unsigned const res);
-    uv_sphere(e8util::vec3 const &o, float r, unsigned const res);
+    uv_sphere(std::string const &name, e8util::vec3 const &o, float r, unsigned const res,
+              bool flip_normal = false);
     ~uv_sphere();
 };
 
