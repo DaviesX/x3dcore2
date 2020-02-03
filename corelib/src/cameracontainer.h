@@ -16,7 +16,7 @@ namespace e8 {
 /**
  * @brief The if_multicam class Generic interface for camera management.
  */
-class camera_container : public if_obj_manager {
+class camera_container : public if_obj_actuator {
   public:
     /**
      * @brief camera_container
@@ -32,7 +32,7 @@ class camera_container : public if_obj_manager {
     if_camera const *active_cam() const;
 
     /**
-     * @brief commit Updates the internal states after a sequence of load() and unload() calls.
+     * @brief commit Nothing to update.
      */
     void commit() override;
 

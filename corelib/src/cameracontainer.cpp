@@ -19,3 +19,11 @@ void e8::camera_container::unload(if_obj const &obj) {
         m_cam = nullptr;
     }
 }
+
+void e8::camera_container::commit() {}
+
+e8::obj_protocol e8::camera_container::support() const {
+    return e8::obj_protocol::obj_protocol_camera;
+}
+
+std::string e8::camera_container::name() const { return m_name; }

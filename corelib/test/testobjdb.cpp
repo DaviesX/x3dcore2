@@ -9,7 +9,7 @@ test::test_objdb::test_objdb() {}
 
 test::test_objdb::~test_objdb() {}
 
-class test_geo_manger : public e8::if_obj_manager {
+class test_geo_manger : public e8::if_obj_actuator {
   public:
     ~test_geo_manger() override;
     void load(e8::if_obj const &obj, e8util::mat44 const &trans) override;
@@ -85,12 +85,12 @@ void test::test_objdb::run() const {
     root->add_child(child);
 
     e8::objdb db;
-    db.register_manager(std::make_unique<test_geo_manger>());
-    db.manage_root(root);
+    db.register_actuator(std::make_unique<test_geo_manger>());
+    db.store_root(root);
     db.push_updates();
 
     test_geo_manger *mgr =
-        static_cast<test_geo_manger *>(db.manager_of(e8::obj_protocol::obj_protocol_geometry));
+        static_cast<test_geo_manger *>(db.actuator_of(e8::obj_protocol::obj_protocol_geometry));
     assert(mgr->num_geos() == 2);
     e8::if_geometry *t_root_id = mgr->find(root->id());
     e8::if_geometry *t_child_id = mgr->find(child->id());

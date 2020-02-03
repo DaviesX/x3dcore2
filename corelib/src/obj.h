@@ -39,10 +39,14 @@ class incompat_obj_exception : public std::exception {
 
 class if_obj;
 
-class if_obj_manager {
+/**
+ * @brief The if_obj_actuator class The back-end/driver that actually applies and carries out the
+ * state changes of the objects.
+ */
+class if_obj_actuator {
   public:
-    if_obj_manager();
-    virtual ~if_obj_manager();
+    if_obj_actuator();
+    virtual ~if_obj_actuator();
 
     virtual void load(if_obj const &obj, e8util::mat44 const &trans) = 0;
     virtual void unload(if_obj const &obj) = 0;
@@ -66,6 +70,10 @@ class if_obj {
     obj_id_t id() const;
     bool dirty() const;
 
+    bool active() const;
+    void activate();
+    void deactivate();
+
     void init_blueprint(std::vector<transform_stage_name_t> const &stages);
     bool update_stage(transform_stage_t const &stage);
     e8util::mat44 blueprint_to_transform() const;
@@ -85,8 +93,9 @@ class if_obj {
     obj_id_t m_id;
     transform_blueprint_t m_blueprint;
     std::set<std::shared_ptr<if_obj>> m_children;
-    bool m_dirty;
-    char m_padding[7];
+    bool m_active = true;
+    bool m_dirty = true;
+    char m_padding[6];
 };
 
 template <class T> class if_copyable_obj : public if_obj {

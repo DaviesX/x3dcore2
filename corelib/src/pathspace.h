@@ -33,7 +33,7 @@ struct intersect_info {
 
 typedef std::map<if_material const *, std::vector<if_geometry const *>> batched_geometry;
 
-class if_path_space : public if_obj_manager {
+class if_path_space : public if_obj_actuator {
   public:
     if_path_space();
     virtual ~if_path_space() override;

@@ -15,9 +15,9 @@ char const *e8::incompat_obj_exception::what() const noexcept {
         .c_str();
 }
 
-e8::if_obj_manager::if_obj_manager() {}
+e8::if_obj_actuator::if_obj_actuator() {}
 
-e8::if_obj_manager::~if_obj_manager() {}
+e8::if_obj_actuator::~if_obj_actuator() {}
 
 static e8::obj_id_t g_obj_id_counter = 101;
 static e8util::mutex_t g_obj_id_counter_mutex = e8util::mutex();
@@ -71,10 +71,12 @@ e8util::mat44 e8::if_obj::blueprint_to_transform() const {
 }
 
 void e8::if_obj::mark_dirty() { m_dirty = true; }
-
 void e8::if_obj::mark_clean() { m_dirty = false; }
-
 bool e8::if_obj::dirty() const { return m_dirty; }
+
+bool e8::if_obj::active() const { return m_active; }
+void e8::if_obj::activate() { m_active = true; }
+void e8::if_obj::deactivate() { m_active = false; }
 
 bool e8::if_obj::add_child(std::shared_ptr<if_obj> const &child) {
     auto it = m_children.find(child);
