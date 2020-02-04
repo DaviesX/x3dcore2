@@ -86,7 +86,7 @@ void test::test_objdb::run() const {
 
     e8::objdb db;
     db.register_actuator(std::make_unique<test_geo_manger>());
-    db.store_root(root);
+    db.insert_root(root);
     db.push_updates();
 
     test_geo_manger *mgr =

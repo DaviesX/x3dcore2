@@ -30,16 +30,29 @@ e8::if_obj_actuator *e8::objdb::actuator_of(obj_protocol type) const {
     }
 }
 
-e8::if_obj *e8::objdb::store_root(std::shared_ptr<if_obj> const &root) {
+e8::if_obj *e8::objdb::insert_root(std::shared_ptr<if_obj> const &root) {
     return m_roots.insert(root).first->get();
 }
 
 std::vector<e8::if_obj *>
-e8::objdb::store_roots(std::vector<std::shared_ptr<if_obj>> const &roots) {
+e8::objdb::insert_roots(std::vector<std::shared_ptr<if_obj>> const &roots) {
     std::vector<e8::if_obj *> result;
     for (std::shared_ptr<if_obj> const &obj : roots) {
-        result.push_back(store_root(obj));
+        result.push_back(insert_root(obj));
     }
+    return result;
+}
+
+std::vector<e8::if_obj *> e8::objdb::find_obj(std::string const &name, obj_protocol type) {
+    std::vector<e8::if_obj *> result;
+    visit_all_filtered(
+        m_roots.begin(), m_roots.end(),
+        [&name, &result](e8::if_obj *obj) {
+            if (obj->name() == name) {
+                result.push_back(obj);
+            }
+        },
+        std::set<obj_protocol>{type});
     return result;
 }
 

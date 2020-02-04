@@ -17,7 +17,6 @@ class if_geometry : public if_operable_obj<if_geometry> {
     virtual ~if_geometry() override;
 
     obj_protocol protocol() const override;
-    std::string name() const;
 
     /**
      * @brief vertices
@@ -54,9 +53,6 @@ class if_geometry : public if_operable_obj<if_geometry> {
 
   protected:
     if_geometry(obj_id_t id, std::string const &name);
-
-  private:
-    std::string m_name;
 };
 
 class trimesh : public if_geometry {

@@ -37,12 +37,10 @@ class if_light : public if_operable_obj<if_light> {
     virtual std::unique_ptr<if_light> copy() const override = 0;
     virtual std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override = 0;
 
-    std::string name() const;
     obj_protocol protocol() const override;
 
   protected:
     if_light(obj_id_t id, std::string const &name);
-    std::string m_name;
 };
 
 class area_light : public if_light {

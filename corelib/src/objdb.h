@@ -39,8 +39,27 @@ class objdb {
      */
     if_obj_actuator *actuator_of(obj_protocol type) const;
 
-    if_obj *store_root(std::shared_ptr<if_obj> const &root);
-    std::vector<if_obj *> store_roots(std::vector<std::shared_ptr<if_obj>> const &roots);
+    /**
+     * @brief insert_root Stores the root object identified by its ID. If the ID has already
+     * existed, it will override the old root object.
+     * @param root Root to be stored.
+     * @return raw pointer to the root stored.
+     */
+    if_obj *insert_root(std::shared_ptr<if_obj> const &root);
+
+    /**
+     * @brief insert_roots Much like the above, it stores multiple roots at once.
+     */
+    std::vector<if_obj *> insert_roots(std::vector<std::shared_ptr<if_obj>> const &roots);
+
+    /**
+     * @brief find_obj Scan the entire object DB and look for objects with the specified name and
+     * protocol.
+     * @param name Name of the objects to filter for.
+     * @param type Protocol of the objects to filter for.
+     * @return All objects that satisfy the above constraints.
+     */
+    std::vector<if_obj *> find_obj(std::string const &name, obj_protocol type);
 
     /**
      * @brief push_updates Push all the active dirty nodes to the underlying registered managers.

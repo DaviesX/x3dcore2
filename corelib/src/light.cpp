@@ -3,18 +3,16 @@
 #include <algorithm>
 #include <cmath>
 
-e8::if_light::if_light(std::string const &name) : m_name(name) {}
+e8::if_light::if_light(std::string const &name) : if_operable_obj<if_light>(name) {}
 
 e8::if_light::~if_light() {}
 
 void e8::if_light::set_scene_boundary(e8util::aabb const & /* bbox */) {}
 
-std::string e8::if_light::name() const { return m_name; }
-
 e8::obj_protocol e8::if_light::protocol() const { return obj_protocol::obj_protocol_light; }
 
 e8::if_light::if_light(obj_id_t id, std::string const &name)
-    : if_operable_obj<if_light>(id), m_name(name) {}
+    : if_operable_obj<if_light>(id, name) {}
 
 e8::area_light::area_light(std::string const &name, std::shared_ptr<if_geometry> const &geo,
                            e8util::vec3 const &rad)

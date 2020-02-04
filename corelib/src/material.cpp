@@ -40,14 +40,12 @@ float ggx_shadow(float alpha2, e8util::vec3 const &i, e8util::vec3 const &o,
 
 } // namespace
 
-e8::if_material::if_material(std::string const &name) : m_name(name) {}
+e8::if_material::if_material(std::string const &name) : if_copyable_obj<e8::if_material>(name) {}
 
 e8::if_material::if_material(obj_id_t id, std::string const &name)
-    : if_copyable_obj<e8::if_material>(id), m_name(name) {}
+    : if_copyable_obj<e8::if_material>(id, name) {}
 
 e8::if_material::~if_material() {}
-
-std::string e8::if_material::name() const { return m_name; }
 
 e8::obj_protocol e8::if_material::protocol() const { return obj_protocol::obj_protocol_material; }
 

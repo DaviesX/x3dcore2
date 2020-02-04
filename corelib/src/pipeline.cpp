@@ -154,9 +154,9 @@ void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
     diff.find_str("scene_file", [this](std::string const &scene_file) {
         m_objdb.clear();
         if (scene_file == "cornellball") {
-            m_objdb.store_roots(e8util::cornell_scene().load_roots());
+            m_objdb.insert_roots(e8util::cornell_scene().load_roots());
         } else {
-            m_objdb.store_roots(e8util::gltf_scene(scene_file).load_roots());
+            m_objdb.insert_roots(e8util::gltf_scene(scene_file).load_roots());
         }
     });
 

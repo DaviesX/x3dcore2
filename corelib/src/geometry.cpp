@@ -3,14 +3,12 @@
 #include <cmath>
 #include <ext/alloc_traits.h>
 
-e8::if_geometry::if_geometry(std::string const &name) : m_name(name) {}
+e8::if_geometry::if_geometry(std::string const &name) : if_operable_obj<if_geometry>(name) {}
 
 e8::if_geometry::if_geometry(obj_id_t id, std::string const &name)
-    : if_operable_obj<if_geometry>(id), m_name(name) {}
+    : if_operable_obj<if_geometry>(id, name) {}
 
 e8::if_geometry::~if_geometry() {}
-
-std::string e8::if_geometry::name() const { return m_name; }
 
 e8::obj_protocol e8::if_geometry::protocol() const { return obj_protocol::obj_protocol_geometry; }
 
