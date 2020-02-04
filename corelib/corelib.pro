@@ -52,8 +52,8 @@ SOURCES += \
     src/lightsources.cpp \
     test/testunidirectlt1renderer.cpp \
     test/testunidirectrenderer.cpp \
-    src/geobuf.cpp \
-    src/cameracontainer.cpp
+    src/cameracontainer.cpp \
+    src/worldspace.cpp
 
 
 HEADERS += \
@@ -91,8 +91,8 @@ HEADERS += \
     src/lightsources.h \
     test/testunidirectlt1renderer.h \
     test/testunidirectrenderer.h \
-    src/geobuf.h \
-    src/cameracontainer.h
+    src/cameracontainer.h \
+    src/worldspace.h
 
 LIBS += -lvulkan
 
