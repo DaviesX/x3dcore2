@@ -72,6 +72,10 @@ e8util::vec3 e8::area_light::radiance(e8util::vec3 const &w, e8util::vec3 const 
 
 e8util::vec3 e8::area_light::power() const { return m_power; }
 
+std::vector<e8::if_geometry const *> e8::area_light::geometries() const {
+    return std::vector<e8::if_geometry const *>{m_geo.get()};
+}
+
 std::unique_ptr<e8::if_light> e8::area_light::copy() const {
     return std::make_unique<area_light>(*this);
 }
@@ -145,6 +149,10 @@ e8util::vec3 e8::sky_light::radiance(e8util::vec3 const &w, e8util::vec3 const &
 }
 
 e8util::vec3 e8::sky_light::power() const { return static_cast<float>(M_PI) * (m_dia * m_dia / 2); }
+
+std::vector<e8::if_geometry const *> e8::sky_light::geometries() const {
+    return std::vector<e8::if_geometry const *>();
+}
 
 std::unique_ptr<e8::if_light> e8::sky_light::copy() const {
     return std::make_unique<sky_light>(*this);

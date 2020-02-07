@@ -6,7 +6,8 @@
 #include <ext/alloc_traits.h>
 #include <memory>
 
-e8::if_path_space::if_path_space() {}
+e8::if_path_space::if_path_space()
+    : m_fail_safe(std::make_unique<mat_fail_safe>("fail_safe_material")) {}
 
 e8::if_path_space::~if_path_space() {}
 
@@ -14,13 +15,10 @@ e8util::aabb e8::if_path_space::aabb() const { return m_bound; }
 
 void e8::if_path_space::load(if_obj const &obj, e8util::mat44 const &trans) {
     std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const &>(obj).transform(trans);
-    std::vector<if_obj *> mats = obj.get_children(obj_protocol::obj_protocol_material);
-
-    assert(mats.size() <= 1);
-    std::unique_ptr<if_material const> mat =
-        !mats.empty() ? static_cast<if_material *>(mats[0])->copy()
-                      : std::make_unique<mat_fail_safe>(geo->name() + "/fail_safe_material");
-
+    if_material const *mat = geo->material();
+    if (mat == nullptr) {
+        mat = m_fail_safe.get();
+    }
     m_bound = m_bound + geo->aabb();
     m_geometries.insert(std::make_pair(obj.id(), binded_geometry(geo, mat)));
 }
@@ -92,7 +90,7 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
             e8util::vec2 uv2 = texcoords[(*hit_tri)(2)];
             uv = hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2;
         }
-        return intersect_info(t, vertex, normal, uv, hit_geo->geometry.get(), hit_geo->mat.get());
+        return intersect_info(t, vertex, normal, uv, hit_geo->geometry.get(), hit_geo->mat);
     } else {
         return intersect_info();
     }
@@ -313,10 +311,10 @@ void e8::bvh_path_space_layout::commit() {
         m_geo_list.push_back(geo.second.geometry.get());
 
         if (geo.second.mat != nullptr) {
-            auto mat_it = mat2ind.find(geo.second.mat.get());
+            auto mat_it = mat2ind.find(geo.second.mat);
             if (mat_it == mat2ind.end()) {
-                mat2ind.insert(std::make_pair(geo.second.mat.get(), m_mat_list.size()));
-                m_mat_list.push_back(geo.second.mat.get());
+                mat2ind.insert(std::make_pair(geo.second.mat, m_mat_list.size()));
+                m_mat_list.push_back(geo.second.mat);
             }
         }
 
@@ -337,7 +335,7 @@ void e8::bvh_path_space_layout::commit() {
         for (triangle const &tri : p.second.geometry->triangles()) {
             prims.push_back(primitive_details(tri, p.second.geometry.get(),
                                               geo2ind[p.second.geometry.get()],
-                                              mat2ind[p.second.mat.get()]));
+                                              mat2ind[p.second.mat]));
         }
     }
 

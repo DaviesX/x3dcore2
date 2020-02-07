@@ -34,6 +34,7 @@ class if_light : public if_operable_obj<if_light> {
     virtual e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const = 0;
     virtual e8util::vec3 radiance(e8util::vec3 const &w, e8util::vec3 const &n) const = 0;
     virtual e8util::vec3 power() const = 0;
+    virtual std::vector<if_geometry const *> geometries() const = 0;
     virtual std::unique_ptr<if_light> copy() const override = 0;
     virtual std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override = 0;
 
@@ -56,6 +57,7 @@ class area_light : public if_light {
     e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 power() const override;
+    std::vector<if_geometry const *> geometries() const override;
     std::unique_ptr<if_light> copy() const override;
     std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override;
 
@@ -79,6 +81,7 @@ class sky_light : public if_light {
     e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 power() const override;
+    std::vector<if_geometry const *> geometries() const override;
     std::unique_ptr<if_light> copy() const override;
     std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override;
 

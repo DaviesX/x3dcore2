@@ -47,7 +47,9 @@ e8::if_material::if_material(obj_id_t id, std::string const &name)
 
 e8::if_material::~if_material() {}
 
-e8::obj_protocol e8::if_material::protocol() const { return obj_protocol::obj_protocol_material; }
+e8::obj_protocol e8::if_material::protocol() const {
+    return e8::obj_protocol::obj_protocol_material;
+}
 
 e8::mat_fail_safe::mat_fail_safe(std::string const &name)
     : if_material(name), m_albedo{0.8f, 0.8f, 0.8f} {}

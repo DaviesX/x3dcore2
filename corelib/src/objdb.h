@@ -55,6 +55,8 @@ class objdb {
     /**
      * @brief find_obj Scan the entire object DB and look for objects with the specified name and
      * protocol.
+     * TODO: The search complexity is linear, but it's possible to make it more efficient via maps
+     * and lazy deletion.
      * @param name Name of the objects to filter for.
      * @param type Protocol of the objects to filter for.
      * @return All objects that satisfy the above constraints.

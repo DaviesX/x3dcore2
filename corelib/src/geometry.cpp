@@ -5,19 +5,23 @@
 
 e8::if_geometry::if_geometry(std::string const &name) : if_operable_obj<if_geometry>(name) {}
 
-e8::if_geometry::if_geometry(obj_id_t id, std::string const &name)
-    : if_operable_obj<if_geometry>(id, name) {}
+e8::if_geometry::if_geometry(if_geometry const &other)
+    : if_operable_obj<if_geometry>(other.id(), other.name()), m_mat(other.m_mat) {}
 
 e8::if_geometry::~if_geometry() {}
 
 e8::obj_protocol e8::if_geometry::protocol() const { return obj_protocol::obj_protocol_geometry; }
+
+void e8::if_geometry::attach_material(std::shared_ptr<if_material> const &mat) { m_mat = mat; }
+
+e8::if_material const *e8::if_geometry::material() const { return m_mat.get(); }
 
 // trimesh
 e8::trimesh::trimesh(std::string const &name) : if_geometry(name), m_aabb(0.0f, 0.0f) {}
 
 e8::trimesh::trimesh() : trimesh("Unknown_Trimesh_Geometry_Name") {}
 
-e8::trimesh::trimesh(trimesh const &mesh) : if_geometry(mesh.id(), mesh.name()) {
+e8::trimesh::trimesh(trimesh const &mesh) : if_geometry(mesh) {
     m_verts = mesh.m_verts;
     m_norms = mesh.m_norms;
     m_texcoords = mesh.m_texcoords;
