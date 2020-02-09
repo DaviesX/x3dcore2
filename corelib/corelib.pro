@@ -53,7 +53,8 @@ SOURCES += \
     test/testunidirectlt1renderer.cpp \
     test/testunidirectrenderer.cpp \
     src/cameracontainer.cpp \
-    src/worldspace.cpp
+    src/worldspace.cpp \
+    src/materialcontainer.cpp
 
 
 HEADERS += \
@@ -92,7 +93,8 @@ HEADERS += \
     test/testunidirectlt1renderer.h \
     test/testunidirectrenderer.h \
     src/cameracontainer.h \
-    src/worldspace.h
+    src/worldspace.h \
+    src/materialcontainer.h
 
 LIBS += -lvulkan
 
