@@ -50,28 +50,28 @@ cornell_balls cornell_box_path_space() {
 
     std::shared_ptr<e8::if_geometry> left_wall =
         e8util::wavefront_obj("testdata/cornellbox/left_wall.obj").load_geometry();
-    left_wall->add_child(red);
+    left_wall->attach_material(red);
     std::shared_ptr<e8::if_geometry> right_wall =
         e8util::wavefront_obj("testdata/cornellbox/right_wall.obj").load_geometry();
-    right_wall->add_child(green);
+    right_wall->attach_material(green);
     std::shared_ptr<e8::if_geometry> back_wall =
         e8util::wavefront_obj("testdata/cornellbox/back_wall.obj").load_geometry();
-    back_wall->add_child(white);
+    back_wall->attach_material(white);
     std::shared_ptr<e8::if_geometry> ceiling =
         e8util::wavefront_obj("testdata/cornellbox/ceiling.obj").load_geometry();
-    ceiling->add_child(white);
+    ceiling->attach_material(white);
     std::shared_ptr<e8::if_geometry> floor =
         e8util::wavefront_obj("testdata/cornellbox/floor.obj").load_geometry();
-    floor->add_child(white);
+    floor->attach_material(white);
     std::shared_ptr<e8::if_geometry> left_sphere =
         e8util::wavefront_obj("testdata/cornellbox/left_sphere.obj").load_geometry();
-    left_sphere->add_child(glossy);
+    left_sphere->attach_material(glossy);
     std::shared_ptr<e8::if_geometry> right_sphere =
         e8util::wavefront_obj("testdata/cornellbox/right_sphere.obj").load_geometry();
-    right_sphere->add_child(white);
+    right_sphere->attach_material(white);
     std::shared_ptr<e8::if_geometry> light_geo =
         e8util::wavefront_obj("testdata/cornellbox/light.obj").load_geometry();
-    light_geo->add_child(light_mat);
+    light_geo->attach_material(light_mat);
 
     scene.path_space->load(*left_wall, e8util::mat44_scale(1.0f));
     scene.path_space->load(*right_wall, e8util::mat44_scale(1.0f));
@@ -85,7 +85,6 @@ cornell_balls cornell_box_path_space() {
 
     std::shared_ptr<e8::if_light> light = std::make_shared<e8::area_light>(
         "light", light_geo, e8util::vec3{0.911f, 0.660f, 0.345f} * 15.0f);
-    light->add_child(light_geo);
 
     scene.light_sources->load(*light, e8util::mat44_scale(1.0f));
     scene.light_sources->commit();

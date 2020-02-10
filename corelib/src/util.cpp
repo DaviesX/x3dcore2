@@ -49,3 +49,10 @@ e8util::not_implemented_exception::not_implemented_exception(std::string const &
 
 e8util::not_implemented_exception::not_implemented_exception()
     : std::logic_error("Function has not been implemented.") {}
+
+e8util::entity_not_found_exception::entity_not_found_exception()
+    : std::out_of_range("Entity cannot be found.") {}
+
+e8util::entity_not_found_exception::entity_not_found_exception(std::string const &entity,
+                                                               std::string const &id)
+    : std::out_of_range("Entity " + entity + " cannot be found with the identifier " + id) {}

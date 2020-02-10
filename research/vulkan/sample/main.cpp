@@ -142,20 +142,20 @@ class TriangleSampleApplication {
         VkPhysicalDevice phs_dev = pick_physical_device(instance);
         QueueFamilyIndices indices = find_queue_families(phs_dev);
         std::cout << "Creating logical device..." << std::endl;
-        dev = create_logical_device(phs_dev, indices);
+        device = create_logical_device(phs_dev, indices);
         std::cout << "Obtaining grahpics queue..." << std::endl;
-        grahpics_queue = get_grahpics_queue(dev, indices);
+        grahpics_queue = get_grahpics_queue(device, indices);
     }
 
     void render() {}
 
     void cleanup() {
-        vkDestroyDevice(dev, nullptr);
+        vkDestroyDevice(device, nullptr);
         vkDestroyInstance(instance, nullptr);
     }
 
     VkInstance instance;
-    VkDevice dev;
+    VkDevice device;
     VkQueue grahpics_queue;
 };
 

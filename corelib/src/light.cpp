@@ -3,18 +3,16 @@
 #include <algorithm>
 #include <cmath>
 
-e8::if_light::if_light(std::string const &name) : m_name(name) {}
+e8::if_light::if_light(std::string const &name) : if_operable_obj<if_light>(name) {}
 
 e8::if_light::~if_light() {}
 
 void e8::if_light::set_scene_boundary(e8util::aabb const & /* bbox */) {}
 
-std::string e8::if_light::name() const { return m_name; }
-
 e8::obj_protocol e8::if_light::protocol() const { return obj_protocol::obj_protocol_light; }
 
 e8::if_light::if_light(obj_id_t id, std::string const &name)
-    : if_operable_obj<if_light>(id), m_name(name) {}
+    : if_operable_obj<if_light>(id, name) {}
 
 e8::area_light::area_light(std::string const &name, std::shared_ptr<if_geometry> const &geo,
                            e8util::vec3 const &rad)
@@ -74,16 +72,16 @@ e8util::vec3 e8::area_light::radiance(e8util::vec3 const &w, e8util::vec3 const 
 
 e8util::vec3 e8::area_light::power() const { return m_power; }
 
+std::vector<e8::if_geometry const *> e8::area_light::geometries() const {
+    return std::vector<e8::if_geometry const *>{m_geo.get()};
+}
+
 std::unique_ptr<e8::if_light> e8::area_light::copy() const {
     return std::make_unique<area_light>(*this);
 }
 
 std::unique_ptr<e8::if_light> e8::area_light::transform(e8util::mat44 const & /* trans */) const {
     return copy();
-}
-
-std::vector<e8::if_geometry const *> const e8::area_light::geometries() const {
-    return std::vector<if_geometry const *>{m_geo.get()};
 }
 
 e8::sky_light::sky_light(std::string const &name, e8util::vec3 const &rad)
@@ -152,14 +150,14 @@ e8util::vec3 e8::sky_light::radiance(e8util::vec3 const &w, e8util::vec3 const &
 
 e8util::vec3 e8::sky_light::power() const { return static_cast<float>(M_PI) * (m_dia * m_dia / 2); }
 
+std::vector<e8::if_geometry const *> e8::sky_light::geometries() const {
+    return std::vector<e8::if_geometry const *>();
+}
+
 std::unique_ptr<e8::if_light> e8::sky_light::copy() const {
     return std::make_unique<sky_light>(*this);
 }
 
 std::unique_ptr<e8::if_light> e8::sky_light::transform(e8util::mat44 const & /* trans */) const {
     return copy();
-}
-
-std::vector<e8::if_geometry const *> const e8::sky_light::geometries() const {
-    return std::vector<if_geometry const *>();
 }

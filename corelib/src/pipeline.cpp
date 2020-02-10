@@ -1,9 +1,9 @@
 #include "pipeline.h"
 #include "camera.h"
-#include "cinematics.h"
 #include "compositor.h"
 #include "frame.h"
 #include "lightsources.h"
+#include "cameracontainer.h"
 #include "obj.h"
 #include "pathspace.h"
 #include "pathtracerfact.h"
@@ -62,7 +62,7 @@ float e8::if_render_pipeline::time_elapsed() const {
 e8::pt_render_pipeline::pt_render_pipeline(if_frame *target) : if_render_pipeline(target) {
     m_com = std::make_unique<aces_compositor>(/*width=*/0, /*height=*/0);
     update_pipeline(config_protocol());
-    m_objdb.register_manager(std::make_unique<stationary_cam_controller>("default_cinematics"));
+    m_objdb.register_actuator(std::make_unique<camera_container>("default_cam_container"));
 }
 
 e8::pt_render_pipeline::~pt_render_pipeline() {}
@@ -70,13 +70,13 @@ e8::pt_render_pipeline::~pt_render_pipeline() {}
 void e8::pt_render_pipeline::render_frame() {
     m_com->resize(m_frame->width(), m_frame->height());
     m_objdb.push_updates();
-    if_cinematics *cinematics =
-        static_cast<if_cinematics *>(m_objdb.manager_of(obj_protocol::obj_protocol_camera));
+    camera_container *cinematics =
+        static_cast<camera_container *>(m_objdb.actuator_of(obj_protocol::obj_protocol_camera));
     if_path_space *path_space =
-        static_cast<if_path_space *>(m_objdb.manager_of(obj_protocol::obj_protocol_geometry));
+        static_cast<if_path_space *>(m_objdb.actuator_of(obj_protocol::obj_protocol_geometry));
     if_light_sources *light_sources =
-        static_cast<if_light_sources *>(m_objdb.manager_of(obj_protocol::obj_protocol_light));
-    if_camera *cur_cam = cinematics->main_cam();
+        static_cast<if_light_sources *>(m_objdb.actuator_of(obj_protocol::obj_protocol_light));
+    if_camera const *cur_cam = cinematics->active_cam();
     if (cur_cam != nullptr) {
         m_renderer->render(m_com.get(), *path_space, *light_sources, *cur_cam, m_samps_per_frame,
                            m_firefly_filter);
@@ -138,25 +138,25 @@ void e8::pt_render_pipeline::update_pipeline(e8util::flex_config const &diff) {
     diff.find_enum("path_space", [this](std::string const &path_space_type,
                                         e8util::flex_config const * /*config*/) {
         if (path_space_type == "linear") {
-            m_objdb.register_manager(std::make_unique<linear_path_space_layout>());
+            m_objdb.register_actuator(std::make_unique<linear_path_space_layout>());
         } else if (path_space_type == "static_bvh") {
-            m_objdb.register_manager(std::make_unique<bvh_path_space_layout>());
+            m_objdb.register_actuator(std::make_unique<bvh_path_space_layout>());
         }
     });
 
     diff.find_enum("light_sources", [this](std::string const &light_sources_type,
                                            e8util::flex_config const * /*config*/) {
         if (light_sources_type == "basic") {
-            m_objdb.register_manager(std::make_unique<basic_light_sources>());
+            m_objdb.register_actuator(std::make_unique<basic_light_sources>());
         }
     });
 
     diff.find_str("scene_file", [this](std::string const &scene_file) {
         m_objdb.clear();
         if (scene_file == "cornellball") {
-            m_objdb.manage_roots(e8util::cornell_scene().load_roots());
+            m_objdb.insert_roots(e8util::cornell_scene().load_roots());
         } else {
-            m_objdb.manage_roots(e8util::gltf_scene(scene_file).load_roots());
+            m_objdb.insert_roots(e8util::gltf_scene(scene_file).load_roots());
         }
     });
 

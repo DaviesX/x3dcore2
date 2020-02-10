@@ -1,16 +1,14 @@
 #include "camera.h"
 #include "tensor.h"
 
-e8::if_camera::if_camera(std::string const &name) : m_name(name) {}
+e8::if_camera::if_camera(std::string const &name) : if_operable_obj<if_camera>(name) {}
 
 e8::if_camera::~if_camera() {}
-
-std::string e8::if_camera::name() const { return m_name; }
 
 e8::obj_protocol e8::if_camera::protocol() const { return obj_protocol::obj_protocol_camera; }
 
 e8::if_camera::if_camera(obj_id_t id, std::string const &name)
-    : if_operable_obj<if_camera>(id), m_name(name) {}
+    : if_operable_obj<if_camera>(id, name) {}
 
 e8::pinhole_camera::pinhole_camera(float sensor_size, float f, float aspect)
     : e8::pinhole_camera("Unknown_PinholeCamera_Name", sensor_size, f, aspect)

@@ -40,16 +40,16 @@ float ggx_shadow(float alpha2, e8util::vec3 const &i, e8util::vec3 const &o,
 
 } // namespace
 
-e8::if_material::if_material(std::string const &name) : m_name(name) {}
+e8::if_material::if_material(std::string const &name) : if_copyable_obj<e8::if_material>(name) {}
 
 e8::if_material::if_material(obj_id_t id, std::string const &name)
-    : if_copyable_obj<e8::if_material>(id), m_name(name) {}
+    : if_copyable_obj<e8::if_material>(id, name) {}
 
 e8::if_material::~if_material() {}
 
-std::string e8::if_material::name() const { return m_name; }
-
-e8::obj_protocol e8::if_material::protocol() const { return obj_protocol::obj_protocol_material; }
+e8::obj_protocol e8::if_material::protocol() const {
+    return e8::obj_protocol::obj_protocol_material;
+}
 
 e8::mat_fail_safe::mat_fail_safe(std::string const &name)
     : if_material(name), m_albedo{0.8f, 0.8f, 0.8f} {}
@@ -231,7 +231,7 @@ e8util::vec3 e8::cook_torr::sample(e8util::rng *rng, float *cond_density, e8util
 
     // sample over the ggx distribution.
     e8util::vec3 u, v;
-    e8util::vec3_basis(n, u, v);
+    e8util::vec3_basis(n, &u, &v);
 
     float theta = 2.0f * static_cast<float>(M_PI) * rng->draw();
     float t = rng->draw();

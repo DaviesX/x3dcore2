@@ -42,14 +42,12 @@ class if_light : public if_operable_obj<if_light> {
      * @brief geometries some light sources emit radiance from physical geometries.
      * @return Any underlying geometries that emit light.
      */
-    virtual std::vector<if_geometry const *> const geometries() const = 0;
+    virtual std::vector<if_geometry const *> geometries() const = 0;
 
-    std::string name() const;
     obj_protocol protocol() const override;
 
   protected:
     if_light(obj_id_t id, std::string const &name);
-    std::string m_name;
 };
 
 class area_light : public if_light {
@@ -65,9 +63,9 @@ class area_light : public if_light {
     e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 power() const override;
+    std::vector<if_geometry const *> geometries() const override;
     std::unique_ptr<if_light> copy() const override;
     std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override;
-    std::vector<if_geometry const *> const geometries() const override;
 
   private:
     std::shared_ptr<if_geometry> m_geo;
@@ -89,9 +87,9 @@ class sky_light : public if_light {
     e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 radiance(e8util::vec3 const &w, e8util::vec3 const &n) const override;
     e8util::vec3 power() const override;
+    std::vector<if_geometry const *> geometries() const override;
     std::unique_ptr<if_light> copy() const override;
     std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override;
-    std::vector<if_geometry const *> const geometries() const override;
 
   private:
     e8util::vec3 m_rad;

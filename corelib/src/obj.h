@@ -39,10 +39,14 @@ class incompat_obj_exception : public std::exception {
 
 class if_obj;
 
-class if_obj_manager {
+/**
+ * @brief The if_obj_actuator class The back-end/driver that actually applies and carries out the
+ * state changes of the objects.
+ */
+class if_obj_actuator {
   public:
-    if_obj_manager();
-    virtual ~if_obj_manager();
+    if_obj_actuator();
+    virtual ~if_obj_actuator();
 
     virtual void load(if_obj const &obj, e8util::mat44 const &trans) = 0;
     virtual void unload(if_obj const &obj) = 0;
@@ -64,7 +68,12 @@ class if_obj {
     virtual obj_protocol protocol() const = 0;
 
     obj_id_t id() const;
+    std::string name() const;
+
     bool dirty() const;
+    bool active() const;
+    void activate();
+    void deactivate();
 
     void init_blueprint(std::vector<transform_stage_name_t> const &stages);
     bool update_stage(transform_stage_t const &stage);
@@ -76,23 +85,25 @@ class if_obj {
     std::set<std::shared_ptr<if_obj>> get_children() const;
 
   protected:
-    if_obj();
-    if_obj(obj_id_t id);
+    if_obj(std::string const &name);
+    if_obj(obj_id_t id, std::string const &name);
     void mark_dirty();
     void mark_clean();
 
   private:
     obj_id_t m_id;
+    std::string m_name;
     transform_blueprint_t m_blueprint;
     std::set<std::shared_ptr<if_obj>> m_children;
-    bool m_dirty;
-    char m_padding[7];
+    bool m_active = true;
+    bool m_dirty = true;
+    char m_padding[6];
 };
 
 template <class T> class if_copyable_obj : public if_obj {
   public:
-    if_copyable_obj() {}
-    if_copyable_obj(obj_id_t id) : if_obj(id) {}
+    if_copyable_obj(std::string const &name) : if_obj(name) {}
+    if_copyable_obj(obj_id_t id, std::string const &name) : if_obj(id, name) {}
     virtual ~if_copyable_obj() {}
 
     virtual obj_protocol protocol() const override = 0;
@@ -101,13 +112,14 @@ template <class T> class if_copyable_obj : public if_obj {
 
 class null_obj : public if_obj {
   public:
+    null_obj();
     obj_protocol protocol() const override;
 };
 
 template <class T> class if_operable_obj : public if_copyable_obj<T> {
   public:
-    if_operable_obj() {}
-    if_operable_obj(obj_id_t id) : if_copyable_obj<T>(id) {}
+    if_operable_obj(std::string const &name) : if_copyable_obj<T>(name) {}
+    if_operable_obj(obj_id_t id, std::string const &name) : if_copyable_obj<T>(id, name) {}
     virtual ~if_operable_obj() {}
 
     virtual obj_protocol protocol() const override = 0;

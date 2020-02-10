@@ -15,9 +15,9 @@ char const *e8::incompat_obj_exception::what() const noexcept {
         .c_str();
 }
 
-e8::if_obj_manager::if_obj_manager() {}
+e8::if_obj_actuator::if_obj_actuator() {}
 
-e8::if_obj_manager::~if_obj_manager() {}
+e8::if_obj_actuator::~if_obj_actuator() {}
 
 static e8::obj_id_t g_obj_id_counter = 101;
 static e8util::mutex_t g_obj_id_counter_mutex = e8util::mutex();
@@ -30,13 +30,15 @@ static e8::obj_id_t next_obj_id() {
     return next_id;
 }
 
-e8::if_obj::if_obj() : if_obj(next_obj_id()) {}
+e8::if_obj::if_obj(std::string const &name) : if_obj(next_obj_id(), name) {}
 
-e8::if_obj::if_obj(obj_id_t id) : m_id(id), m_dirty(true) {}
+e8::if_obj::if_obj(obj_id_t id, std::string const &name) : m_id(id), m_name(name), m_dirty(true) {}
 
 e8::if_obj::~if_obj() {}
 
 e8::obj_id_t e8::if_obj::id() const { return m_id; }
+
+std::string e8::if_obj::name() const { return m_name; }
 
 void e8::if_obj::init_blueprint(std::vector<transform_stage_name_t> const &stages) {
     assert(std::set<std::string>(stages.begin(), stages.end()).size() == stages.size());
@@ -71,10 +73,12 @@ e8util::mat44 e8::if_obj::blueprint_to_transform() const {
 }
 
 void e8::if_obj::mark_dirty() { m_dirty = true; }
-
 void e8::if_obj::mark_clean() { m_dirty = false; }
-
 bool e8::if_obj::dirty() const { return m_dirty; }
+
+bool e8::if_obj::active() const { return m_active; }
+void e8::if_obj::activate() { m_active = true; }
+void e8::if_obj::deactivate() { m_active = false; }
 
 bool e8::if_obj::add_child(std::shared_ptr<if_obj> const &child) {
     auto it = m_children.find(child);
@@ -107,5 +111,7 @@ std::vector<e8::if_obj *> e8::if_obj::get_children(obj_protocol const &interface
 }
 
 std::set<std::shared_ptr<e8::if_obj>> e8::if_obj::get_children() const { return m_children; }
+
+e8::null_obj::null_obj() : if_obj("null") {}
 
 e8::obj_protocol e8::null_obj::protocol() const { return obj_protocol_null; }

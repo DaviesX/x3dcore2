@@ -87,6 +87,12 @@ class not_implemented_exception : public std::logic_error {
     not_implemented_exception(std::string const &func_name);
 };
 
+class entity_not_found_exception : public std::out_of_range {
+  public:
+    entity_not_found_exception();
+    entity_not_found_exception(std::string const &entity, std::string const &id);
+};
+
 } // namespace e8util
 
 #endif // UTIL_H

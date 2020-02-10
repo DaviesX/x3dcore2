@@ -33,7 +33,11 @@ struct intersect_info {
 
 typedef std::map<if_material const *, std::vector<if_geometry const *>> batched_geometry;
 
-class if_path_space : public if_obj_manager {
+/**
+ * @brief The if_path_space class Handles how path interacts with the objects loaded into this
+ * class, hence enables one to know whether an arbitrary path is valid in the space of all path.
+ */
+class if_path_space : public if_obj_actuator {
   public:
     if_path_space();
     virtual ~if_path_space() override;
@@ -50,16 +54,16 @@ class if_path_space : public if_obj_manager {
 
   protected:
     struct binded_geometry {
-        binded_geometry(std::unique_ptr<if_geometry const> &geometry,
-                        std::unique_ptr<if_material const> &mat)
-            : geometry(std::move(geometry)), mat(std::move(mat)) {}
+        binded_geometry(std::unique_ptr<if_geometry const> &geometry, if_material const *mat)
+            : geometry(std::move(geometry)), mat(mat) {}
 
         std::unique_ptr<if_geometry const> geometry;
-        std::unique_ptr<if_material const> mat;
+        if_material const *mat;
     };
 
     std::map<obj_id_t, binded_geometry> m_geometries;
     e8util::aabb m_bound;
+    std::unique_ptr<if_material> m_fail_safe;
 };
 
 class linear_path_space_layout : public if_path_space {

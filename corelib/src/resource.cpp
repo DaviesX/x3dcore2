@@ -110,8 +110,9 @@ std::vector<std::shared_ptr<e8::if_obj>> e8util::cornell_scene::load_roots() {
     roots.push_back(cams);
     roots.push_back(obj_light);
     for (unsigned i = 0; i < geometries.size(); i++) {
-        geometries[i]->add_child(mats[i]);
+        geometries[i]->attach_material(mats[i]);
         roots.push_back(geometries[i]);
+        roots.push_back(mats[i]);
     }
     std::vector<std::shared_ptr<e8::if_light>> virtual_lights = cornell_scene_load_virtual_lights();
     for (unsigned i = 0; i < virtual_lights.size(); i++) {

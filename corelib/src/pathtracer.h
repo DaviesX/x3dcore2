@@ -191,7 +191,7 @@ class bidirect_mis_path_tracer : public if_path_tracer {
                                             if_light_sources const &light_sources) const;
 
   private:
-    static unsigned const m_max_path_len = 4;
+    static unsigned const m_max_path_len = 8;
 };
 
 } // namespace e8

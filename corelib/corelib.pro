@@ -48,12 +48,13 @@ SOURCES += \
     src/objdb.cpp \
     src/obj.cpp \
     src/pathspace.cpp \
-    src/cinematics.cpp \
     test/testobjdb.cpp \
     src/lightsources.cpp \
     test/testunidirectlt1renderer.cpp \
     test/testunidirectrenderer.cpp \
-    src/geobuf.cpp
+    src/cameracontainer.cpp \
+    src/worldspace.cpp \
+    src/materialcontainer.cpp
 
 
 HEADERS += \
@@ -87,12 +88,13 @@ HEADERS += \
     src/objdb.h \
     src/obj.h \
     src/pathspace.h \
-    src/cinematics.h \
     test/testobjdb.h \
     src/lightsources.h \
     test/testunidirectlt1renderer.h \
     test/testunidirectrenderer.h \
-    src/geobuf.h
+    src/cameracontainer.h \
+    src/worldspace.h \
+    src/materialcontainer.h
 
 LIBS += -lvulkan
 

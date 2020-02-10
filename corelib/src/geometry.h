@@ -1,6 +1,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include "material.h"
 #include "obj.h"
 #include "tensor.h"
 #include <memory>
@@ -9,7 +10,8 @@
 
 namespace e8 {
 
-typedef e8util::vec<3, unsigned> triangle;
+// Triangle face is defined by a group of 3 vertex indices.
+using triangle = e8util::vec<3, unsigned>;
 
 class if_geometry : public if_operable_obj<if_geometry> {
   public:
@@ -17,7 +19,19 @@ class if_geometry : public if_operable_obj<if_geometry> {
     virtual ~if_geometry() override;
 
     obj_protocol protocol() const override;
-    std::string name() const;
+
+    /**
+     * @brief attach_material Attach material to the geometry. If existing material has been
+     * attached, it will override with this new one.
+     * @param mat Material to be attached.
+     */
+    void attach_material(std::shared_ptr<if_material> const &mat);
+
+    /**
+     * @brief material Currently attached material.
+     * @return Pointer to the material attached, if it exists. If not, it returns the nullptr.
+     */
+    if_material const *material() const;
 
     /**
      * @brief vertices
@@ -38,6 +52,10 @@ class if_geometry : public if_operable_obj<if_geometry> {
      */
     virtual std::vector<e8util::vec2> const &texcoords() const = 0;
 
+    /**
+     * @brief triangles Triangle face indices.
+     * @return
+     */
     virtual std::vector<triangle> const &triangles() const = 0;
 
     struct surface_sample {
@@ -53,10 +71,10 @@ class if_geometry : public if_operable_obj<if_geometry> {
     virtual std::unique_ptr<if_geometry> transform(e8util::mat44 const &trans) const override = 0;
 
   protected:
-    if_geometry(obj_id_t id, std::string const &name);
+    if_geometry(if_geometry const &other);
 
   private:
-    std::string m_name;
+    std::shared_ptr<if_material> m_mat;
 };
 
 class trimesh : public if_geometry {
@@ -105,8 +123,8 @@ class triangle_fragment : public trimesh {
 
 class uv_sphere : public trimesh {
   public:
-    uv_sphere(std::string const &name, e8util::vec3 const &o, float r, unsigned const res);
-    uv_sphere(e8util::vec3 const &o, float r, unsigned const res);
+    uv_sphere(std::string const &name, e8util::vec3 const &o, float r, unsigned const res,
+              bool flip_normal = false);
     ~uv_sphere();
 };
 

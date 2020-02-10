@@ -59,7 +59,6 @@ class if_material : public if_copyable_obj<if_material> {
     if_material(std::string const &name);
     virtual ~if_material() override;
 
-    std::string name() const;
     obj_protocol protocol() const override;
 
     virtual std::unique_ptr<if_material> copy() const override = 0;
@@ -91,7 +90,6 @@ class if_material : public if_copyable_obj<if_material> {
 
   protected:
     if_material(obj_id_t id, std::string const &name);
-    std::string m_name;
 };
 
 /**

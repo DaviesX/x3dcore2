@@ -14,7 +14,7 @@ class if_geometry;
 
 namespace e8 {
 
-class if_light_sources : public if_obj_manager {
+class if_light_sources : public if_obj_actuator {
   public:
     if_light_sources();
     virtual ~if_light_sources() override;

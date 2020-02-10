@@ -12,9 +12,9 @@ void test::test_gltf_resource::run() const {
     e8util::gltf_scene res("res/polly/project_polly.gltf");
 
     e8::objdb db;
-    db.register_manager(std::make_unique<e8::linear_path_space_layout>());
+    db.register_actuator(std::make_unique<e8::linear_path_space_layout>());
     db.push_updates();
-    db.register_manager(std::make_unique<e8::bvh_path_space_layout>());
+    db.register_actuator(std::make_unique<e8::bvh_path_space_layout>());
     db.push_updates();
 
     //        std::vector<e8::if_geometry*> const& geos = res.load_geometries();
