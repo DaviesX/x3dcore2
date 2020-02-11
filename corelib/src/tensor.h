@@ -1002,6 +1002,10 @@ class rng {
 
 #define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 
+// Colors.
+typedef vec3 color3;
+typedef vec4 color4;
+
 } // namespace e8util
 
 #endif // TENSOR_H
