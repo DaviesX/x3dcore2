@@ -61,13 +61,8 @@ std::unique_ptr<e8::if_material> e8::mat_fail_safe::copy() const {
     return std::make_unique<mat_fail_safe>(*this);
 }
 
-e8util::vec3 eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
-                  e8util::vec3 const &i);
-e8util::vec3 sample(e8util::rng *rng, float *cond_density, e8util::vec2 const &uv,
-                    e8util::vec3 const &n, e8util::vec3 const &o);
-
-e8util::vec3 e8::mat_fail_safe::eval(e8util::vec2 const & /*uv*/, e8util::vec3 const & /*n*/,
-                                     e8util::vec3 const & /*o*/, e8util::vec3 const & /*i*/) const {
+e8::color e8::mat_fail_safe::eval(e8util::vec2 const & /*uv*/, e8util::vec3 const & /*n*/,
+                                  e8util::vec3 const & /*o*/, e8util::vec3 const & /*i*/) const {
     return m_albedo * (1.0f / static_cast<float>(M_PI));
 }
 
@@ -91,8 +86,8 @@ std::unique_ptr<e8::if_material> e8::mat_mixture::copy() const {
     return std::make_unique<mat_mixture>(*this);
 }
 
-e8util::vec3 e8::mat_mixture::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
-                                   e8util::vec3 const &o, e8util::vec3 const &i) const {
+e8::color e8::mat_mixture::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
+                                e8util::vec3 const &o, e8util::vec3 const &i) const {
     return m_ratio * m_mat_0->eval(uv, n, o, i) + (1 - m_ratio) * m_mat_1->eval(uv, n, o, i);
 }
 
@@ -109,8 +104,8 @@ e8util::vec3 e8::mat_mixture::sample(e8util::rng *rng, float *cond_density, e8ut
     return i;
 }
 
-e8::oren_nayar::oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness,
-                           std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
+e8::oren_nayar::oren_nayar(std::string const &name, color const &albedo, float roughness,
+                           std::shared_ptr<texture_map<color>> const &albedo_map,
                            std::shared_ptr<texture_map<float>> const &roughness_map)
     : if_material(name), m_albedo_map(albedo_map), m_roughness_map(roughness_map), m_albedo(albedo),
       m_sigma(roughness) {
@@ -127,7 +122,7 @@ std::unique_ptr<e8::if_material> e8::oren_nayar::copy() const {
     return std::make_unique<oren_nayar>(*this);
 }
 
-e8util::vec3 e8::oren_nayar::albedo(e8util::vec2 const &uv) const {
+e8::color e8::oren_nayar::albedo(e8util::vec2 const &uv) const {
     if (m_albedo_map != nullptr) {
         return m_albedo_map->map(uv);
     } else {
@@ -135,8 +130,8 @@ e8util::vec3 e8::oren_nayar::albedo(e8util::vec2 const &uv) const {
     }
 }
 
-e8util::vec3 e8::oren_nayar::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
-                                  e8util::vec3 const &o, e8util::vec3 const &i) const {
+e8::color e8::oren_nayar::eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+                               e8util::vec3 const &i) const {
     // Clamp within the range of cosine to avoid numerical problem.
     float cos_thei = CLAMP(i.inner(n), 0.0f, 1.0f);
     float cos_theo = CLAMP(o.inner(n), 0.0f, 1.0f);
@@ -172,9 +167,9 @@ e8util::vec3 e8::oren_nayar::sample(e8util::rng *rng, float *cond_density,
     return i;
 }
 
-e8::cook_torr::cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness,
+e8::cook_torr::cook_torr(std::string const &name, color const &albedo, float roughness,
                          std::complex<float> const &ior,
-                         std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map,
+                         std::shared_ptr<texture_map<color>> const &albedo_map,
                          std::shared_ptr<texture_map<float>> const &roughness_map)
     : if_material(name), m_albedo_map(albedo_map), m_roughness_map(roughness_map), m_albedo(albedo),
       m_ior(ior), m_alpha2(2 * roughness * roughness) {}
@@ -187,7 +182,7 @@ std::unique_ptr<e8::if_material> e8::cook_torr::copy() const {
     return std::make_unique<cook_torr>(*this);
 }
 
-e8util::vec3 e8::cook_torr::albedo(e8util::vec2 const &uv) const {
+e8::color e8::cook_torr::albedo(e8util::vec2 const &uv) const {
     return m_albedo_map != nullptr ? m_albedo_map->map(uv) : m_albedo;
 }
 
@@ -200,8 +195,8 @@ float e8::cook_torr::alpha2(e8util::vec2 const &uv) const {
     }
 }
 
-e8util::vec3 e8::cook_torr::eval(e8util::vec2 const &uv, e8util::vec3 const &n,
-                                 e8util::vec3 const &o, e8util::vec3 const &i) const {
+e8::color e8::cook_torr::eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+                              e8util::vec3 const &i) const {
     float cos_o_the = std::max(0.0f, n.inner(o));
     float cos_i_the = std::max(0.0f, n.inner(i));
     if (e8util::equals(cos_i_the, 0.0f) || e8util::equals(cos_o_the, 0.0f)) {

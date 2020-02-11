@@ -10,6 +10,8 @@
 
 namespace e8 {
 
+using color = e8util::vec3;
+
 /**
  * @brief The texture_map class Generic texture map. It represents a 2D texture containing arbitrary
  * content in each texel. This 2D texture is continously addressable.
@@ -72,8 +74,8 @@ class if_material : public if_copyable_obj<if_material> {
      * @param i Incident path.
      * @return Reflected radiance.
      */
-    virtual e8util::vec3 eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
-                              e8util::vec3 const &i) const = 0;
+    virtual color eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+                       e8util::vec3 const &i) const = 0;
 
     /**
      * @brief sample Compute a incident path sample given the normal and reflected path.
@@ -104,13 +106,13 @@ class mat_fail_safe : public if_material {
 
     std::unique_ptr<if_material> copy() const override;
 
-    e8util::vec3 eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
-                      e8util::vec3 const &i) const override;
+    color eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+               e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng *rng, float *cond_density, e8util::vec2 const &uv,
                         e8util::vec3 const &n, e8util::vec3 const &o) const override;
 
   private:
-    e8util::vec3 m_albedo;
+    color m_albedo;
     unsigned m_padding;
 };
 
@@ -125,8 +127,8 @@ class mat_mixture : public if_material {
 
     std::unique_ptr<if_material> copy() const override;
 
-    e8util::vec3 eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
-                      e8util::vec3 const &i) const override;
+    color eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+               e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng *rng, float *cond_density, e8util::vec2 const &uv,
                         e8util::vec3 const &n, e8util::vec3 const &o) const override;
 
@@ -144,24 +146,24 @@ class mat_mixture : public if_material {
 class oren_nayar : public if_material {
   public:
     oren_nayar(std::string const &name, e8util::vec3 const &albedo, float roughness,
-               std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map = nullptr,
+               std::shared_ptr<texture_map<color>> const &albedo_map = nullptr,
                std::shared_ptr<texture_map<float>> const &roughness_map = nullptr);
     oren_nayar(oren_nayar const &other);
 
     std::unique_ptr<if_material> copy() const override;
 
-    e8util::vec3 eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
-                      e8util::vec3 const &i) const override;
+    color eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+               e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng *rng, float *cond_density, e8util::vec2 const &uv,
                         e8util::vec3 const &n, e8util::vec3 const &o) const override;
 
   private:
-    e8util::vec3 albedo(e8util::vec2 const &uv) const;
+    color albedo(e8util::vec2 const &uv) const;
 
-    std::shared_ptr<texture_map<e8util::vec3>> m_albedo_map;
+    std::shared_ptr<texture_map<color>> m_albedo_map;
     std::shared_ptr<texture_map<float>> m_roughness_map;
 
-    e8util::vec3 m_albedo;
+    color m_albedo;
     float m_sigma;
     float m_a;
     float m_b;
@@ -175,25 +177,25 @@ class cook_torr : public if_material {
   public:
     cook_torr(std::string const &name, e8util::vec3 const &albedo, float roughness,
               std::complex<float> const &ior,
-              std::shared_ptr<texture_map<e8util::vec3>> const &albedo_map = nullptr,
+              std::shared_ptr<texture_map<color>> const &albedo_map = nullptr,
               std::shared_ptr<texture_map<float>> const &roughness_map = nullptr);
     cook_torr(cook_torr const &other);
 
     std::unique_ptr<if_material> copy() const override;
 
-    e8util::vec3 eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
-                      e8util::vec3 const &i) const override;
+    color eval(e8util::vec2 const &uv, e8util::vec3 const &n, e8util::vec3 const &o,
+               e8util::vec3 const &i) const override;
     e8util::vec3 sample(e8util::rng *rng, float *cond_density, e8util::vec2 const &uv,
                         e8util::vec3 const &n, e8util::vec3 const &o) const override;
 
   private:
-    e8util::vec3 albedo(e8util::vec2 const &uv) const;
+    color albedo(e8util::vec2 const &uv) const;
     float alpha2(e8util::vec2 const &uv) const;
 
-    std::shared_ptr<texture_map<e8util::vec3>> m_albedo_map;
+    std::shared_ptr<texture_map<color>> m_albedo_map;
     std::shared_ptr<texture_map<float>> m_roughness_map;
 
-    e8util::vec3 m_albedo;
+    color m_albedo;
     std::complex<float> m_ior;
     float m_alpha2;
 };
