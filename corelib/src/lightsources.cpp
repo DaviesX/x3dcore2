@@ -26,7 +26,7 @@ void e8::if_light_sources::unload(if_obj const &obj) {
 
 e8::obj_protocol e8::if_light_sources::support() const { return obj_protocol::obj_protocol_light; }
 
-e8::if_light const *e8::if_light_sources::obj_light(if_obj const &obj) const {
+e8::if_light const *e8::if_light_sources::obj_light(if_geometry const &obj) const {
     auto it = m_obj_lights_lookup.find(obj.id());
     if (it != m_obj_lights_lookup.end()) {
         return it->second;

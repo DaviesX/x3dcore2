@@ -300,12 +300,11 @@ std::vector<std::shared_ptr<e8::if_obj>> e8util::wavefront_obj::load_roots() {
 }
 
 void e8util::wavefront_obj::save_roots(std::vector<std::shared_ptr<e8::if_obj>> const &roots) {
-    e8::visit_all_filtered(
-        roots.begin(), roots.end(),
-        [this](e8::if_obj const *obj) {
-            this->save_geometry(static_cast<e8::if_geometry const *>(obj));
-        },
-        std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
+    e8::visit_all_filtered(roots.begin(), roots.end(),
+                           [this](e8::if_obj const *obj) {
+                               this->save_geometry(static_cast<e8::if_geometry const *>(obj));
+                           },
+                           std::set<e8::obj_protocol>{e8::obj_protocol::obj_protocol_geometry});
 }
 
 class e8util::gltf_scene_internal {
@@ -360,12 +359,10 @@ e8util::gltf_scene_internal::gltf_scene_internal(std::string const &location) {
     }
 
     if (!res) {
-        throw e8util::res_io_exception("Failed to load " + location +
-                                       "\n"
-                                       "\tError: " +
-                                       err +
-                                       "\n"
-                                       "\tWarning: " +
+        throw e8util::res_io_exception("Failed to load " + location + "\n"
+                                                                      "\tError: " +
+                                       err + "\n"
+                                             "\tWarning: " +
                                        warn);
     }
 }

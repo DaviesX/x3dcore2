@@ -22,8 +22,9 @@ class if_light_sources : public if_obj_actuator {
 
     void load(if_obj const &obj, e8util::mat44 const &trans) override;
     void unload(if_obj const &obj) override;
+
     obj_protocol support() const override;
-    if_light const *obj_light(if_obj const &obj) const;
+    if_light const *obj_light(if_geometry const &obj) const;
 
     virtual void commit() override = 0;
     virtual if_light const *sample_light(e8util::rng *rng, float *pdf) const = 0;
@@ -31,7 +32,7 @@ class if_light_sources : public if_obj_actuator {
     get_relevant_lights(e8util::frustum const &frustum) const = 0;
 
   protected:
-    // Store all loaded lights.
+    // Store all loaded lights, keyed by light ID.
     std::map<obj_id_t, std::unique_ptr<if_light>> m_lights;
 
     // Fast lookup for lights that are attached an object.

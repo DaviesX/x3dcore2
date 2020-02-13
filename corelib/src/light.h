@@ -34,9 +34,15 @@ class if_light : public if_operable_obj<if_light> {
     virtual e8util::vec3 projected_radiance(e8util::vec3 const &w, e8util::vec3 const &n) const = 0;
     virtual e8util::vec3 radiance(e8util::vec3 const &w, e8util::vec3 const &n) const = 0;
     virtual e8util::vec3 power() const = 0;
-    virtual std::vector<if_geometry const *> geometries() const = 0;
+
     virtual std::unique_ptr<if_light> copy() const override = 0;
     virtual std::unique_ptr<if_light> transform(e8util::mat44 const &trans) const override = 0;
+
+    /**
+     * @brief geometries some light sources emit radiance from physical geometries.
+     * @return Any underlying geometries that emit light.
+     */
+    virtual std::vector<if_geometry const *> geometries() const = 0;
 
     obj_protocol protocol() const override;
 
