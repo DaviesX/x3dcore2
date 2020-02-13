@@ -1,5 +1,6 @@
 #include "src/geometry.h"
 #include "src/lightsources.h"
+#include "src/materialcontainer.h"
 #include "src/pathspace.h"
 #include "src/pathtracer.h"
 #include "src/resource.h"
@@ -25,11 +26,14 @@ struct sphere_scene {
         std::shared_ptr<e8::if_material> material =
             std::make_shared<e8::oren_nayar>("material", albedo, /*roughness=*/0.0f);
 
+        mats = std::make_unique<e8::default_material_container>();
+        mats->load(*material, e8util::mat44_scale(1.0f));
+
         std::shared_ptr<e8::uv_sphere> sphere = std::make_shared<e8::uv_sphere>(
             /*name=*/"sphere", /*o=*/e8util::vec3{0.0f, 0.0f, 0.0f}, /*r=*/10.0f,
             /*res=*/30, /*flip_normal=*/true);
         sphere->update();
-        sphere->attach_material(material);
+        sphere->attach_material(material->id());
 
         path_space = std::make_unique<e8::bvh_path_space_layout>();
         path_space->load(*sphere, e8util::mat44_scale(1.0f));
@@ -47,6 +51,7 @@ struct sphere_scene {
     e8util::vec3 light_rad = 1.0f;
 
     std::unique_ptr<e8::if_path_space> path_space;
+    std::unique_ptr<e8::if_material_container> mats;
     std::unique_ptr<e8::if_light_sources> light_sources;
 };
 
@@ -63,8 +68,9 @@ void inner_sphere_validation(e8::if_path_tracer const &tracer, unsigned num_samp
             std::vector<e8util::ray>{r}, *scene.path_space, *scene.light_sources);
 
         for (unsigned j = 0; j < num_samps_per_dir; j++) {
-            std::vector<e8util::vec3> estimate = tracer.sample(
-                rn, std::vector<e8util::ray>{r}, hits, *scene.path_space, *scene.light_sources);
+            std::vector<e8util::vec3> estimate =
+                tracer.sample(rn, std::vector<e8util::ray>{r}, hits, *scene.path_space, *scene.mats,
+                              *scene.light_sources);
             QVERIFY(estimate.size() == 1);
             QVERIFY2(estimate[0](0) > 0 && estimate[0](1) > 0 && estimate[0](2) > 0,
                      ("At " + std::to_string(i) + "|" + std::to_string(j)).c_str());

@@ -5,6 +5,7 @@
 #include "obj.h"
 #include "tensor.h"
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -21,17 +22,17 @@ class if_geometry : public if_operable_obj<if_geometry> {
     obj_protocol protocol() const override;
 
     /**
-     * @brief attach_material Attach material to the geometry. If existing material has been
-     * attached, it will override with this new one.
-     * @param mat Material to be attached.
+     * @brief attach_material Attach ID of the material to the geometry. If existing material has
+     * been attached, it will override with this new one.
+     * @param mat_id Material ID to be attached.
      */
-    void attach_material(std::shared_ptr<if_material> const &mat);
+    void attach_material(obj_id_t mat_id);
 
     /**
-     * @brief material Currently attached material.
-     * @return Pointer to the material attached, if it exists. If not, it returns the nullptr.
+     * @brief material_id ID of the currently attached material.
+     * @return ID to the material attached, if it exists. If not, it returns empty.
      */
-    if_material const *material() const;
+    std::optional<obj_id_t> material_id() const;
 
     /**
      * @brief vertices
@@ -74,7 +75,7 @@ class if_geometry : public if_operable_obj<if_geometry> {
     if_geometry(if_geometry const &other);
 
   private:
-    std::shared_ptr<if_material> m_mat;
+    std::optional<e8::obj_id_t> m_mat_id;
 };
 
 class trimesh : public if_geometry {

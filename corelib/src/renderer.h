@@ -3,6 +3,7 @@
 
 #include "camera.h"
 #include "frame.h"
+#include "materialcontainer.h"
 #include "pathspace.h"
 #include "pathtracer.h"
 #include "pathtracerfact.h"
@@ -54,8 +55,8 @@ class pt_image_renderer {
      * @return Convergence statistics (see above).
      */
     numerical_stats render(if_compositor *compositor, if_path_space const &path_space,
-                           if_light_sources const &light_sources, if_camera const &cam,
-                           unsigned num_samps, bool firefly_filter);
+                           if_material_container const &mats, if_light_sources const &light_sources,
+                           if_camera const &cam, unsigned num_samps, bool firefly_filter);
 
   private:
     /**
@@ -63,7 +64,7 @@ class pt_image_renderer {
      */
     struct sampling_task_data : public e8util::if_task_storage {
         sampling_task_data(e8util::data_id_t id, if_path_space const &path_space,
-                           if_light_sources const &light_sources,
+                           if_material_container const &mats, if_light_sources const &light_sources,
                            std::vector<e8util::ray> const &rays,
                            if_path_tracer::first_hits const &first_hits, unsigned num_samps,
                            unsigned width, unsigned height, bool firefly_filter);
@@ -71,6 +72,7 @@ class pt_image_renderer {
         ~sampling_task_data() override = default;
 
         if_path_space const &path_space;
+        if_material_container const &mats;
         if_light_sources const &light_sources;
 
         // All rays shooting out from the camera sensor.

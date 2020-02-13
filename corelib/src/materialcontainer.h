@@ -3,8 +3,9 @@
 
 #include "material.h"
 #include "obj.h"
-#include <map>
 #include <memory>
+#include <optional>
+#include <unordered_map>
 
 namespace e8 {
 
@@ -19,9 +20,10 @@ class if_material_container : public if_obj_actuator {
     /**
      * @brief find Fast lookup the loaded materials by an ID.
      * @param mat_id ID of the material to look for.
-     * @return Pointer to the material if it exits. If not, returns the nullptr.
+     * @return Reference to the material if it exits. If not, returns the reference to a failed safe
+     * material.
      */
-    if_material *find(obj_id_t mat_id) const;
+    if_material const &find(std::optional<obj_id_t> mat_id) const;
 
     void load(if_obj const &obj, e8util::mat44 const &trans) override;
     void unload(if_obj const &obj) override;
@@ -30,7 +32,9 @@ class if_material_container : public if_obj_actuator {
 
   protected:
     // Stores all the materials.
-    std::map<obj_id_t, std::shared_ptr<if_material>> m_mats;
+    std::unordered_map<obj_id_t, std::shared_ptr<if_material>> m_mats;
+    // Failed safe material.
+    mat_fail_safe m_fail_safe;
 };
 
 /**

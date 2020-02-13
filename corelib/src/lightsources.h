@@ -5,6 +5,7 @@
 #include "tensor.h"
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace e8 {
@@ -34,7 +35,7 @@ class if_light_sources : public if_obj_actuator {
     std::map<obj_id_t, std::unique_ptr<if_light>> m_lights;
 
     // Fast lookup for lights that are attached an object.
-    std::map<obj_id_t, if_light *const> m_obj_lights_lookup;
+    std::unordered_map<obj_id_t, if_light *const> m_obj_lights_lookup;
 };
 
 class basic_light_sources : public if_light_sources {

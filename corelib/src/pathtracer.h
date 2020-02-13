@@ -1,17 +1,13 @@
 #ifndef IF_PATHTRACER_H
 #define IF_PATHTRACER_H
 
+#include "light.h"
+#include "lightsources.h"
+#include "materialcontainer.h"
 #include "pathspace.h"
 #include "tensor.h"
 #include <iosfwd>
 #include <vector>
-
-namespace e8 {
-class if_light;
-}
-namespace e8 {
-class if_light_sources;
-}
 
 namespace e8 {
 
@@ -57,11 +53,13 @@ class if_path_tracer {
      * hits.
      * @param path_space Defines the set of possible paths.
      * @param light_sources The set of light sources.
+     * @param mats Material container.
      * @return A sample of the measurement function estimate.
      */
     virtual std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                              first_hits const &first_hits,
                                              if_path_space const &path_space,
+                                             if_material_container const &mats,
                                              if_light_sources const &light_sources) const = 0;
 };
 
@@ -75,6 +73,7 @@ class position_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 };
 
@@ -88,6 +87,7 @@ class normal_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 };
 
@@ -102,6 +102,7 @@ class direct_path_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 };
 
@@ -116,12 +117,14 @@ class unidirect_path_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 
   protected:
     e8util::vec3 sample_indirect_illum(e8util::rng &rng, e8util::vec3 const &o,
                                        e8::intersect_info const &vert,
                                        if_path_space const &path_space,
+                                       if_material_container const &mats,
                                        if_light_sources const &light_sources, unsigned depth) const;
 };
 
@@ -136,12 +139,14 @@ class unidirect_lt1_path_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 
   protected:
     e8util::vec3 sample_indirect_illum(e8util::rng &rng, e8util::vec3 const &o,
                                        e8::intersect_info const &vert,
                                        if_path_space const &path_space,
+                                       if_material_container const &mats,
                                        if_light_sources const &light_sources, unsigned depth,
                                        unsigned n, unsigned m) const;
 };
@@ -157,17 +162,18 @@ class bidirect_lt2_path_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 
   protected:
-    e8util::vec3 join_with_light_paths(e8util::rng &rng, e8util::vec3 const &o,
-                                       e8::intersect_info const &vert,
-                                       if_path_space const &path_space,
-                                       if_light_sources const &light_sources,
-                                       unsigned cam_path_len) const;
+    e8util::vec3
+    join_with_light_paths(e8util::rng &rng, e8util::vec3 const &o, e8::intersect_info const &vert,
+                          if_path_space const &path_space, if_material_container const &mats,
+                          if_light_sources const &light_sources, unsigned cam_path_len) const;
     e8util::vec3 sample_indirect_illum(e8util::rng &rng, e8util::vec3 const &o,
                                        e8::intersect_info const &vert,
                                        if_path_space const &path_space,
+                                       if_material_container const &mats,
                                        if_light_sources const &light_sources, unsigned depth) const;
 };
 
@@ -183,6 +189,7 @@ class bidirect_mis_path_tracer : public if_path_tracer {
 
     std::vector<e8util::vec3> sample(e8util::rng &rng, std::vector<e8util::ray> const &rays,
                                      first_hits const &first_hits, if_path_space const &path_space,
+                                     if_material_container const &mats,
                                      if_light_sources const &light_sources) const override;
 
   protected:

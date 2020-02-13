@@ -1,4 +1,5 @@
 #include "src/camera.h"
+#include "src/cameracontainer.h"
 #include "src/compositor.h"
 #include "src/frame.h"
 #include "src/lightsources.h"
@@ -29,6 +30,7 @@ struct cornell_balls {
 
     std::unique_ptr<e8::if_path_space> path_space;
     std::unique_ptr<e8::if_light_sources> light_sources;
+    std::unique_ptr<e8::if_material_container> mats;
     std::unique_ptr<e8::if_camera> camera;
 };
 
@@ -36,6 +38,7 @@ cornell_balls cornell_box_path_space() {
     cornell_balls scene;
     scene.path_space = std::make_unique<e8::bvh_path_space_layout>();
     scene.light_sources = std::make_unique<e8::basic_light_sources>();
+    scene.mats = std::make_unique<e8::default_material_container>();
 
     std::shared_ptr<e8::if_material> white =
         std::make_shared<e8::oren_nayar>("white", e8util::vec3({0.725f, 0.710f, 0.680f}), 0.078f);
@@ -48,30 +51,44 @@ cornell_balls cornell_box_path_space() {
     std::shared_ptr<e8::if_material> light_mat =
         std::make_shared<e8::oren_nayar>("light", e8util::vec3({0, 0, 0}), 0.078f);
 
+    scene.mats->load(*white, e8util::mat44_scale(1.0f));
+    scene.mats->load(*red, e8util::mat44_scale(1.0f));
+    scene.mats->load(*green, e8util::mat44_scale(1.0f));
+    scene.mats->load(*glossy, e8util::mat44_scale(1.0f));
+    scene.mats->load(*light_mat, e8util::mat44_scale(1.0f));
+    scene.mats->commit();
+
     std::shared_ptr<e8::if_geometry> left_wall =
         e8util::wavefront_obj("testdata/cornellbox/left_wall.obj").load_geometry();
-    left_wall->attach_material(red);
+    left_wall->attach_material(red->id());
+
     std::shared_ptr<e8::if_geometry> right_wall =
         e8util::wavefront_obj("testdata/cornellbox/right_wall.obj").load_geometry();
-    right_wall->attach_material(green);
+    right_wall->attach_material(green->id());
+
     std::shared_ptr<e8::if_geometry> back_wall =
         e8util::wavefront_obj("testdata/cornellbox/back_wall.obj").load_geometry();
-    back_wall->attach_material(white);
+    back_wall->attach_material(white->id());
+
     std::shared_ptr<e8::if_geometry> ceiling =
         e8util::wavefront_obj("testdata/cornellbox/ceiling.obj").load_geometry();
-    ceiling->attach_material(white);
+    ceiling->attach_material(white->id());
+
     std::shared_ptr<e8::if_geometry> floor =
         e8util::wavefront_obj("testdata/cornellbox/floor.obj").load_geometry();
-    floor->attach_material(white);
+    floor->attach_material(white->id());
+
     std::shared_ptr<e8::if_geometry> left_sphere =
         e8util::wavefront_obj("testdata/cornellbox/left_sphere.obj").load_geometry();
-    left_sphere->attach_material(glossy);
+    left_sphere->attach_material(glossy->id());
+
     std::shared_ptr<e8::if_geometry> right_sphere =
         e8util::wavefront_obj("testdata/cornellbox/right_sphere.obj").load_geometry();
-    right_sphere->attach_material(white);
+    right_sphere->attach_material(white->id());
+
     std::shared_ptr<e8::if_geometry> light_geo =
         e8util::wavefront_obj("testdata/cornellbox/light.obj").load_geometry();
-    light_geo->attach_material(light_mat);
+    light_geo->attach_material(light_mat->id());
 
     scene.path_space->load(*left_wall, e8util::mat44_scale(1.0f));
     scene.path_space->load(*right_wall, e8util::mat44_scale(1.0f));
@@ -105,7 +122,8 @@ void tst_renderer::pt_render_cornel_balls() {
         /*num_threads=*/1);
     for (unsigned k = 0; k < 10; k++) {
         e8::clamp_compositor compositor(/*width=*/800, /*height=*/600);
-        renderer.render(&compositor, *scene.path_space, *scene.light_sources, *scene.camera,
+        renderer.render(&compositor, *scene.path_space, *scene.mats, *scene.light_sources,
+                        *scene.camera,
                         /*num_samps=*/1, /*firefly_filter=*/false);
 
         e8util::vec3 irradiance;

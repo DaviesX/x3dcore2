@@ -1,12 +1,19 @@
 #include "materialcontainer.h"
 
-e8::if_material_container::if_material_container() {}
+e8::if_material_container::if_material_container() : m_fail_safe("fail_safe") {}
 
 e8::if_material_container::~if_material_container() {}
 
-e8::if_material *e8::if_material_container::find(obj_id_t mat_id) const {
-    auto it = m_mats.find(mat_id);
-    return it != m_mats.end() ? it->second.get() : nullptr;
+e8::if_material const &e8::if_material_container::find(std::optional<obj_id_t> mat_id) const {
+    if (!mat_id.has_value()) {
+        return m_fail_safe;
+    }
+
+    auto it = m_mats.find(*mat_id);
+    if (it == m_mats.end()) {
+        return m_fail_safe;
+    }
+    return *it->second;
 }
 
 void e8::if_material_container::load(if_obj const &obj, e8util::mat44 const & /*trans*/) {

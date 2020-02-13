@@ -1,4 +1,4 @@
-#ifndef SCENE_H
+﻿#ifndef SCENE_H
 #define SCENE_H
 
 #include "geometry.h"
@@ -17,10 +17,10 @@ namespace e8 {
 // Represents a ray-surface intersection. The intersection is valid only when geo is present.
 struct intersect_info {
     intersect_info(float t, e8util::vec3 const &vertex, e8util::vec3 const &normal,
-                   e8util::vec2 const &uv, if_geometry const *geo, if_material const *mat)
-        : geo(geo), t(t), vertex(vertex), normal(normal), uv(uv), mat(mat) {}
+                   e8util::vec2 const &uv, if_geometry const *geo)
+        : geo(geo), t(t), vertex(vertex), normal(normal), uv(uv) {}
 
-    intersect_info() : geo(nullptr), mat(nullptr) {}
+    intersect_info() : geo(nullptr) {}
     bool valid() const { return geo != nullptr; }
 
     if_geometry const *geo;
@@ -28,7 +28,6 @@ struct intersect_info {
     e8util::vec3 vertex;
     e8util::vec3 normal;
     e8util::vec2 uv;
-    if_material const *mat;
 };
 
 typedef std::map<if_material const *, std::vector<if_geometry const *>> batched_geometry;
@@ -53,17 +52,8 @@ class if_path_space : public if_obj_actuator {
     void unload(if_obj const &obj) override;
 
   protected:
-    struct binded_geometry {
-        binded_geometry(std::unique_ptr<if_geometry const> &geometry, if_material const *mat)
-            : geometry(std::move(geometry)), mat(mat) {}
-
-        std::unique_ptr<if_geometry const> geometry;
-        if_material const *mat;
-    };
-
-    std::map<obj_id_t, binded_geometry> m_geometries;
+    std::map<obj_id_t, std::unique_ptr<if_geometry const>> m_geometries;
     e8util::aabb m_bound;
-    std::unique_ptr<if_material> m_fail_safe;
 };
 
 class linear_path_space_layout : public if_path_space {
@@ -94,18 +84,17 @@ class bvh_path_space_layout : public linear_path_space_layout {
 
   private:
     struct primitive {
-        primitive(triangle const &tri, unsigned i_geo, unsigned short i_mat)
-            : tri(tri), i_geo(i_geo), i_mat(i_mat) {}
+        primitive(triangle const &tri, unsigned i_geo) : tri(tri), i_geo(i_geo) {}
 
         triangle tri;
+
+        // Stores index instead of pointer to save cache space.
         unsigned int i_geo;
-        unsigned short i_mat;
     };
 
     struct primitive_details : public primitive {
-        primitive_details(triangle const &tri, e8::if_geometry const *geo, unsigned i_geo,
-                          unsigned short i_mat)
-            : primitive(tri, i_geo, i_mat) {
+        primitive_details(triangle const &tri, e8::if_geometry const *geo, unsigned i_geo)
+            : primitive(tri, i_geo) {
             std::vector<e8util::vec3> const &verts = geo->vertices();
             e8util::vec3 const &v0 = verts[tri(0)];
             e8util::vec3 const &v1 = verts[tri(1)];
@@ -191,8 +180,9 @@ class bvh_path_space_layout : public linear_path_space_layout {
     std::vector<flattened_node> m_bvh;
 
     std::vector<primitive> m_prims;
+
+    // Can't use m_geometries because it doesn't support random access.
     std::vector<if_geometry const *> m_geo_list;
-    std::vector<if_material const *> m_mat_list;
 };
 
 } // namespace e8

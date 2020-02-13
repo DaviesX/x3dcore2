@@ -110,7 +110,7 @@ std::vector<std::shared_ptr<e8::if_obj>> e8util::cornell_scene::load_roots() {
     roots.push_back(cams);
     roots.push_back(obj_light);
     for (unsigned i = 0; i < geometries.size(); i++) {
-        geometries[i]->attach_material(mats[i]);
+        geometries[i]->attach_material(mats[i]->id());
         roots.push_back(geometries[i]);
         roots.push_back(mats[i]);
     }

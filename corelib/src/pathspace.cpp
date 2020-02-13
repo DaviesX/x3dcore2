@@ -6,8 +6,7 @@
 #include <ext/alloc_traits.h>
 #include <memory>
 
-e8::if_path_space::if_path_space()
-    : m_fail_safe(std::make_unique<mat_fail_safe>("fail_safe_material")) {}
+e8::if_path_space::if_path_space() {}
 
 e8::if_path_space::~if_path_space() {}
 
@@ -15,12 +14,8 @@ e8util::aabb e8::if_path_space::aabb() const { return m_bound; }
 
 void e8::if_path_space::load(if_obj const &obj, e8util::mat44 const &trans) {
     std::unique_ptr<if_geometry const> geo = static_cast<if_geometry const &>(obj).transform(trans);
-    if_material const *mat = geo->material();
-    if (mat == nullptr) {
-        mat = m_fail_safe.get();
-    }
     m_bound = m_bound + geo->aabb();
-    m_geometries.insert(std::make_pair(obj.id(), binded_geometry(geo, mat)));
+    m_geometries.insert(std::make_pair(obj.id(), std::move(geo)));
 }
 
 void e8::if_path_space::unload(if_obj const &obj) {
@@ -43,12 +38,12 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
     float const t_max = 1000.0f;
 
     float t = INFINITY;
-    binded_geometry const *hit_geo = nullptr;
+    if_geometry const *hit_geo = nullptr;
     triangle const *hit_tri = nullptr;
     e8util::vec3 hit_b;
 
     for (auto it = m_geometries.begin(); it != m_geometries.end(); ++it) {
-        if_geometry const *geo = it->second.geometry.get();
+        if_geometry const *geo = it->second.get();
 
         std::vector<e8util::vec3> const &verts = geo->vertices();
         std::vector<triangle> const &tris = geo->triangles();
@@ -62,7 +57,7 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
             e8util::vec3 b;
             if (r.intersect(v0, v1, v2, t_min, t_max, b, t0) && t0 < t) {
                 hit_b = b;
-                hit_geo = &it->second;
+                hit_geo = it->second.get();
                 hit_tri = &tri;
                 t = t0;
             }
@@ -70,19 +65,19 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
     }
 
     if (hit_geo != nullptr) {
-        std::vector<e8util::vec3> const &verts = hit_geo->geometry->vertices();
+        std::vector<e8util::vec3> const &verts = hit_geo->vertices();
         e8util::vec3 v0 = verts[(*hit_tri)(0)];
         e8util::vec3 v1 = verts[(*hit_tri)(1)];
         e8util::vec3 v2 = verts[(*hit_tri)(2)];
         e8util::vec3 vertex = hit_b(0) * v0 + hit_b(1) * v1 + hit_b(2) * v2;
 
-        std::vector<e8util::vec3> const &normals = hit_geo->geometry->normals();
+        std::vector<e8util::vec3> const &normals = hit_geo->normals();
         e8util::vec3 n0 = normals[(*hit_tri)(0)];
         e8util::vec3 n1 = normals[(*hit_tri)(1)];
         e8util::vec3 n2 = normals[(*hit_tri)(2)];
         e8util::vec3 normal = (hit_b(0) * n0 + hit_b(1) * n1 + hit_b(2) * n2).normalize();
 
-        std::vector<e8util::vec2> const &texcoords = hit_geo->geometry->texcoords();
+        std::vector<e8util::vec2> const &texcoords = hit_geo->texcoords();
         e8util::vec2 uv;
         if (!texcoords.empty()) {
             e8util::vec2 uv0 = texcoords[(*hit_tri)(0)];
@@ -90,7 +85,7 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
             e8util::vec2 uv2 = texcoords[(*hit_tri)(2)];
             uv = hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2;
         }
-        return intersect_info(t, vertex, normal, uv, hit_geo->geometry.get(), hit_geo->mat);
+        return intersect_info(t, vertex, normal, uv, hit_geo);
     } else {
         return intersect_info();
     }
@@ -98,8 +93,8 @@ e8::intersect_info e8::linear_path_space_layout::intersect(e8util::ray const &r)
 
 bool e8::linear_path_space_layout::has_intersect(e8util::ray const &r, float t_min, float t_max,
                                                  float &t) const {
-    for (std::pair<obj_id_t const, binded_geometry> const &p : m_geometries) {
-        if_geometry const *geo = p.second.geometry.get();
+    for (std::pair<obj_id_t const, std::unique_ptr<if_geometry const>> const &p : m_geometries) {
+        std::unique_ptr<if_geometry const> const &geo = p.second;
 
         std::vector<e8util::vec3> const &verts = geo->vertices();
         std::vector<triangle> const &tris = geo->triangles();
@@ -297,45 +292,22 @@ void e8::bvh_path_space_layout::flatten(std::vector<flattened_node> &bvh, node *
 void e8::bvh_path_space_layout::commit() {
     this->linear_path_space_layout::commit();
 
-    m_mat_list.clear();
     m_geo_list.clear();
     m_prims.clear();
     m_bvh.clear();
 
-    // construct geometry, light and material mapping.
+    // Construct mappings from geometry to index of the element in the geometry list.
     std::map<if_geometry const *, unsigned int> geo2ind;
-    std::map<if_material const *, unsigned short> mat2ind;
-    std::map<if_light const *, unsigned short> light2ind;
-    for (std::pair<obj_id_t const, binded_geometry> const &geo : m_geometries) {
-        geo2ind.insert(std::make_pair(geo.second.geometry.get(), m_geo_list.size()));
-        m_geo_list.push_back(geo.second.geometry.get());
-
-        if (geo.second.mat != nullptr) {
-            auto mat_it = mat2ind.find(geo.second.mat);
-            if (mat_it == mat2ind.end()) {
-                mat2ind.insert(std::make_pair(geo.second.mat, m_mat_list.size()));
-                m_mat_list.push_back(geo.second.mat);
-            }
-        }
-
-        //        if (geo.second.light != nullptr) {
-        //            auto light_it = light2ind.find(geo.second.light.get());
-        //            if (light_it == light2ind.end()) {
-        //                light2ind.insert(std::make_pair(geo.second.light.get(),
-        //                m_light_list.size())); m_light_list.push_back(geo.second.light.get());
-        //            }
-        //        }
+    for (std::pair<obj_id_t const, std::unique_ptr<if_geometry const>> const &geo : m_geometries) {
+        geo2ind.insert(std::make_pair(geo.second.get(), m_geo_list.size()));
+        m_geo_list.push_back(geo.second.get());
     }
-    mat2ind.insert(std::make_pair(nullptr, 0xFFFF));
-    light2ind.insert(std::make_pair(nullptr, 0xFFFF));
 
-    // construct primitive list.
+    // Construct primitive list.
     std::vector<primitive_details> prims;
-    for (std::pair<obj_id_t const, binded_geometry> const &p : m_geometries) {
-        for (triangle const &tri : p.second.geometry->triangles()) {
-            prims.push_back(primitive_details(tri, p.second.geometry.get(),
-                                              geo2ind[p.second.geometry.get()],
-                                              mat2ind[p.second.mat]));
+    for (std::pair<obj_id_t const, std::unique_ptr<if_geometry const>> const &p : m_geometries) {
+        for (triangle const &tri : p.second->triangles()) {
+            prims.push_back(primitive_details(tri, p.second.get(), geo2ind[p.second.get()]));
         }
     }
 
@@ -348,7 +320,7 @@ void e8::bvh_path_space_layout::commit() {
     flatten(m_bvh, tmp_bvh);
     delete_bvh(tmp_bvh, 0);
 
-    // discards the details.
+    // Discards the details.
     m_prims.reserve(prims.size());
     for (unsigned i = 0; i < prims.size(); i++) {
         m_prims.push_back(prims[i]);
@@ -434,8 +406,7 @@ e8::intersect_info e8::bvh_path_space_layout::intersect(e8util::ray const &r) co
             uv = hit_b(0) * uv0 + hit_b(1) * uv1 + hit_b(2) * uv2;
         }
 
-        return intersect_info(t, vertex, normal, uv, hit_geo,
-                              hit_prim->i_mat == 0xFFFF ? nullptr : m_mat_list[hit_prim->i_mat]);
+        return intersect_info(t, vertex, normal, uv, hit_geo);
     } else {
         return intersect_info();
     }

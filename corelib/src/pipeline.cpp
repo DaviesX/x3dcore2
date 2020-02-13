@@ -1,9 +1,9 @@
 #include "pipeline.h"
 #include "camera.h"
+#include "cameracontainer.h"
 #include "compositor.h"
 #include "frame.h"
 #include "lightsources.h"
-#include "cameracontainer.h"
 #include "obj.h"
 #include "pathspace.h"
 #include "pathtracerfact.h"
@@ -63,6 +63,9 @@ e8::pt_render_pipeline::pt_render_pipeline(if_frame *target) : if_render_pipelin
     m_com = std::make_unique<aces_compositor>(/*width=*/0, /*height=*/0);
     update_pipeline(config_protocol());
     m_objdb.register_actuator(std::make_unique<camera_container>("default_cam_container"));
+    m_objdb.register_actuator(std::make_unique<default_material_container>());
+    m_objdb.register_actuator(std::make_unique<basic_light_sources>());
+    m_objdb.register_actuator(std::make_unique<bvh_path_space_layout>());
 }
 
 e8::pt_render_pipeline::~pt_render_pipeline() {}
@@ -70,17 +73,29 @@ e8::pt_render_pipeline::~pt_render_pipeline() {}
 void e8::pt_render_pipeline::render_frame() {
     m_com->resize(m_frame->width(), m_frame->height());
     m_objdb.push_updates();
-    camera_container *cinematics =
+
+    camera_container *cams =
         static_cast<camera_container *>(m_objdb.actuator_of(obj_protocol::obj_protocol_camera));
+    assert(cams != nullptr);
+
     if_path_space *path_space =
         static_cast<if_path_space *>(m_objdb.actuator_of(obj_protocol::obj_protocol_geometry));
+    assert(path_space != nullptr);
+
+    if_material_container *mats = static_cast<if_material_container *>(
+        m_objdb.actuator_of(obj_protocol::obj_protocol_material));
+    assert(mats != nullptr);
+
     if_light_sources *light_sources =
         static_cast<if_light_sources *>(m_objdb.actuator_of(obj_protocol::obj_protocol_light));
-    if_camera const *cur_cam = cinematics->active_cam();
+    assert(light_sources != nullptr);
+
+    if_camera const *cur_cam = cams->active_cam();
     if (cur_cam != nullptr) {
-        m_renderer->render(m_com.get(), *path_space, *light_sources, *cur_cam, m_samps_per_frame,
-                           m_firefly_filter);
+        m_renderer->render(m_com.get(), *path_space, *mats, *light_sources, *cur_cam,
+                           m_samps_per_frame, m_firefly_filter);
     }
+
     m_com->commit(m_frame);
     m_frame->commit();
 }

@@ -2,11 +2,12 @@
 #include "compositor.h"
 
 e8::pt_image_renderer::sampling_task_data::sampling_task_data(
-    e8util::data_id_t id, if_path_space const &path_space, if_light_sources const &light_sources,
-    std::vector<e8util::ray> const &rays, if_path_tracer::first_hits const &first_hits,
-    unsigned num_samps, unsigned width, unsigned height, bool firefly_filter)
-    : e8util::if_task_storage(id), path_space(path_space), light_sources(light_sources), rays(rays),
-      first_hits(first_hits), num_samps(num_samps), width(width), height(height),
+    e8util::data_id_t id, if_path_space const &path_space, if_material_container const &mats,
+    if_light_sources const &light_sources, std::vector<e8util::ray> const &rays,
+    if_path_tracer::first_hits const &first_hits, unsigned num_samps, unsigned width,
+    unsigned height, bool firefly_filter)
+    : e8util::if_task_storage(id), path_space(path_space), mats(mats), light_sources(light_sources),
+      rays(rays), first_hits(first_hits), num_samps(num_samps), width(width), height(height),
       firefly_filter(firefly_filter) {}
 
 e8::pt_image_renderer::sampling_task::sampling_task() : e8util::if_task(false), m_pt(nullptr) {}
@@ -40,8 +41,8 @@ void e8::pt_image_renderer::sampling_task::run(e8util::if_task_storage *p) {
 
     // Compute and accumulate multi-sample estimate.
     for (unsigned i = 0; i < data->num_samps; i++) {
-        std::vector<e8util::vec3> estimate = m_pt->sample(m_rng, data->rays, data->first_hits,
-                                                          data->path_space, data->light_sources);
+        std::vector<e8util::vec3> estimate = m_pt->sample(
+            m_rng, data->rays, data->first_hits, data->path_space, data->mats, data->light_sources);
         if (data->firefly_filter) {
             for (unsigned y = 0; y < data->height; y++) {
                 for (unsigned x = 0; x < data->width; x++) {
@@ -104,6 +105,7 @@ e8::pt_image_renderer::pt_image_renderer(std::unique_ptr<pathtracer_factory> fac
 
 e8::pt_image_renderer::numerical_stats
 e8::pt_image_renderer::render(if_compositor *compositor, if_path_space const &path_space,
+                              if_material_container const &mats,
                               if_light_sources const &light_sources, if_camera const &cam,
                               unsigned num_samps, bool firefly_filter) {
     // Generate camera seed rays and first_hits
@@ -122,7 +124,7 @@ e8::pt_image_renderer::render(if_compositor *compositor, if_path_space const &pa
     // Launch tasks.
     unsigned allocated_samps =
         static_cast<unsigned>(std::ceil(static_cast<float>(num_samps) / m_tasks.size()));
-    sampling_task_data task_config(/*id=*/0, path_space, light_sources, rays, first_hits,
+    sampling_task_data task_config(/*id=*/0, path_space, mats, light_sources, rays, first_hits,
                                    allocated_samps, compositor->width(), compositor->height(),
                                    firefly_filter);
     for (unsigned i = 0; i < m_tasks.size(); i++) {

@@ -6,15 +6,15 @@
 e8::if_geometry::if_geometry(std::string const &name) : if_operable_obj<if_geometry>(name) {}
 
 e8::if_geometry::if_geometry(if_geometry const &other)
-    : if_operable_obj<if_geometry>(other.id(), other.name()), m_mat(other.m_mat) {}
+    : if_operable_obj<if_geometry>(other.id(), other.name()), m_mat_id(other.m_mat_id) {}
 
 e8::if_geometry::~if_geometry() {}
 
 e8::obj_protocol e8::if_geometry::protocol() const { return obj_protocol::obj_protocol_geometry; }
 
-void e8::if_geometry::attach_material(std::shared_ptr<if_material> const &mat) { m_mat = mat; }
+void e8::if_geometry::attach_material(obj_id_t mat_id) { m_mat_id = mat_id; }
 
-e8::if_material const *e8::if_geometry::material() const { return m_mat.get(); }
+std::optional<e8::obj_id_t> e8::if_geometry::material_id() const { return m_mat_id; }
 
 // trimesh
 e8::trimesh::trimesh(std::string const &name) : if_geometry(name), m_aabb(0.0f, 0.0f) {}
